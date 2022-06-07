@@ -1,0 +1,195 @@
+---
+title: |
+  Statistica per la Misura
+  
+  Parte 1. --- Variabili Stocastiche
+runningheader: "SpM --- Variabili Stocastiche" # only for pdf output
+subtitle: "Variabili Stocastiche" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html: default
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+```
+
+# Introduzione
+
+`r newthought('Le tecniche di bootstrapping')` consentono di analizzare delle statistiche simulando nuovi campioni a partire da un campione originario. La simulazione può essere fatta in due modi: in modo **non-parametrico** i campioni bootstrap vengono generati dal campione originario mediante campionamento senza reinserimento; in modo **parametrico** i campioni bootstrap vengono generati da distribuzioni aventi una forma nota (e assunta corretta) e parametri stimati dal campione originario (tipicamente media e varianza).
+
+
+# Bootstrapping
+
+```{r, include=FALSE}
+library(boot)
+library(tidyverse)
+library(tidymodels)
+library(magrittr)
+library(grDevices)
+```
+
+
+## Metodo non-parametrico
+
+`r newthought('Cominciamo con l\'esempio più semplice')`: vogliamo calcolare l'intervallo di confidenza sulla media campionaria mediante il metodo bootstrap. Per farlo, a partire da un campione, effettuiamo un **campionamento con reinserimento** $N=`r (N <- 10000)`$ volte. Per ogni estrazione calcoliamo il valore della statistica che vogliamo studiare, in questo caso la media campionaria.
+```{marginfigure}
+Ricorda: è possibile effettuare un'operazione di campionamento con o senza reinserimento. Nel primo caso, le osservazioni campionate vengono reinserite nell'insieme originario e possono essere ri-campionate. Nel bootstrapping non-parametrico si estraggono campioni (casuali con reinserimento) di **dimensione uguale** al campione originario: conterranno quindi sicuramente dei duplicati.
+```
+Otteniamo quindi $N$ valori (stime) della statistica in studio, campione del quale possiamo valutare la distribuzione e calcolare un intervallo di confidenza.
+
+In particolare, per quest'ultimo, possiamo utilizzare il cosiddetto metodo dei quantili: per un intervallo di confidenza al 95% il limite inferiore sarà il 2.5 percentile, e il limite superiore il 97.5 percentile.
+
+In R possiamo utilizzare la funzione `boot()` della libreria `bootstrap`: in modalità _non parametrica_ (default) essa richiede---oltre al vettore delle osservazioni e al numero di campionamenti---una funzione di due argomenti: il primo rappresenta il vettore delle osservazioni, il secondo il vettore degli indici estratti nel generico campionamento. 
+
+Quest'interfaccia è assolutamente flessibile e può essere adattata allo studio di qualunque statistica. È ovviamente possibile creare una funzione _ad hoc_ oppure, nei casi più semplici, creare una funzione anonima con la sintassi abbreviata `\(x, i) mean(x[i])`.
+
+```{r}
+set.seed(1)
+d <- rbeta(100, 1, 10)
+d.boot <- boot(d, \(x, i) mean(x[i]), R=N)
+d.plot <- tibble(i = seq_along(d.boot$t), t = d.boot$t)
+d.boot.ci <- boot.ci(d.boot, type=c("perc"))
+d.test <- t.test(d)
+```
+
+Confronto con intervallo di confidenza:
+
+```{r, fig.cap="Campioni bootstrap", fig.margin = T}
+d.plot %>%
+  ggplot(aes(x = i, y = t)) +
+  geom_point(size = 0.05, alpha = 0.5) + 
+  geom_hline(aes(color = "Bootstrap", 
+                 yintercept = d.boot.ci$percent[4])) + 
+  geom_hline(aes(color = "Bootstrap", 
+                 yintercept = d.boot.ci$percent[5])) + 
+  geom_hline(aes(color = "T-test", 
+                 yintercept = d.test$conf.int[1])) +
+  geom_hline(aes(color = "T-test", 
+                 yintercept = d.test$conf.int[2])) +
+  scale_color_discrete(name = "Tipo") + 
+  theme(legend.position = "bottom")
+```
+
+Meglio osservabile mediante un istogramma, dato che l'indice in ascissa non porta nessuna informazione (corridponde infatti all'indice del campione di bootstrap, che è casuale per definizione):
+
+```{r, fig.cap="Istogramma dei campioni bootstrap", fig.margin = T}
+d.plot %>%
+  ggplot(aes(x = t)) + 
+  geom_histogram(bins = nclass.scott(d.plot$t), 
+                 fill = grey(0.8), 
+                 color = grey(0.)) +
+  geom_vline(aes(color = "Bootstrap", 
+                 xintercept = d.boot.ci$percent[4])) + 
+  geom_vline(aes(color = "Bootstrap", 
+                 xintercept = d.boot.ci$percent[5])) + 
+  geom_vline(aes(color = "T-test", 
+                 xintercept = d.test$conf.int[1])) +
+  geom_vline(aes(color = "T-test", 
+                 xintercept = d.test$conf.int[2])) +
+  scale_color_discrete(name ="Tipo") + 
+  theme(legend.position = "bottom")
+```
+
+Come si osserva, l'intervallo di confidenza stimato mediante bootstrapping è molto simile a quello calcolato mediante test di Student.
+Il vantaggio, tuttavia, è che questo metodo può essere facilmente applicato a _qualunque_ statistica o indicatore, anche quando non sia noto o facile da definire l'intervallo di confidenza in forma analitica. Inoltre, e soprattutto, non si fa **nessuna ipotesi sulla forma della distribuzione** dei dati iniziali: dato che il campionamento viene effettuato _con probabilità uniforme_, infatti, ogni campione di bootstrap avrà una distribuzione simile all'originale, tanto più simle quanto il campione originale è grande. Al contrario i metodi analitici, quando disponibili, ipotizzano sempre una certa distrubuzione: ad esempio nel caso considerato il metodo analitico di Student assume una distribuzione normale.
+
+```{r eval=FALSE, include=FALSE}
+plot(db$t, cex=0.1)
+abline(h=db.ci$percent[4:5], col="red")
+abline(h=dt$conf.int, lty=2, col="blue")
+hist(pd$t, freq = T, breaks="Scott")
+abline(v=db.ci$percent[4:5], col="red")
+abline(v=dt$conf.int, lty=2, col="blue")
+```
+
+## Metodo parametrico
+
+```{r}
+d.pboot <- boot(d, R = N, sim = "parametric",
+                statistic = \(x) mean(x),
+                ran.gen = \(x, p) rnorm(length(x), p$mean, p$sd),
+                mle = list(mean=mean(d), sd=sd(d)))
+d.pboot.ci <- boot.ci(d.pboot, type=c("perc"))
+d.plot$tp <- d.boot$t
+d.plot %>%
+  ggplot(aes(x = tp)) + 
+  geom_histogram(bins = nclass.scott(d.plot$tp), 
+                 fill = grey(0.8), 
+                 color = grey(0.)) +
+  geom_vline(aes(color = "N-Bootstrap", 
+                 xintercept = d.boot.ci$percent[4])) + 
+  geom_vline(aes(color = "N-Bootstrap", 
+                 xintercept = d.boot.ci$percent[5])) +
+  geom_vline(aes(color = "P-Bootstrap", 
+                 xintercept = d.pboot.ci$percent[4])) + 
+  geom_vline(aes(color = "P-Bootstrap", 
+                 xintercept = d.pboot.ci$percent[5])) + 
+  geom_vline(aes(color = "T-test", 
+                 xintercept = d.test$conf.int[1])) +
+  geom_vline(aes(color = "T-test", 
+                 xintercept = d.test$conf.int[2])) +
+  scale_color_discrete(name ="Tipo") + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+set.seed(1)
+data <- tibble(
+  d = rbeta(100, 1, 10),
+  i = seq_along(d)
+)
+boots <- bootstraps(data, times = 10000) %>%
+  mutate(mean_coef = map(splits, ~ tibble(
+    estimate = mean(analysis(.)$d),
+    term = "mean"),
+  ),
+  mean = map_dbl(mean_coef, ~.[[1]]),
+  i = seq_along(mean))
+boots.pctl <- int_pctl(boots, mean_coef)
+
+ggplot(boots, aes(x=i, y=mean)) +
+  geom_point(size = 0.05, alpha = 0.5) + 
+  geom_hline(yintercept = boots.pctl$.estimate) + 
+  geom_hline(yintercept = boots.pctl$.lower) + 
+  geom_hline(yintercept = boots.pctl$.upper)
+  
+```
+
+
+
+
+```{r}
+set.seed(27)
+boots <- bootstraps(mtcars, times = 2000, apparent = TRUE)
+boots
+
+
+fit_nls_on_bootstrap <- function(split) {
+    nls(mpg ~ k / wt + b, analysis(split), start = list(k = 1, b = 0))
+}
+
+boot_models <-
+  boots %>% 
+  mutate(model = map(splits, fit_nls_on_bootstrap),
+         coef_info = map(model, tidy))
+
+boot_coefs <- 
+  boot_models %>% 
+  unnest(coef_info)
+```
+

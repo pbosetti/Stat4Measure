@@ -1,0 +1,1073 @@
+---
+title: |
+  Statistica per la Misura
+  
+  Parte 1. --- Variabili Stocastiche
+runningheader: "SpM --- Variabili Stocastiche" # only for pdf output
+subtitle: "Variabili Stocastiche" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html: default
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+```
+
+# Introduzione
+
+`r newthought('In questa prima sezione')` del corso vedremo i principali
+concetti base per trattare variabili casuali---o
+*stocastiche*---mediante il linguaggio R. In questa come nelle prossime
+sezioni i concetti teorici verranno gradualmente introdotti assieme alle
+funzionalità del linguaggio R che ne consentono l'applicazione.
+
+# Il linguaggio R e l'applicazione RStudio
+
+`r newthought('Per prima cosa')`, introduciamo R e il suo ambiente. R è
+un linguaggio open source nato, con il nome di S, presso i Bell Labs
+attorno al 1976. Gli stessi Bell Labs avevano già creato, qualche anno
+prima, il linguaggio *C* (oggi il secondo linguaggio più usato al
+mondo), il cui nome è stato scelto come lettera immediatamente
+successiva al precedente linguaggio utilizzato presso i Labs, il
+*Basic*, in breve noto come *B*, suggerendo che il C fosse un passo in
+più rispetto al B. Nello stesso ambito i ricercatori si dedicarono a
+sviluppare un linguaggio dedicato all'analisi statistica, chiamandolo
+appunto *S*. Il linguaggio S nacque in forma chiusa, ed è tuttora
+disponibile sotto licenza (*payware*). Nel 1995 lo statistico Martin
+Mächler realizzò un interprete open source (un clone) di S,
+distribuendolo nell'ambito del progetto GNU a partire dal 2000. Chiamò
+il clone *R* alludendo ad una versione semplificata di S, ma gratuita.
+
+Oggi R è molto più diffuso di S, ed è uno dei due linguaggi più
+utilizzati al mondo (l'altro è Python) nel campo della statistica, del
+data mining e dell'analisi di big data.
+
+Con il termine *R* ci si riferisce sia al *linguaggio*, sia
+all'*interprete*, cioè al software in grado di eseguire programmi
+scritti in R. A differenza di altri interpreti (come Python o Ruby), R
+nasce però con un'interfaccia grafica integrata, proprio perché è nato
+con l'obiettivo di analizzare dati, anche mediante la realizzazione di
+grafici.
+
+Negli ultimi anni è nata e si è rapidamente diffusa una collezione di
+strumenti e librerie che hanno enormemente potenziato le capacità di R:
+si tratta di un ambiente di sviluppo e di una collezione di *pacchetti*,
+cioè estensioni software del linguaggio. L'ambiente di sviluppo si
+chiama *RStudio* e la collezione si chiama *Tidyverse*.
+
+Prima di procedere è quindi necessario installare, in sequenza, R
+(@R-base) ed RStudio (@RStudio).[^1]
+
+L'installazione del solo R fornisce già un'interfaccia grafica con console
+interattiva ed editor per la creazione di script. Tuttavia, si tratta di
+un'interfaccia molto semplice e limitata, per cui si preferisce installare
+*anche* RStudio, un ambiente di sviluppo molto più ricco e moderno. Si noti che
+RStudio **non funziona senza aver prima installato R base**.
+
+[^1]: Inizia con
+    [cran.mirror.garr.it/CRAN](https://cran.mirror.garr.it/CRAN/),
+    quindi installa
+    [rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/).
+    Entrambi sono disponibili per Windows, MacOS e Linux.
+    
+
+# Primi passi in R
+
+`r newthought('R è nato come linguaggio interattivo')`, in cui
+l'operatore inserisce una serie di espressioni un una *console* e ottiene
+immediatamente la valutazione dell'espressione, una alla volta. Cominciamo
+quindi ad utilizzare R in questa modalità, lanciando RStudio e cliccando nel
+pannello denominato *Console*.
+
+Ogni linguaggio si basa sul concetto di assegnazione, cioè quello di
+salvare un valore in una variabile. In R l'assegnazione si ottiene con
+l'operatore `<-`:
+
+```{marginfigure}
+Le versioni più recenti di R consentono di usare come operatore di assegnazione anche l'uguale, `=`. Tuttavia, l'operatore freccia è preferibile perché anzitutto funziona anche nel verso opposto, `1 -> a`, e in secondo luogo si distingue dall'uguale che invece è utilizzato, come vedremo, nella sintassi delle funzioni.
+```
+
+```{r}
+a <- 3.14
+```
+
+L'operatore freccia funziona anche nella direzione opposta:
+
+```{r}
+3.1416 -> a
+```
+
+```{marginfigure}
+Si può forzare la restituzione di un'operazione muta mettendla tra parentesi 
+tonde: `(b <- 3)`
+```
+
+L'assegnazione è un'operazione muta, cioè non dà alcun output. Per
+verificare il valore di `a` possiamo scrivere:
+
+```{r}
+a
+```
+
+Come si vede, l'interprete stampa l'output preceduto da due `#` e da un
+numero tra parentesi quadre: `[1]`. Questo tipo di formato è utile
+perché consente di copiare e incollare una sequenza di comandi inclusi
+gli output intermedi, dato che **il carattere `#` è il marcatore di
+commento** in R. Il numero tra parentesi quadre, inoltre, indica che la
+variabile è un vettore il cui primo elemento stampato su quella riga ha
+indice 1.
+
+Quest'ultimo fatto ci dice due cose:
+
+1.  in R, ogni valore è intrinsecamente un vettore; uno scalare è
+    semplicemente un vettore di lunghezza 1,
+2.  in R, il primo indice di un vettore è 1 (come in MATLAB e non 0 come
+    in C/C++ e linguaggi simili).
+    
+Le variabili possono contenere valori di tipi, o *classi*, diversi.
+
+## Classi native in R
+
+Il linguaggio R è dotato di 6 classi native, più una:
+
+* **character** - una sequenza di caratteri che formano del testo: `"a"`, `"string"`, `'my text'` * **numeric** - un valore numerico reale: `1`, `0.5` 
+* **integer** - un valore numerico intero: `10L` 
+* **logical** - `TRUE` oppure `FALSE` (abbreviato `T`, `F`) 
+* **complex** - un valore complesso: `3+5i` 
+* **function** - una *funzione*
+
+Oltre a questi sei tipi c'è anche la classe **raw**, che indica una sequenza di
+byte grezzi. Ogni variabile, o *istanza*, di questi tipi è intrinsecamente un
+vettore, con l'eccezione delle classi function e raw. Uno scalare è
+semplicemente un vettore di lunghezza 1.
+
+## Valori speciali
+
+Sono definiti i seguenti valori speciali:
+
+* `NA`: valore mancante
+* `NULL`: nullo, niente, non definito
+* `Inf`: infinito
+* `NaN`: *Not a Number*, come ad esempio il risultato di `0/0`
+
+## Vettori
+
+Un vettore può essere creato con la funzione `c()`: essa accetta un numero
+variabile di argomenti, che rappresentano gli elementi del vettore, in ordine:
+
+```{marginfigure}
+Le *funzioni* in R sono rappresentate da un *nome* seguito da un elenco tra 
+parentesi tonde di *argomenti* separati da virgole.
+```
+
+```{r}
+(v1 <- c(1, 2, 3, 4))
+```
+
+La funzione `c()` può anche accodare più vettori:
+
+```{r}
+v2 <- c(5, 6)
+c(v1, v2, 7, 8)
+```
+
+Spesso è utile creare delle *sequenze ordinate di interi*: ciò può essere 
+ottenuto con l'*operatore* sequenza `:` (due punti):
+
+```{r}
+(v3 <- 1:10)
+# funziona anche all'indietro:
+(v4 <- 20:11)
+```
+
+Se si desidera un passo diverso da 1 è necessario usare la funzione `seq()`:
+
+```{r}
+(v5 <- seq(1, 10, 0.5))
+```
+
+Molto utile è anche `seq_along()`, che crea una sequenza da 1 alla lunghezza di
+un altrio vettore:
+
+```{r}
+seq_along(v5)
+```
+
+
+## Coercizione
+
+Quando si mescolano tipi differenti in un vettore, R opera una *coercizione*,
+cioè trasforma i valori in un tipo comune:
+
+```{r}
+c(1L, 7, "2")
+c(T, 0)
+```
+
+In certi casi la coercizione può essere forzata con la famiglia di funzioni che 
+iniziano con `as.`:
+
+```{r}
+as.numeric(c("a", "1"))
+as.character(c(1, 1.7))
+```
+
+## Matrici e array
+
+Una *matrice* può essere costruita con la funzione `matrix()`:
+
+```{r}
+(m1 <- matrix(v3, 2, 5))
+```
+
+Si noti che gli elementi vengono inseriti *per colonna*
+
+```{marginfigure}
+È possibile anche inserirli *per righe* utilizzando l'opzione `byrow` 
+della funzione `matrix()`. Come passare queste opzioni alle funzioni 
+verrà ilustrato più avanti.
+```
+
+Quando è necessario creare matrici con più di due dimensioni si usa la 
+funzione `array()`, il cui secondo argomento è un vettore di lunghezza pari al 
+numero di dimensioni e i cui valori sono le lunghezze nelle varie dimensioni:
+
+```{r}
+array(1:8, c(2,2,2))
+```
+
+## Introspezione
+
+Spesso è utile ottenere informazioni su un oggetto: ciò può essere fatto con le
+funzioni di *introspezione*:
+
+* `mode()`: restituisce lo *storage mode*, cioè il modo in cui R internamente memorizza un dato
+* `typeof()`: restituisce il tipo base
+* `class()`: restituisce la classe di un oggetto; per i tipi base è uguale a `typeof()`)
+* `length()`: restituisce il numero di elementi
+* `attributes()` e `attr()`: restituiscono i *metadati*
+
+```{r}
+typeof(m1)
+class(m1)
+length(m1)
+```
+
+Come si vede, un oggetto può appartenere a più classi. Vedremo più oltre ciò 
+cosa significa in pratica.
+
+Ad ogni oggetto possono essere assegnati dei *metadati*, ossia delle 
+informazioni aggiuntive. Queste informazioni possono appartenere a loro volta ad
+una qualsiasi classe o tipo di R. Inoltre, un oggetto può avere più metadati 
+associati, ognuno con un dato nome. 
+`attributes(x)` restituisce tutti i metadati di `x`, invece `attr(x, "name")`
+restituisce l'attributo di `x` chiamato `"name"`.
+
+```{marginfigure}
+R è tecnicamente un linguaggio ad oggetti, sebbene il suo paradigma di oggetto 
+sia decisamente diverso da quello di linguaggi come C++, Java o Python. 
+In questi ultimi, infatti, un *oggetto* dispone di *attributi* (valori) e di
+*metodi* (funzioni che operano sull'oggetto e sui suoi attributi). 
+
+In R, invece, sono le funzioni che si *adattano* (cioè operano differentemente)
+alla classe degli oggetti che hanno come argomento.
+
+Per chi viene da altri linguagi di programmazione è bene ricordarsi questa
+differenza.
+```
+
+In realtà, una matrice o un'array non sono altro che vettori con lo speciale 
+attributo `dim`, che ne specifica le dimensioni:
+
+```{r}
+attributes(m1)
+attr(m1, "dim")
+```
+
+Le stesse due funzioni sono disponibili anche nella "variante freccia", che 
+consentono di *modificare gli attributi*:
+
+```{r}
+v <- 1:8
+attr(v, "dim") <- c(2,4)
+v
+```
+
+È possibile definire attributi a piacere:
+```{marginfigure}
+La funzione `list()` serve per creare una lista di coppie chiave=valore.
+```
+
+```{r}
+attributes(v) <- list("author"="Paolo Bosetti", "ID"=131)
+attributes(v)
+```
+
+## Funzioni
+
+In R una funzione è una variabile come un'altra, e può quindi essere creata, 
+assegnata ad una variabile, riassegnata successivamente, cancellata. Si dice
+che le funzioni sono *first class object*.
+
+Una nuova funzione può essere creata con la keyword `function`:
+
+```{r}
+my_fun <- function(x) x^2
+my_fun(1:5)
+```
+
+Se il *corpo* della funzione richiede più espressioni, è necessario inserirle 
+dentro un *blocco*, cioè una coppia di `{}`, andando a capo tra una istruzione
+e l'altra. La funzione ritorna automaticamente l'ultima espressione valutata, 
+oppure è possibile restituire esplicitamente un valore con `return()`:
+
+```{r}
+my_fun <- function(x) {
+  result = x^2
+  return(result)
+}
+```
+
+
+Come si vede, è spesso utile sfruttare le caratteristiche delle funzioni e degli 
+operatori nativi di R (che, come l'elevazione a potenza `^`, sono 
+*vettorializzati*) per realizzare funzioni a loro volta vettorializate.
+
+```{marginfigure}
+Una funzione è *vettorializzata* quando opera automaticamente su uno scalare o 
+su un vettore, elemento per elemento.
+```
+
+Dato che una funzione è di fatto una variabile, può essere a sua volta passata
+come argomento ad un'altra funzione:
+
+```{r}
+my_apply <- function(x, f) f(x)
+my_apply(10, my_fun)
+```
+
+In quest'ultimo esempio, `my_apply(10, my_fun)` applica la funzione `my_fun` al
+valore `10`.
+
+Come si vede sopra, gli argomenti delle funzioni sono passati tra parentesi e
+separati da virgole. I due argomenti dell'esempio precedente sono passati, 
+come avviene per molti altri linguaggi, *per posizione*: quando cioè si effettua 
+la una chiamata a `my_fun`, il primo argomento viene associato al parametro `x`
+e il secondo al parametro `f`, e così via.
+
+In R, però, è possibile---e molto utile!---passare argomenti *per nome* anziché 
+per posizione, con la seguente sintassi:
+
+```{marginfigure}
+L'operatore `=` come assegnazione è valido solo al *top-level*. In una chiamata
+di funzione serve invece per associare valori a parametri.
+L'operatore `<-` è invece valido ovuque e assolve **sempre** ad un'assegnazione.
+Ad esempio: `system.time(m <- mean(1:1E9))` misura il tempo necessario
+ad effettuare l'assegnazione a `m` della media del primo miliardo di numeri 
+interi.
+```
+
+```{r}
+my_apply(f=my_fun, x=20)
+```
+
+Si noti che in questo caso è **necessario** usare l'uguale e non si può 
+utilizzare l'operatore freccia `->`.
+
+È inoltre possibile associare dei valori di default a uno o più parametri di una 
+funzione:
+
+```{r}
+f <- function(x, y, n=10, test=F) {
+  ifelse(test, 0, x^y + n)
+}
+```
+
+In tale funzione i parametri `x` e `y` sono obbligatori, mentre `n` e `test` 
+sono opzionali, e se mancano assumono i corrispondenti valori di default.
+La funzione `ifelse()`, inoltre, valuta il primo argomento: se è vero, 
+restituisce il suo secondo argomento; se è falso, restituisce il terzo. 
+Vediamo come si può usare `f`:
+
+```{r}
+f(2, 10) # equivale a f(2, 10, 10, F)
+f(test=T, y=10, x=2)
+f(n=3, test=T) # x e y non sono necessari
+try(f(n=3))
+```
+
+```{marginfigure}
+La funzione `try()` *prova* ad eseguire una funzione: se questa funzione
+fallisce, stampa il messaggio di errore e continua. Senza il `try()` 
+l'espressione dell'esempio terminerebbe l'esecuzione del programma o script.
+```
+
+Questa sintassi risulterà estremamente comoda: infatti, funzioni avanzate spesso
+richiedono un gran numero di argomenti e ciò, passando gli argomenti solo per 
+posizione, risulterebbe complesso, poco leggibile e soggetto ad errori. 
+Potendo invece passare gli argomenti per nome e disponendo di default ben
+scelti, risulta semplice e leggibile anche chiamare funzioni con una decina
+di argomenti o più.
+
+Abbiamo sopra visto che esistono funzioni come `dim(v) <- c(2,3)`: cosa sono? 
+come si dichiarano? Si tratta delle cosiddette **funzioni freccia**, o 
+*replacement functions*. In questo caso l'assegnazione `<-` fa parte del nome 
+della funzione (con o senza spazio, non ha importanza), cioè il nome della 
+funzione è `dim<-`, ed è una funzione differente da `dim`. In generale, cioè, 
+scrivere `my_fun(...) <- value` è un errore, *a meno che* non si sia definita
+anche la funzione `my_fun<-`.
+
+Come si definiscono le funzioni freccia? vediamo un esempio. Vogliamo creare una 
+funzione che eleva a potenza una variabile *modificando direttamente* la 
+variabile stessa:
+
+```{r}
+`pwr<-` <- function(obj, value) obj ** value
+a <- 2
+pwr(a) <- 10
+a
+```
+
+Attenzione a quanto segue:
+
+* il nome della funzione, inclusa la freccia, deve essere *protetto* con i 
+*backtick* `` ` `` (altrimenti avremmo due frecce in sequenza, che 
+confondono l'interprete)
+* il primo argomento **deve chiamarsi `obj`**, ed è il valore che viene 
+modificato, e l'ultimo argomento **deve chiamarsi `value`**, e rappresenta il 
+lato destro dell'assegnazione.
+
+Infine, nel corpo di una funzione è spesso necessario gestire il flusso di 
+esecuzione mediante gli **operatori di controllo di flusso**:
+
+* `if(cond) expr`
+* `if(cond) true.expr  else  false.expr`
+* `for(var in vector) expr`
+* `while(cond) expr`
+* `repeat expr`
+* `break`
+* `next`
+
+Si tratta dei medesimi operatori disponibili pressoché in ogni linguaggio di 
+programmazione. Rimandando all'help in linea per i dettagli, rimarchiamo qui 
+solo la principale particolarità di R nella sintassi di `for` con un modo molto 
+lento per calcolare la somma dei numeri da 1 a 10:
+
+```{r}
+s <- 0
+for (i in 1:10) {
+  s <- s + i
+}
+s
+```
+
+## Indicizzazione
+
+Dato che ogni variabile in R (con l'eccezione delle funzioni) è intrinsecamente 
+un vettore, è evidentemente necessario poter estrarre singoli valori o 
+sottoinsiemi dai vettori. Per questo si utilizzano gli operatori di 
+*indicizzazione*.
+
+Il principale operatore di indicizzazione è la coppia di parentesi quadrate, 
+`[]`, tra le quali va inserito l'*indice*, cioè la posizione, dell'elemento da 
+estrarre. Il primo elemento ha indice 1:
+
+```{r}
+v <- 10:1
+v[2]
+```
+
+Per una matrice gli indici sono 2:
+
+```{r}
+m <- matrix(1:10, nrow=2, ncol=5)
+m[2,2]
+```
+
+Se un indice è omesso, vengono restituito tutti gli elementi corrispondenti
+all'indice mancante (intera riga o colonna):
+
+```{r}
+m[2,]
+```
+
+La vera potenza dell'operatore `[]` deriva però da poter accettare *vettori* 
+di indici, consentendo di estrarre sottoinsiemi:
+
+```{r}
+v[c(1,3,7)]
+```
+
+Oltre che vettori di indici è possibile anche passare vettori booleani, dove
+`TRUE` significa *estrai*, `FALSE` significa *tralascia*. In questo caso il 
+vettore booleano può essere lungo quanto il vettore originale ma può anche
+essere più corto; in questo secondo caso, esso viene *riciclato*, assumendo 
+cioè che si ripeta ciclicamente fino a coprire la lunghezza del vettore 
+originario:
+
+```{r}
+v[c(T,F)]   # uno sì e uno no
+# equivale a 
+v[c(T,F,T,F,T,F,T,F,T,F)]
+v[c(T,F,F)] #uno sì e due no
+```
+
+Ovviamente, il vettore booleano può anche essere il risultato di un'espressione:
+
+```{marginfigure}
+L'operatore `%%` restituisce il resto della divisione intera.
+```
+
+
+```{r}
+v %% 2 == 0
+v[v %% 2==0]
+v[v > 5]
+```
+
+
+
+## Classi aggiuntive: `factor`, `list`, `data.frame`
+
+Alcune classi, pur non corrispondendo a tipi base di R, sono estremamente utili
+e comuni. È il caso di `factor`, che rappresenta un *fattore*, cioè una
+variabile che può assumere solo un numero discreto di valoro, o *livelli*; 
+`list`, che rappresenta una lista di coppie nome-valore; e `data.frame`, che
+rappresenta una *tabella* di vettori colona di uguale lunghezza ma di tipo 
+potenzialmente differente.
+
+**La classe `factor`** è utile per definire condizioni omogenee in un 
+esperimento: ad esempio `(maschio,femmina)`, oppure `(alto,basso)`, oppure 
+`(mattina,pomeriggio,sera)`, oppure ancora `(A,B,C,D,E,F,G)` e così via. I 
+livelli sono in numero finito e possono essere *non-ordinati* (*unordered*), 
+oppure *ordinati* (*ordered*). In questo secondo caso sono in relazione di 
+grandezza l'uno rispetto all'altro.
+
+```{marginfigure}
+La funzione `factor()` converte un vettore di stringhe in un vettore di fattori.
+
+Le variabili predefinite `LETTERS` e `letters` sono vettori contenenti le 
+lettere dell'alfabeto maiuscole e minuscole, rispettivamente.
+```
+
+```{r}
+uf <- factor(c("maschio", "femmina", "femmina"))
+uf
+class(uf)
+typeof(uf)
+uf[1] < uf[2]
+```
+
+Si noti che internamente i fattori sono memorizzati come interi, come riportato 
+da `typeof()`.
+
+I fattori ordinati sono del tutto equivalenti, ma consentono di comparare due
+livelli:
+
+```{r}
+of <- factor(LETTERS[1:5], ordered=T)
+of
+of <- factor(LETTERS[1:5], levels=LETTERS[c(2,1,3,5,4)], ordered=T)
+of
+of[2] < of[1]
+```
+
+**La classe `list`** è un contenitore utile a raccogliere elementi eterogenei:
+
+```{r}
+l <- list(A="uno", B="due", C=3, D=1:4)
+l
+```
+
+Le liste possono essere indicizzate in tre modi:
+
+1. con la notazione `$`: si estraggono gli elementi per nome
+2. con l'operatore `[]`: estrae per posizione e **restituisce una lista**
+3. con l'operatore `[[]]`: estrae per posizione e restituisce l'elemento
+
+Vediamo gli esempi:
+
+```{r}
+l$C
+l[1:3]
+l[[4]]
+```
+
+**La classe `data.frame`** è una della classi più utilizzate in R, ed è un modo
+molto flessibile per organizzare anche grandi quantità di dati, tipicamente
+risultanti da misurazioni. Può essere visualizzata come una tabella di 
+$m\times n$ elementi, ottenuta combinando $n$ vettori colonna di $m$ elementi 
+ciascuno, e in cui i vettori potenzialmente possono essere di tipi differenti 
+(interi, razionali, stringhe, fattori, date, ecc.). Rispetto ad una matrice, 
+un data frame ha quindi due principali differenze:
+
+* le colonne hanno un nome, oltre ad una posizione
+* le colonne possono essere di tipo differente
+
+Vediamo anzitutto come si crea un data frame:
+
+```{marginfigure}
+Gli argomenti di `data.frame` sono coppie `nome=vettore`, con i vettori che
+devono avere tutti la stessa lunghezza. I nomi delle colonne non possono
+contenere spazi; se si desidera uno spazio è necessario proteggere il nome con
+i *backtick*: `` `prima colonna` = 1:10``.
+Infine, una colonna **non può** fare riferimento ad un'altra in fase di 
+creazione, ad es. `data.frame(x=1:10, y=x^2)`: per ottenere un risultato simile
+si crea dil data frame con la colonna `x` e si aggiunge poi la colonna 
+`df$y <- df$x^2`.
+```
+
+
+```{r}
+v <- 1:5
+df <- data.frame(name=letters[v], x=v, y=v^2)
+df
+```
+
+È possibile accedere agli elementi di un data frame come se fosse una matrice:
+
+```{r}
+df[2,3]
+```
+
+Ma spesso è più utile accedere alle colonne *per nome*. Come per le liste, si
+usa in questo caso l'operatore `$`. Il risultato (la colonna estratta) è un 
+vettore, che può a sua volta essere indicizzato con i metodi visti sopra:
+
+```{r}
+df$name
+df$x[df$y>10]
+```
+
+È ovviamente possibile modificare singoli valori o intere colonne, come pure 
+aggiungere nuove colonne:
+
+```{marginfigure}
+Spesso i data frame possono essere molto lunghi, con decine di migliaia di 
+righe. In questi casi è utile utilizzare le funzioni `head(df)` o `tail(df)`, 
+che mostrano le prime o le ultime righe del data frame. 
+
+Inoltre, rsulta spesso utile la funzione `str(df)`, che stampa la *struttura* 
+del data frame, cioè l'elenco delle colone con il rispettivo tipo e un estratto
+dei loro primi valori.
+```
+
+
+```{r}
+df$x[1] <- 10
+df$y <- df$x^2
+df$z <- df$x^3
+df
+```
+
+
+# Introduction
+
+The Tufte handout style is a style that Edward Tufte uses in his books
+and handouts. Tufte's style is known for its extensive use of sidenotes,
+tight integration of graphics with text, and well-set typography. This
+style has been implemented in LaTeX and HTML/CSS[^2], respectively. We
+have ported both implementations into the [**tufte**
+package](https://github.com/rstudio/tufte). If you want LaTeX/PDF
+output, you may use the `tufte_handout` format for handouts, and
+`tufte_book` for books. For HTML output, use `tufte_html`. These formats
+can be either specified in the YAML metadata at the beginning of an R
+Markdown document (see an example below), or passed to the
+`rmarkdown::render()` function. See @R-rmarkdown for more information
+about **rmarkdown**.
+
+[^2]: See Github repositories
+    [tufte-latex](https://github.com/tufte-latex/tufte-latex) and
+    [tufte-css](https://github.com/edwardtufte/tufte-css)
+
+``` yaml
+---
+title: "An Example Using the Tufte Style"
+author: "John Smith"
+output:
+  tufte::tufte_handout: default
+  tufte::tufte_html: default
+---
+```
+
+There are two goals of this package:
+
+1.  To produce both PDF and HTML output with similar styles from the
+    same R Markdown document;
+2.  To provide simple syntax to write elements of the Tufte style such
+    as side notes and margin figures, e.g. when you want a margin
+    figure, all you need to do is the chunk option `fig.margin = TRUE`,
+    and we will take care of the details for you, so you never need to
+    think about `\begin{marginfigure} \end{marginfigure}` or
+    `<span class="marginfigure"> </span>`; the LaTeX and HTML code under
+    the hood may be complicated, but you never need to learn or write
+    such code.
+
+If you have any feature requests or find bugs in **tufte**, please do
+not hesitate to file them to <https://github.com/rstudio/tufte/issues>.
+For general questions, you may ask them on StackOverflow:
+<https://stackoverflow.com/tags/rmarkdown>.
+
+# Headings
+
+This style provides first and second-level headings (that is, `#` and
+`##`), demonstrated in the next section. You may get unexpected output
+if you try to use `###` and smaller headings.
+
+`r newthought('In his later books')`[^3], Tufte starts each section with
+a bit of vertical space, a non-indented paragraph, and sets the first
+few words of the sentence in small caps. To accomplish this using this
+style, call the `newthought()` function in **tufte** in an *inline R
+expression* `` `r ` `` as demonstrated at the beginning of this
+paragraph.[^4]
+
+[^3]: [Beautiful Evidence](https://www.edwardtufte.com/tufte/books_be)
+
+[^4]: Note you should not assume **tufte** has been attached to your R
+    session. You should either `library(tufte)` in your R Markdown
+    document before you call `newthought()`, or use
+    `tufte::newthought()`.
+
+# Figures
+
+## Margin Figures
+
+Images and graphics play an integral role in Tufte's work. To place
+figures in the margin you can use the **knitr** chunk option
+`fig.margin = TRUE`. For example:
+
+```{r fig-margin, fig.margin = TRUE, fig.cap = "MPG vs horsepower, colored by transmission.", fig.width=3.5, fig.height=3.5, cache=TRUE, message=FALSE}
+library(ggplot2)
+mtcars2 <- mtcars
+mtcars2$am <- factor(
+  mtcars$am, labels = c('automatic', 'manual')
+)
+ggplot(mtcars2, aes(hp, mpg, color = am)) +
+  geom_point() + geom_smooth() +
+  theme(legend.position = 'bottom')
+```
+
+Note the use of the `fig.cap` chunk option to provide a figure caption.
+You can adjust the proportions of figures using the `fig.width` and
+`fig.height` chunk options. These are specified in inches, and will be
+automatically scaled down to fit within the handout margin.
+
+## Arbitrary Margin Content
+
+In fact, you can include anything in the margin using the **knitr**
+engine named `marginfigure`. Unlike R code chunks ```` ```{r} ````, you
+write a chunk starting with ```` ```{marginfigure} ```` instead, then
+put the content in the chunk. See an example on the right about the
+first fundamental theorem of calculus.
+
+```{marginfigure}
+We know from _the first fundamental theorem of calculus_ that for $x$ in $[a, b]$:
+$$\frac{d}{dx}\left( \int_{a}^{x} f(u)\,du\right)=f(x).$$
+```
+
+For the sake of portability between LaTeX and HTML, you should keep the
+margin content as simple as possible (syntax-wise) in the
+`marginefigure` blocks. You may use simple Markdown syntax like
+`**bold**` and `_italic_` text, but please refrain from using footnotes,
+citations, or block-level elements (e.g. blockquotes and lists) there.
+
+Note: if you set `echo = FALSE` in your global chunk options, you will
+have to add `echo = TRUE` to the chunk to display a margin figure, for
+example ```` ```{marginfigure, echo = TRUE} ````.
+
+## Full Width Figures
+
+You can arrange for figures to span across the entire page by using the
+chunk option `fig.fullwidth = TRUE`.
+
+```{r fig-fullwidth, fig.width = 10, fig.height = 2, fig.fullwidth = TRUE, fig.cap = "A full width figure.", warning=FALSE, message=FALSE, cache=TRUE}
+ggplot(diamonds, aes(carat, price)) + geom_smooth() +
+  facet_grid(~ cut)
+```
+
+Other chunk options related to figures can still be used, such as
+`fig.width`, `fig.cap`, `out.width`, and so on. For full width figures,
+usually `fig.width` is large and `fig.height` is small. In the above
+example, the plot size is $10 \times 2$.
+
+## Arbitrary Full Width Content
+
+Any content can span to the full width of the page. This feature
+requires Pandoc 2.0 or above. All you need is to put your content in a
+fenced `Div` with the class `fullwidth`, e.g.,
+
+``` md
+::: {.fullwidth}
+Any _full width_ content here.
+:::
+```
+
+Below is an example:
+
+::: fullwidth
+*R is free software and comes with ABSOLUTELY NO WARRANTY.* You are
+welcome to redistribute it under the terms of the GNU General Public
+License versions 2 or 3. For more information about these matters see
+<https://www.gnu.org/licenses/>.
+:::
+
+## Main Column Figures
+
+Besides margin and full width figures, you can of course also include
+figures constrained to the main column. This is the default type of
+figures in the LaTeX/HTML output.
+
+```{r fig-main, fig.cap = "A figure in the main column.", cache=TRUE}
+ggplot(diamonds, aes(cut, price)) + geom_boxplot()
+```
+
+# Sidenotes
+
+One of the most prominent and distinctive features of this style is the
+extensive use of sidenotes. There is a wide margin to provide ample room
+for sidenotes and small figures. Any use of a footnote will
+automatically be converted to a sidenote. [^5]
+
+[^5]: This is a sidenote that was entered using a footnote.
+
+If you'd like to place ancillary information in the margin without the
+sidenote mark (the superscript number), you can use the `margin_note()`
+function from **tufte** in an inline R expression.
+`r margin_note("This is a margin note.  Notice that there is no number preceding the note.")`
+This function does not process the text with Pandoc, so Markdown syntax
+will not work here. If you need to write anything in Markdown syntax,
+please use the `marginfigure` block described previously.
+
+# References
+
+References can be displayed as margin notes for HTML output. For
+example, we can cite R here [@R-base]. To enable this feature, you must
+set `link-citations: yes` in the YAML metadata, and the version of
+`pandoc-citeproc` should be at least 0.7.2. You can always install your
+own version of Pandoc from <https://pandoc.org/installing.html> if the
+version is not sufficient. To check the version of `pandoc-citeproc` in
+your system, you may run this in R:
+
+```{r eval=FALSE}
+system2('pandoc-citeproc', '--version')
+```
+
+If your version of `pandoc-citeproc` is too low, or you did not set
+`link-citations: yes` in YAML, references in the HTML output will be
+placed at the end of the output document.
+
+# Tables
+
+You can use the `kable()` function from the **knitr** package to format
+tables that integrate well with the rest of the Tufte handout style. The
+table captions are placed in the margin like figures in the HTML output.
+
+```{r}
+knitr::kable(
+  mtcars[1:6, 1:6], caption = 'A subset of mtcars.'
+)
+```
+
+# Block Quotes
+
+We know from the Markdown syntax that paragraphs that start with `>` are
+converted to block quotes. If you want to add a right-aligned footer for
+the quote, you may use the function `quote_footer()` from **tufte** in
+an inline R expression. Here is an example:
+
+> "If it weren't for my lawyer, I'd still be in prison. It went a lot
+> faster with two people digging."
+>
+> `r tufte::quote_footer('--- Joe Martin')`
+
+Without using `quote_footer()`, it looks like this (the second line is
+just a normal paragraph):
+
+> "Great people talk about ideas, average people talk about things, and
+> small people talk about wine."
+>
+> --- Fran Lebowitz
+
+# Responsiveness
+
+The HTML page is responsive in the sense that when the page width is
+smaller than 760px, sidenotes and margin notes will be hidden by
+default. For sidenotes, you can click their numbers (the superscripts)
+to toggle their visibility. For margin notes, you may click the circled
+plus signs to toggle visibility.
+
+# More Examples
+
+The rest of this document consists of a few test cases to make sure
+everything still works well in slightly more complicated scenarios.
+First we generate two plots in one figure environment with the chunk
+option `fig.show = 'hold'`:
+
+```{r fig-two-together, fig.cap="Two plots in one figure environment.", fig.show='hold', cache=TRUE, message=FALSE}
+p <- ggplot(mtcars2, aes(hp, mpg, color = am)) +
+  geom_point()
+p
+p + geom_smooth()
+```
+
+Then two plots in separate figure environments (the code is identical to
+the previous code chunk, but the chunk option is the default
+`fig.show = 'asis'` now):
+
+```{r fig-two-separate, ref.label='fig-two-together', fig.cap=sprintf("Two plots in separate figure environments (the %s plot).", c("first", "second")), cache=TRUE, message=FALSE}
+```
+
+You may have noticed that the two figures have different captions, and
+that is because we used a character vector of length 2 for the chunk
+option `fig.cap` (something like
+`fig.cap = c('first plot', 'second plot')`).
+
+Next we show multiple plots in margin figures. Similarly, two plots in
+the same figure environment in the margin:
+
+```{r fig-margin-together, fig.margin=TRUE, fig.show='hold', fig.cap="Two plots in one figure environment in the margin.", fig.width=3.5, fig.height=2.5, cache=TRUE}
+p
+p + geom_smooth(method = 'lm')
+```
+
+Then two plots from the same code chunk placed in different figure
+environments:
+
+```{r fig-margin-separate, fig.margin=TRUE, fig.cap=sprintf("Two plots in separate figure environments in the margin (the %s plot).", c("first", "second")), fig.width=3.5, fig.height=2.5, cache=TRUE}
+knitr::kable(head(iris, 15))
+p
+knitr::kable(head(iris, 12))
+p + geom_smooth(method = 'lm')
+knitr::kable(head(iris, 5))
+```
+
+We blended some tables in the above code chunk only as *placeholders* to
+make sure there is enough vertical space among the margin figures,
+otherwise they will be stacked tightly together. For a practical
+document, you should not insert too many margin figures consecutively
+and make the margin crowded.
+
+You do not have to assign captions to figures. We show three figures
+with no captions below in the margin, in the main column, and in full
+width, respectively.
+
+```{r fig-nocap-margin, fig.margin=TRUE, fig.width=3.5, fig.height=2, cache=TRUE}
+# a boxplot of weight vs transmission; this figure
+# will be placed in the margin
+ggplot(mtcars2, aes(am, wt)) + geom_boxplot() +
+  coord_flip()
+```
+
+```{r fig-nocap-main, cache=TRUE}
+# a figure in the main column
+p <- ggplot(mtcars, aes(wt, hp)) + geom_point()
+p
+```
+
+```{r fig-nocap-fullwidth, fig.fullwidth=TRUE, fig.width=10, fig.height=3, cache=TRUE}
+# a fullwidth figure
+p + geom_smooth(method = 'lm') + facet_grid(~ gear)
+```
+
+# Some Notes on Tufte CSS
+
+There are a few other things in Tufte CSS that we have not mentioned so
+far. If you prefer `r sans_serif('sans-serif fonts')`, use the function
+`sans_serif()` in **tufte**. For epigraphs, you may use a pair of
+underscores to make the paragraph italic in a block quote, e.g.
+
+> *I can win an argument on any topic, against any opponent. People know
+> this, and steer clear of me at parties. Often, as a sign of their
+> great respect, they don't even invite me.*
+>
+> `r quote_footer('--- Dave Barry')`
+
+We hope you will enjoy the simplicity of R Markdown and this R package,
+and we sincerely thank the authors of the Tufte-CSS and Tufte-LaTeX
+projects for developing the beautiful CSS and LaTeX classes. Our
+**tufte** package would not have been possible without their heavy
+lifting.
+
+You can turn on/off some features of the Tufte style in HTML output. The
+default features enabled are:
+
+``` yaml
+output:
+  tufte::tufte_html:
+    tufte_features: ["fonts", "background", "italics"]
+```
+
+If you do not want the page background to be lightyellow, you can remove
+`background` from `tufte_features`. You can also customize the style of
+the HTML page via a CSS file. For example, if you do not want the
+subtitle to be italic, you can define
+
+``` css
+h3.subtitle em {
+  font-style: normal;
+}
+```
+
+in, say, a CSS file `my_style.css` (under the same directory of your Rmd
+document), and apply it to your HTML output via the `css` option, e.g.,
+
+``` yaml
+output:
+  tufte::tufte_html:
+    tufte_features: ["fonts", "background"]
+    css: "my_style.css"
+```
+
+There is also a variant of the Tufte style in HTML/CSS named "[Envisoned
+CSS](https://github.com/nogginfuel/envisioned-css)". This style can be
+used by specifying the argument `tufte_variant = 'envisioned'` in
+`tufte_html()`[^6], e.g.
+
+[^6]: The actual Envisioned CSS was not used in the **tufte** package.
+    We only changed the fonts, background color, and text color based on
+    the default Tufte style.
+
+``` yaml
+output:
+  tufte::tufte_html:
+    tufte_variant: "envisioned"
+```
+
+To see the R Markdown source of this example document, you may follow
+[this link to
+Github](https://github.com/rstudio/tufte/raw/main/inst/rmarkdown/templates/tufte_html/skeleton/skeleton.Rmd),
+use the wizard in RStudio IDE
+(`File -> New File -> R Markdown -> From Template`), or open the Rmd
+file in the package:
+
+```{r eval=FALSE}
+file.edit(
+  tufte:::template_resources(
+    'tufte_html', '..', 'skeleton', 'skeleton.Rmd'
+  )
+)
+```
+
+This document is also available in
+[Chinese](https://rstudio.github.io/tufte/cn/), and its `envisioned`
+style can be found [here](https://rstudio.github.io/tufte/envisioned/).
+
+```{r bib, include=FALSE}
+# create a bib file for the R packages used in this document
+# knitr::write_bib(c('base', 'rmarkdown'), file = 'skeleton.bib')
+```

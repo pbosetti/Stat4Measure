@@ -1,0 +1,32 @@
+---
+title: "Syllabus"
+output: html_notebook
+---
+
+# Temi del corso
+
+1.  Variabili stocastiche
+2.  Statistica descrittiva: stimatori
+3.  Distribuzioni: discrete e continue
+4.  Bootstrapping
+5.  Statistica inferenziale
+6.  test semplici
+7.  ANOVA
+8.  Analisi dei residui
+9.  Regressione lineare, lineare generalizzata, logistica
+10. Taratura statica, incertezza, GUM, Monte-Carlo
+11. Design and Analysis of Experiments
+12. Time series: processi ARMA, ARIMA, SARIMA, Akaike Information
+    Criterion
+13. ACF e PACF
+14. Dominio delle frequenze e trasformata di Fourier
+
+Opzionali:
+
+-   Markov Chains
+-   Classificatori SVM
+-   Reportistica automatica, presentazione dei dati
+
+
+# Links
+- Bootstrapping: <https://www.tidymodels.org/learn/statistics/bootstrap/>
