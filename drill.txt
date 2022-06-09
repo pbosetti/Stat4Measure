@@ -1,0 +1,25 @@
+# Trivelazione
+# File creato il  Tue Jun  7 17:56:49 2022
+# Fattori:
+#   A = carico assiale, 40-60 N
+#   B = portata fango di trivellazione, 30-50 l/min
+#   C = velocità di rotazione, 100-200 rpm
+#   D = tipo di fango di trivellazione, A-B
+#   Y = velocità di trivellazione, m/min
+StdOrder RunOrder A B C D Y
+1 1 1 - - - - NA
+8 8 2 + + + - NA
+7 7 3 - + + - NA
+13 13 4 - - + + NA
+15 15 5 - + + + NA
+16 16 6 + + + + NA
+11 11 7 - + - + NA
+5 5 8 - - + - NA
+3 3 9 - + - - NA
+14 14 10 + - + + NA
+9 9 11 - - - + NA
+6 6 12 + - + - NA
+10 10 13 + - - + NA
+2 2 14 + - - - NA
+4 4 15 + + - - NA
+12 12 16 + + - + NA

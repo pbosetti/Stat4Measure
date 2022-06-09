@@ -1,0 +1,41 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 1. --- Statistica inferenziale
+runningheader: "SpM --- Statistica inferenziale" # only for pdf output
+subtitle: "SpM --- Statistica inferenziale" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+source("myfunctions.R")
+```
+
+# Test di ipotesi
+
+# Test di Student
+
+# Test di Tukey
+
+# ANOVA
+
+## ANOVA a una via
+
+## ANOVA a due vie
+
+# Analisi dei residui

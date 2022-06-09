@@ -1,0 +1,41 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 1. --- Serie temporali
+runningheader: "SpM --- Serie temporali" # only for pdf output
+subtitle: "SpM --- Serie temporali" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+source("myfunctions.R")
+```
+
+# Statistica delle serie temporali
+
+# Regressione delle serie temporali
+
+## Modelli ARMA
+
+## Modelli ARIMA
+
+## Modelli SARIMA
+
+## Akaike Information Criterion
+
+# Analisi di regressione: ACF e PACF

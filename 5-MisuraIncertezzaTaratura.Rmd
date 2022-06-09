@@ -1,0 +1,40 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 1. --- Misura, incertezza e taratura
+runningheader: "SpM --- Misura, incertezza e taratura" # only for pdf output
+subtitle: "SpM --- Misura, incertezza e taratura" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+source("myfunctions.R")
+```
+
+# GUM
+
+## Incertezza
+
+## Propagazione dell'incertezza
+
+## Metodo Monte Carlo
+
+# Modello statico di uno strumento di misura
+
+# Taratura statica
+

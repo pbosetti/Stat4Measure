@@ -1,0 +1,33 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 1. --- Regressione
+runningheader: "SpM --- Regressione" # only for pdf output
+subtitle: "SpM --- Regressione" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+source("myfunctions.R")
+```
+
+# Regressione lineare
+
+# Regressione lineare generalizzata
+
+## Regressione logistica

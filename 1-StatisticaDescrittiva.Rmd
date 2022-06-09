@@ -1,0 +1,255 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 1. --- Satistica descrittiva
+runningheader: "SpM --- Statistica base" # only for pdf output
+subtitle: "SpM --- Statistica base" # only for html output
+author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+    keep_tex: false
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+library(tidyverse)
+library(glue)
+source("myfunctions.R")
+```
+
+# Variabili stocastiche
+
+`r newthought('Una variabile stocastica')` è una variabile che assume valori casuali ad ogni osservazione, cioè tali per cui non è possibile prevedere il valore esatto della prossima osservazione, nemmeno conoscendo le osservazioni precedenti.
+
+Le variabili stocastiche sono di particolare interesse per l'ingegneria e per l'industria in genere, dato che ogni *misurazione* produce, come risultato, un valore che ha un contenuto casuale ed è quindi rappresentabile come una variabile stocastica.
+
+```{marginfigure}
+La **misurazione** è il processo che porta alla valutazione oggettiva del **misurando**.
+Il risultato di una misurazione è chiamato **misura**.
+```
+
+A sua volta, il contributo casuale ad una misura è chiamato *incertezza*.
+
+Dato che ogni attività produttiva è indissolubilmente legata a delle misurazioni, è quindi evidente quanto sia fondamentale trattare in maniera coerente e robusta i contributi casuali alle misure.
+
+```{r include=FALSE}
+N <- 30
+m <- 25
+```
+
+Si noti che quando diciamo che ogni misura è affetta da una componente casuale non significa---ovviamente---che il valore di un misurando sia inconoscibile. Esiste infatti un *effetto scala*: supponiamo ad esempio misuriamo la lunghezza di un campione `r N` volte, ottenendo i risultati in Fig. \ref{fig:rep_measures1}.
+
+```{r rep_measures1, echo=FALSE, fig.margin=T, fig.cap=glue("Il risultato di {N} misurazioni consecutive di una lunghezza")}
+df <- tibble(i=1:N, x=rnorm(N, m, 0.01))
+df %>% ggplot(aes(x=i, y=x)) +
+  geom_point() +
+  labs(x="indice", y="misura (mm)")
+```
+I valori così ottenuti, pur raggruppandosi approssimativamente al *valore medio* `r m` sulla scala delle ordinate, sembrano effettivamente formare una nuvola molto ampia.
+
+Se tuttavia riportiamo *gli  stessi valori* su una scala più ampia, vediamo come l'elemento casuale *sembra scomparire* (vedi Fig. \ref{fig:rep_measures2}).
+
+In altre parole, la componente stocastica di una misura è affetta da un effetto scala: tanto più piccolo è il rapporto tra il *valore medio* misurato e la *variabilità* tipica dello strumento (cioè la sua *precisione*), tanto meno sarà apprezzabile l'effetto di casualità.
+
+
+```{r rep_measures2, echo=FALSE, fig.margin=T, fig.cap=glue("Il risultato di {N} misurazioni consecutive di una lunghezza, in scala più ampia")}
+df %>% ggplot(aes(x=i, y=x)) +
+  geom_point() +
+  coord_cartesian(ylim=c(0, 50)) +
+  labs(x="indice", y="misura (mm)")
+```
+Questo semplice esempio ci fa capire come sia essenziale definire in maniera precisa ed efficace concetti intuitivi come *variabilità* e *valore medio* che abbiamo sopra espresso.
+
+# Popolazioni, campioni e stimatori
+
+## Popolazioni
+`r newthought('In statistica, una popolazione')` è un insieme di valori, oggetti o eventi di interesse per una qualche analisi o esperimento. Se vogliamo studiare la statura dei residenti nella città di Trento, ad esempio, la *popolazione* di interesse per questo studio è l'intero insieme degli abitanti di Trento. Se vogliamo invece studiare il comportamento meccanico della lega d'Alluminio prodotta da un certo impianto che stiamo gestendo, la popolazione di interesse può essere definita come l'intera quantità di lega prodotta a partire da un certo lotto di materia prima in condizioni analoghe.
+
+Tuttavia, spesso la definizione della popolazione di interesse è arbitraria, e dipende da cosa siamo interessati a studiare. Nel caso dell'impianto di produzione di lega, ad esempio, la definizione sopra data è adatta allo studio *specifico* del comportamento di un preciso lotto di produzione. Ma se invece volessimo includere nello studio anche gli effetti di variabilità delle materie prime (tra un lotto e l'altro), delle condizioni ambientali, degli operatori che vi lavorano, ecc., sarebbe più opportuno definire come popolazione un insieme molto ampio---più ampio possibile, in effetti---tale da comprendere tutti i casi che possano influire sulla variabilità complessiva del materiale prodotto.
+
+Questo ci fa capire due cose:
+
+* la definizione della popolazione dipende dall'obiettivo dell'analisi/studio;
+* la dimensione di una popolazione è generalmente molto ampia e potenzialmente non limitata, nel senso che nel caso di un processo continuo può includere anche eventi futuri.
+
+## Proprietà delle popolazioni
+Ovviamente, analizzare un set molto grande, non limitato o addirittura infinito, pone seri problemi pratici. Per questo motivo la statistica lavora su *campioni*, cioè sottoinsiemi poco numerosi della popolazione oggetto di studio. Un campione deve essere *estratto* dalla popolazione in modo da consentire, con un rischio definito di errore, la generalizzazione all'intera popolazione. Cioè il campione deve essere *rappresentativo* della popolazione, e la rappresentatività può essere garantita dalla casualità dell'estrazione.
+
+Le principali proprietà di una popolazione sono il suo valore medio, chiamato *valore atteso* e indicato con $\mu$, e la sua variabilità, chiamata *varianza* e indicata con $\sigma^2$. Dal unto di vista matematico possono essere definite mediante due *operatori*: l'operatore valore atteso $E$ e l'operatore varianza $V$. Per una popolazione di elementi discreti $x_i$, sono definiti come:
+```{marginfigure}
+La lettera $E$ per valore atteso viene dall'inglese *expected value*. In generale si utilizzano lettere greche come $\mu$ e $\sigma$ per le proprietà della popolazione e le corrispondenti lettere romane per le proprietà dei campioni.
+```
+\begin{eqnarray}
+\mu =& E(x) := \sum_i x_i p(x_i) \\
+\sigma^2 =& V(x) := \sum_i (x_i -\mu)^2 p(x_i)
+\end{eqnarray}
+
+Nelle ultime equazioni $x_i$ indica il generico elemento della popolazione e $p(x_i)$ indica la *probabilità* di riscontrare tale elemento (@Kolmogorov). Un esempio di funzione probabilità di una variabile discreta definita solo sugli interi è in Fig. \ref{fig:binom}.
+
+```{marginfigure}
+La definizione di *probabilità* e *frequenza* è essenzialmente **assiomatica**.
+Si noti che $p(x_i)\in[0,1]~\forall i$ e $f(x)\geq 0, x\in\mathbb{R}$.
+```
+
+Un caso di popolazione di elementi discreti, o *popolazione a valori discreti*, è la misura del numero di spilli per confezione in un impianto che produce spilli, oppure il numero di difetti su piastrelle in ceramica, oppure semplicemente il risultato del lancio di un dado a 6 facce. In altre parole, si tratta di variabili stocastiche che **possono assumere esclusivamente valori interi**, o comunque associabili a valori interi.
+
+```{r binom, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile discreta, a valori solo sugli interi"}
+df <- tibble(x=1:20, p=dbinom(x, 10, 0.5))
+df %>% ggplot(mapping=aes(x=x, y=p)) + 
+  geom_col(width=0.1) +
+  geom_point() +
+  labs(x="variabile discreta", y="probabilità")
+```
+```{r chisq, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile continua, a valori sui reali"}
+df <- tibble(x=seq(0,20,0.1), p=dchisq(x, 5))
+df %>% ggplot(mapping=aes(x=x, y=p)) + 
+  geom_line() +
+  labs(x="variabile continua", y="frequenza")
+```
+
+Se invece la misurazione mi fornisce una variabile stocastica continua, cioè a valori sull'insieme dei numeri reali, si tratta di *popolazione a valori continui*. In questo caso, gli operatori $E(x)$ e $V(x)$ diventano:
+\begin{eqnarray}
+\mu =& E(x) := \int_{-\infty}^\infty x f(x)dx \\
+\sigma^2 =& V(x) := \int_{-\infty}^\infty (x -\mu)^2 f(x)dx
+\end{eqnarray}
+dove $f(x)$ è la *frequenza* di x, cioè l'analogo continuo della probabilità. Un esempio di funzione frequenza di una variabile stocastica continua è in Fig. \ref{fig:chisq}. Le funzioni di Figg. \ref{fig:binom}--\ref{fig:chisq} sono chiamate *funzioni di densità di probabilità*, o **PDF** (da *Probability Density Function*).
+
+Si noti che dal confronto tra $E(x)$ e $V(x)$ risulta
+\begin{equation}
+\sigma^2 = E\left[(x-\mu)^2\right]
+\end{equation}
+
+Gli operatori valore atteso e varianza godono delle seguenti proprietà:
+\begin{eqnarray}
+E(c)&=&c\\
+E(x)&=&\mu\\
+E(cx)&=&cE(x)=c\mu\\
+V(c)&=&0\\
+V(x)&=&\sigma^2\\
+V(cx)&=&c^2V(x)=c^2\sigma^2\\
+E(x+y)&=&E(x)+E(y)=\mu_x+\mu_y\\
+\mathrm{Cov}(x,y)&=&E[(x-\mu_x)(y-\mu_y)] \label{eq:cov}\\
+V(x+y)&=&V(x)+V(y)+2\textrm{ Cov}(x,y)\\
+V(x-y)&=&V(x)+V(y)-2\textrm{ Cov}(x,y)
+\end{eqnarray}
+dove $c$ indica una costante.
+```{marginfigure}
+Covarianza e correlazione sono anche indicate come $\sigma_{xy}$ e $\rho_{xy}$, rispettivamente.
+```
+
+In particolare, la Eq. (\ref{eq:cov}) definisce l'operatore *covarianza*, che è un indice di quanto due variabili stocastiche siano interdipendenti (cioè il valore assunto da una dipende dal valore assunto dall'altra). Più utile della covarianza (che non è limitata) è la *correlazione*:
+\begin{equation}
+\mathrm{Corr}(x, y) = \frac{E[(x-\mu_x)(y-\mu_y)]}{\sigma_x\sigma_y} = \frac{\mathrm{Cov}(x,y)}{\sigma_x\sigma_y}
+\end{equation}
+che ha il vantaggio di essere compresa nell'intervallo $[-1,1]$: 
+
+* vicina a zero significa nessuna correlazione
+* vicina a 1 significa forte correlazione *positiva* (se aumenta $x$ aumenta anche $y$)
+* vicina a -1 significa forte correlazione *negativa* (se aumenta $x$ diminuisce $y$).
+
+## Campioni
+Come abbiamo visto sopra, per motivi pratici si studia una popolazione sempre ricorrendo ad un campione. Intuitivamente, tanto più grande è il campione, tanto più esso sarà rappresentativo della popolazione stessa. Il numero di possibili campioni *differenti* di dimensione $n$ che è possibile estrarre da una popolazione di $N$ elementi è definito dal *coefficiente binomiale*:
+\begin{equation}
+\binom{N}{n}=\frac{N!}{(N-n)!n!}
+\end{equation}
+
+La *media* e la *varianza* di un campione consentono di stimare il valore atteso e la varianza della popolazione da cui il campione è stato estratto. Essi sono definiti come:
+\begin{eqnarray}
+\bar x &=& \frac{1}{n}\sum_{i=1}^n x_i \label{eq:s_mean}\\
+S^2 &=& \frac{\sum_{i=1}^n (x_i - \bar x)^2}{n-1} \label{eq:s_var}
+\end{eqnarray}
+
+Un po' di terminologia:
+
+* spesso al posto della varianza campionaria si usa la sua radice quadrata, detta *deviazione standard*: $S_x=\sqrt{S^2_x}$; essa ha il vantaggio di avere le stesse unità di misura della variabile stocastica base.
+* media e varianza campionaria sono chiamate *stimatori* per la popolazione
+* un singolo valore assunto da uno stimatore è chiamato *stima*
+* uno stimatore è anche chiamato *statistica*, cioè la media campionaria è una statistica della popolazione di riferimento
+
+Si noti che nelle Eqq. (\ref{eq:s_mean}--\ref{eq:s_var}) i valori $x_i$ sono *estratti casualmente* dalla popolazione. Di conseguenza, le stime campionarie assumono variabili differenti per campioni differenti e---dato che la differenza tra due campioni è casuale---di conseguenza anche le stime campionarie (media e varianza) sono delle variabili stocastiche.
+
+```{r include=FALSE}
+N <- 5000
+n <- c(20, 500)
+mu <- 10
+ns <- 50
+```
+
+
+```{r rand_mean, echo=FALSE, fig.margin=T, fig.cap=glue("Media campionaria come variabile casuale: {ns} campioni di {n[1]} elementi (quadrati chiari) o {n[2]} elementi (cerchi scuri) estratti da una popolazione di {N} elementi. La linea media rappresenta il valore atteso della popolazione")}
+set.seed(123)
+pop <- rnorm(N, mu, 0.1)
+samples <- 1:ns
+m1 <- c()
+m2 <- c()
+for (i in samples) {
+  m1 <- c(m1, mean(sample(pop, n[1])))
+  m2 <- c(m2, mean(sample(pop, n[2])))
+}
+tibble(i=samples, m=m) %>% ggplot() +
+  geom_point(aes(x=i, y=m1), col=gray(0.6), shape=22, fill=gray(0.8), size=2) +
+  geom_point(aes(x=i, y=m2), col=gray(0), shape=21, fill=gray(0.4), size=2) +
+  geom_hline(yintercept=mu) + 
+  labs(x="# campione", y=TeX("$\\bar{x}_i$"))
+  
+```
+Come si vede in Fig. \ref{fig:rand_mean}, ripetendo la stima della media su diversi campioni si ottiene decisamente una variabile casuale. Inoltre, è anche evidente che più grande è il campione (`r n[2]` contro `r n[1]` elementi), più ridotta è la varianza dello stimatore media attorno al valore atteso della popolazione. Si parla in questo caso di *convergenza in distribuzione* dello stimatore al parametro della popolazione che esso stima. 
+Un ragionamento analogo vale ovviamente per la varianza campionaria: è una variabile casuale che converge in distribuzione alla varianza della popolazione.
+
+Dato che la media campionaria è una variabile casuale, è naturale chiedersi, a questo punto, quale siano *il valore atteso e la varianza della media campionaria*. Risulta rispettivamente:
+\begin{eqnarray}
+\mathrm E(\bar x) &=& \mathrm E(\frac{x_1+x_2+\dots+x_n}{n}) = \frac{1}{n}\left[\mathrm E(x_1+x_2+\dots+x_n) \right]\\
+&=& \frac{1}{n}\left[\mathrm E(x_1)+\mathrm E(x_2)+\dots+\mathrm E(x_n) \right] = \frac{1}{n} n\mathrm E(x) \\
+\mathrm E(\bar x)&=& \mu
+\end{eqnarray}
+e:
+\begin{eqnarray}
+\mathrm V(\bar x) &=& \mathrm V(\frac{x_1+x_2+\dots+x_n}{n}) = \frac{1}{n^2}\left[\mathrm V(x_1+x_2+\dots+x_n) \right]\\
+&=& \frac{1}{n^2}\left[\mathrm V(x_1)+\mathrm V(x_2)+\dots+\mathrm V(x_n) \right] = \frac{n\mathrm V(x)}{n^2} = \frac{\mathrm V(x)}{n} \\
+\mathrm V(\bar x) &=& \frac{s_x^2}{n} \label{eq:var_mean}
+\end{eqnarray}
+
+In particolare, la Eq. (\ref{eq:var_mean}) è di particolare importanza, soprattutto nel campo delle misure, e può essere riassunta come $s_{\bar x}=s_x/\sqrt{n}$, cioè la deviazione standard della media campionaria è uguale alla deviazione standard campionaria diviso la radice quadrata del numero di campioni.
+```{marginfigure}
+Esistono altri stimatori del valore atteso: ad esempio la *mediana* (valore maggiore della metà delle osservazioni totali) e la *moda* (l'elemento osservato più di frequente). Tuttavia si dimostra che la media campionaria sia lo stimatore con varianza minima.
+```
+
+Come ultima nota, quando si fa riferimento a stimatori o statistiche, si parla del loro *numero di gradi di libertà* (o DoF, *Degrees of Freedom*). I gradi di libertà di una statistica sono il numero di elementi *indipendenti* che compaiono nella sua definizione. È particolarmente interessante il caso della varianza: dalla sua definizione risulta che
+\[
+\sigma^2=E\left(\frac{\sum(x_i - \bar x)^2}{n-1}\right)=E\left(\frac{SS}{\nu}\right)
+\]
+dove $\nu=n-1$ è il numero di gradi di libertà della statistica al numeratore, $SS$, chiamata *somma quadratica* (*Sum of Squares*). Cioè la varianza è il valore atteso della somma quadratica divisa per il suo numero di gradi di libertà, cioè di elementi indipendenti. Che questi ultimi siano $n-1$ è dimostrato dalla seguente relazione:
+\[
+\sum_{i=1}^n(x_i-\bar x) = \sum_{i=1}^n(x_i)-n\bar x=:0
+\]
+dove l'ultima uguaglianza è per definizione di $\bar x$. Quest'ultima relazione ci dice che non tutti gli $n$ elementi nella definizione di $SS$ possono essere indipendenti, dato che il valore di uno di essi è prevedibile dai restanti $n-1$ grazie alla definizione di $\bar x$
+```{marginfigure}
+È evidente che la differenza tra $n$ e $n-1$ gradi di libertà tende a zero all'aumentare della dimensione del campione. Nei fatti, tale differenza diventa praticamente inefficace per campioni con più di 50--100 elementi. Per piccoli campioni, tuttavia, la differenza è senz'altro significativa.
+```
+Si noti che se il valore atteso $\mu_x$ è noto possiamo sostituirlo alla sua stima $\bar x$ nell'espressione dello scarto quadratico. In tal caso tutti gli elementi della somma quadratica sono indipendenti e la formula per il calcolo della varianza campionaria diventa:
+\[
+S^2 = \frac{\sum(x_i - \mu_x)^2}{n},~~~\textrm{con }\nu=n
+\]
+dato che 
+\[
+\sum_{i=1}^{n}(x_i-\mu_x)=\sum_{i=1}^{n}(x_i)-n\mu_x\neq 0
+\]
+Il concetto di gradi di libertà sarà molto usato nei prossimi capitoli.
+
+# Distribuzioni
+
+## Distribuzioni discrete
+
+## Distribuzioni continue
