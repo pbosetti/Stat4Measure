@@ -26,12 +26,124 @@ header-includes:
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
+library(tidyverse)
 source("myfunctions.R")
 ```
 
 # Test di ipotesi
+`r newthought("Nella prima Parte")` si è visto come media e varianza campionarie siano stimatori dei parametri della popolazione di origine, nonché essi stessi delle variabili stocastiche. È quindi del tutto normale che prelevando un campione la sua media sia *diversa dal valore atteso* della popolazione. Ancora più in generale, è normale che prelevando *due* campioni le loro medie siano differenti.
+
+Siccome in generale la popolazione e il suo valore atteso sono ignoti, è lecito chiedersi, dati due campioni con media differente, qual è la probabilità che essi vengano dalla stessa popolazione o no, ossia che il valore atteso della popolazione da cui proviene il primo campione sia uguale al valore atteso della popolazione del secondo campione.
+
+Questo tipo di domanda può essere formulata come un **test di ipotesi**, cioè una risposta ad un paio di possibili alternative:
+\begin{equation}
+\begin{array}{rl}
+H_0:& \mu_1 = \mu_2 \\
+H_1:& \mu_1 \neq \mu_2
+\end{array}\label{eq:h0h1}
+\end{equation}
+
+La prima ipotesi, $H_0$, è detta **ipotesi nulla**, ed è sempre quella di non-significatività: cioè stabilisce che la differenza tra le medie dei due campioni **non è sufficientemente ampia** da dedurre che essi provengano da popolazioni con valori attesi differenti.
+
+La seconda ipotesi, $H_1$, è detta **ipotesi alternativa**, ed è l'opposto dell'ipotesi nulla, cioè stabilisce che la differenza tra le medie dei due campioni **è sufficientemente ampia** da dedurre che essi provengano da popolazioni con valori attesi differenti.
+
+In questa cornice è evidente che ci sono quattro distinte possibilità, che possono essere raccolte nella seguente **matrice di confusione**:
+
+```{r echo=F}
+tribble(
+  ~"Ipotesi nulla", ~vera, ~falsa,
+  "accettata", "OK", "Errore tipo II",
+  "rifiutata", "Errore tipo I", "OK"
+) %>%
+  knitr::kable()
+```
+
+L'**errore di tipo I** è anche chiamato **falso positivo**, o falso allarme: è cioè la condizione in cui si assume come significativa una differenza che non lo è. L'**errore di tipo II**, invece, corrisponde ad un **falso negativo**, cioè ad un mancato allarme.
+Lo scopo della statistica inferenziale è associare una **probabilità** agli errori di tipo I e di tipo II in test di ipotesi come quello sopra riportato.
+
+La probabilità di un errore di tipo I è indicata con $\alpha$, quella di un errore di tipo II con $\beta$, mentre il complemento a 1 di $\beta$ è la *potenza* di un test, $P=1-\beta$.
+Se stessimo parlando di un allarme domestico, $\alpha$ sarebbe la probabilità di un falso allarme, $\beta$ quella di un mancato allarme, mentre la potenza corrisponde all'affidabilità dell'impianto di allarme (la probabilità che suoni quando c'è un'intrusione).
 
 # Test di Student
+## Formulazione classica
+Il primo a formulare matematicamente la coppia di ipotesi sopra descritte e a trovare il modo per calcolarne la probabilità è stato William S. Gosset, mastro birraio delle birrerie Guinness di Dublino. Fu un autodidatta, il che gli guadagnò il nomignolo di *Student* da parte dei suoi colleghi.
+```{marginfigure}
+![](images/Gosset.jpg){width=100%}
+
+William Sealy Gosset, a.k.a. Student (1876--1937)
+```
+Il suo problema, di tipo eminentemente industriale, era determinare quando le immancabili differenze delle caratteristiche della birra tra lotti di produzione (ad es. il grado alcolico) fossero sufficientemente grandi da concludere che il processo di produzione era mutato (in maniera indesiderata) tra un lotto e l'altro.
+
+In generale, dati due campioni $y_{1,i},~~i \in{1,2,\dots,n_2}$ e $y_{2,j},~~j \in{1,2,\dots,n_2}$, data la coppia di ipotesi in (\ref{eq:h0h1}), si può scrivere che:
+\begin{equation}
+t_0=\frac{\bar y_1 - \bar y_2}{S_p\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\label{eq:tconzero}
+\end{equation}
+con $S_p^2$ chiamata **varianza comune** e definita come:
+\begin{equation}
+S_p^2=\frac{(n_1-1)S_1^2+(n_2-1)S_2^2}{n_1+n_2-2}
+\end{equation}
+
+Si dimostra (vedi le definizioni date nella Parte 1), che il denominatore della (\ref{eq:tconzero}) è una $\mathcal{\chi}^2_{n_1+n_2-2}$ divisa per i suoi gradi di libertà. Quindi, se i due campioni provengono da due distribuzioni normali, allora anche le loro medie saranno distribuite in maniera normale. Di conseguenza, si può dire che:
+\begin{equation}
+t_0\sim t_{n_1+n_2-2}
+\end{equation}
+$t_0$, che è una variabile casuale, è detta **statistica di test**. Fissata una certa probabilità d'errore di tipo I massima, $\alpha$, è quindi possibile affermare che se
+\begin{equation}
+|t_0| > t_{\alpha/2, n_1+n_2-2}
+\end{equation}
+dove $t_{\alpha/2, n_1+n_2-2}$ è il **quantile** $\alpha/2$ della distribuzione T di Student,
+allora l'ipotesi nulla $H_0$ può essere rifiutata con una probabilità minore di $\alpha$.
+
+Per capire perché la probabilità $\alpha$ sia divisa per due, consideriamo la situazione dal punto di vista grafico, studiando la funzione di ripartizione della T di Student:
+date le due medie campionarie ci si calcola il valore della statistica di test $t_0$. Dato che quale dei due campioni sia $y_1$ e quale $y_2$ è arbitrario, anche il **segno** di $t_0$ può essere arbitrariamente positivo o negativo. Tuttavia, quanto più il $|t_0|$ è grande tanto minore sarà la probabilità di riscontrare un tale valore **a partire da due campioni provenienti dalla stessa popolazione**. 
+```{r include=FALSE}
+t0 <- 2.2
+k <- 5
+alpha <- 0.05
+```
+Supponiamo di ottenere $t_0=`r t0`$ per un totale di $k=`r k`$ gradi di libertà. Ovviamente scambiando i campioni otterremmo $t_0=`r -t0`$. Supponiamo anche che la probabilità d'errore critica sia $\alpha = `r alpha`$. In grafico:
+```{r fig.margin=T}
+ta2 <- qt(alpha/2, k)
+tibble(x=seq(-5,5,0.1), pt=pt(x, k)) %>%
+  ggplot(aes(x=x, y=pt)) + 
+  geom_line() +
+  geom_vline(xintercept=c(-ta2,ta2), lty=2, color="red") +
+  geom_vline(xintercept=t0, lty=2, color="blue")
+```
+Cioè: valori esterni all'intervallo indicato dalle linee rosse hanno una probabilità complessiva $\alpha$ (metà sui negativi e metà sui positivi), quindi se la statistica di test $t_0$ (linea blu) cade all'interno di questo intervallo allora vale $H_0$, altrimenti, se cade all'esterno, è possibile rifiutare $H_0$ con una probabilità d'errore di tipo I minore di $\alpha$.
+Il valore soglia $t_{\alpha/2, n_1+n_2-2}$ può essere calcolato con la funzione quantile di T, coda inferiore: `qt(alpha/2, k)`. Si noti che quando Gosset ha sviluppato questa tecnica i computer ancora non esistevano, quindi la tecnica si basava su tabelle calcolate a priori che riportavano il valore della funzione quantile per diversi gradi di libertà (per riga) e diverse probabilità $\alpha$ (per colonna), in modo simile alla seguente:
+```{marginfigure}
+Il calcolo della funzione quantile della T di Student coinvolge una funzione inversa dell'integrale di una funzione (la densità di distribuzione) la cui definizione include la funzione trascendente $\Gamma$: senza computer è tutt'altro che facile.
+```
+```{r echo=FALSE}
+tbl <- read_csv("t_values_en.csv")
+tbl %>% 
+  slice_head(n=10) %>%
+  select("DoF"=`...1`,2:8) %>%
+knitr::kable()
+```
+Da cui si vede, ad esempio, che la soglia per $k=5$ e $\alpha=0.01$ è pari a `r round(qt(0.01, 5, lower.tail=F), 3)`.
+
+## Come si sceglie $\alpha$
+Non abbiamo detto come si determina il valore di $\alpha$. Trattandosi di una soglia, il suo valore va determinato arbitrariamente dallo sperimentatore, sulla base di considerazioni estrinseche, quali---tipicamente---le conseguenze di un eventuale errore di inferenza. Se ad esempio le conseguenze di un falso positivo fossero gravi (danni a cose o persone), allora sarebbe opportuno scegliere la probabilità d'errore bassa (minore di 0.001). Se invece le conseguenze fossero minori (perdita di tempo) potremo accettare anche valori di $\alpha$ superiori (ad e. 0.05).
+
+Si noti che *probabilità d'errore del 10%* significa che se ripetiamo 100 volte lo stesso test su 100 campioni provenienti dalle stesse distribuzioni possiamo aspettarci di avere 10 falsi positivi. Quindi, la scelta del valore di $\alpha$ dovrebbe anche essere correlata alla frequenza con qui il test viene effettuato.
+
+## Formulazione moderna e *p-value*
+
+La formulazione classica del test di Student prevede solo la disponibilità delle tabelle quantili e la valutazione della statistica di test $t_0$ (fatta di sole operazioni elementari), quindi ha il pregio di essere relativamente semplice.
+
+Tuttavia, la risposta che abbiamo è **a soglia**: o accettiamo o rifiutiamo l'ipotesi nulla, ma se risultasse che $|t_0|$ fosse poco più grande di $\alpha$, non avremmo modo di sapere *quanto* in effetti la probabilità d'errore sia più piccola di $\alpha$.
+
+Per questo motivo, da quando sono disponibili i calcolatori si preferisce un approccio differente al test di Student e ai test di inferenza in generale: si calcola cioè direttamente la probabilità di riscontrare un valore maggiore o uguale a $|t_0|$:
+```{r}
+pt(abs(t0), k, lower.tail = F)*2
+```
+Cioè il `r round(pt(abs(t0), k, lower.tail = F)*200,2)`% di probabilità di falso positivo.
+Tale valore corrisponde alla probabilità di un errore di tipo I, ed è chiamato *p-value*. La scelta se rifiutare l'ipotesi nulla viene fatta direttamente sulla base del *p-value*: **tanto più esso è piccolo, tanto più si rafforza l'ipotesi alternativa $H_1$**.
+
+## Funzioni di R
+
 
 # Test di Tukey
 
