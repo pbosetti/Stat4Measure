@@ -2,9 +2,9 @@
 title:
   Statistica per la Misura
   
-  Parte 3. --- Statistica inferenziale
-runningheader: "SpM --- Statistica inferenziale" # only for pdf output
-subtitle: "SpM --- Statistica inferenziale" # only for html output
+  Parte 3. --- Tidyverse
+runningheader: "SpM --- Tidyverse" # only for pdf output
+subtitle: "SpM --- Tidyverse" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
@@ -29,16 +29,295 @@ library(latex2exp)
 source("myfunctions.R")
 ```
 
-# Test di ipotesi
+# Tidyverse, o la modernizzazione di R
+`r newthought("R è un linguaggio relativamente stabile e maturo")`, tuttavia include alcune caratteristiche (più uniche che rare) che negli ultimi anni hanno portato allo sviluppo di una collezione di librerie che ne hanno trasformato l'impiego. Queste librerie vanno sotto il nome collettivo di **Tidyverse** (vedi @R-tidyverse, @tidyverse e @tidyverse2019).
 
-# Test di Student
+Una **libreria** in R è un pacchetto di funzioni e dati che ne estendono le funzionalità. Il pacchetto può essere automaticamente scaricato e installato da R (mediante la funzione `install.packages()` o via GUI dal pannello *Packages* > *Install*). Una volta installato, per essere utilizzato un pacchetto deve essere caricato con la funzione `library()`.
 
-# Test di Tukey
+Per Tidyverse procediamo così:
+```{r}
+# solo la prima volta:
+# install.packages("tidyverse")
+# poi, per caricare la libreria:
+library(tidyverse)
+```
 
-# ANOVA
+Si noti che per l'installazione è necessario passare il nome della libreria come stringa, ma per il caricamento si usa il nome "nudo".
 
-## ANOVA a una via
+In realtà, `tidyverse` è un meta-pacchetto, ossia un pacchetto che carica altri 8 pacchetti:
+```{marginfigure}
+Nel contesto *big data* si parla di **tidy data** quando i dato sono organizzati in tabelle in cui ogni colonna è una variabile e ogni riga un'osservazione.
+```
 
-## ANOVA a due vie
+* `ggplot2`: nuova interfaccia per realizzare grafici
+* `tibble`: versione migliorata di `data.frame`
+* `tidyr`: creazione di **tidy data**
+* `readr`: file I/O migliorato
+* `purrr`: programmazione funzionale
+* `dplyr`: modifica di data frame
+* `stringr`: gestione stringhe
+* `forcats`: gestione fattori (*factors*)
 
-# Analisi dei residui
+Questi pacchetti possono anche essere caricati individualmente e separatamente, quando ad esempio non servano tutti e sia necessario risparmiare risorse.
+
+Nelle prossime Parti del corso, dove possibile, utilizzeremo estensivamente Tidyverse anziché la programmazione convenzionale. Di seguito, vedremo un'introduzione ai pacchetti più utili: dato che l'intero Tidyverse è estremamente esteso e richiede molto tempo per essere trattato nel dettaglio, ci focalizzeremo sulle basi in questa Parte, con esempi più evoluti nelle Parti seguenti e rimandiamo a materiale specifico per gli approfondimenti, ad esempio, l'ottimo *R for Data Science* (@Wickham:2017) e la sua versione online gratuita (@r4ds).
+```{marginfigure}
+Per una panoramica di tutte le funzioni vedere il *cheat sheet* su \url{https://raw.githubusercontent.com/rstudio/cheatsheets}.
+```
+
+
+# Operatore *pipe*
+`r newthought("È un operatore messo a disposizione")` da uno qualsiasi dei pacchetti sopra elencati. Il concetto di **pipe** è abbastanza comune in informatica e indica un tubo, un condotto, che veicola il risultato di un comando come ingresso di un comando successivo.
+```{marginfigure}
+In R un operatore è una funzione con due argomenti. Le stesse operazioni aritmetiche sono di fatto definite come `` `+` <- function(a,b) `` e possono essere indifferenemente chiamate come `` `+`(1,2) `` oppure `1 + 2`. Operatori speciali possono essere liberamente definiti come funzioni con la sintassi `` `%op%` <- function(a,b) `` e invocati come `a %op% b` (definendo quindi l'operatore `%op%`, con `op` una stringa generica).
+```
+
+L'operatore pipe, `%>%` è definito come un operatore che prende una variabile o l'output di una prima funzione e lo passa come **primo argomento** ad una seconda funzione:
+```{r}
+set.seed(0)
+rnorm(10) %>% sort(decreasing=T) %>% round(2)
+```
+è equivalente a:
+```{r}
+set.seed(0)
+round(sort(rnorm(10), decreasing=T), 2)
+```
+
+Si noti come la versione con *pipe* è più leggibile e chiara della versione convenzionale.
+In particolare, quando il numero di funzioni annidate l'una dentro l'altra diventa elevato il codice diventa molti difficile da comprendere e, quindi, soggetto ad errori. Convenzionalmente, in questi casi si semplifica il codice assegnando a variabili il risultato delle elaborazioni intermedie, con il risultato di definire numerose variabili non necessarie che aumentano la richiesta di memoria.
+
+L'uso dell'operatore *pipe* serve quindi a rendere il **codice più leggibile** e ad evitare il ricorso a **variabili intermedie**.
+
+Il pacchetto `magrittr`, che fa sempre parte del progetto Tidyverse ma non è caricato automaticamente con `tidyverse`, estende l'operatore *pipe* con alcune varianti più complesse ma decisamente opzionali, per cui rimandiamo i curiosi alla documentazione relativa (@magrittr).
+
+# Pacchetto `tibble`
+`r newthought("Il data frame è una classe fondamentali")` per la rappresentazione di strutture dati in R. Questo pacchetto mette a disposizione una nuova classe, `tibble` che eredita tutte le funzioni della classe `data.frame` ma ne migliora alcuni aspetti. È quindi possibile (e consigliato) utilizzare le `tibble` come sostituti dei `data.frame` dato che ogni funzione che accetta come parametro un data frame continua a funzionare anche passando una `tibble`.
+
+I vantaggi di `tibble` nei confronti di `data.frame` sono tre:
+
+* sono più flessibili in creazione
+* sono più robuste: fanno meno assunzioni e conversioni implicite dei tipi in ingresso
+* vengono stampate in maniera più chiara e completa
+
+Ci sono tre modi per creare una `tibble`: il primo è mediante conversione di un data frame esistente:
+```{r}
+df <- data.frame(a=1:300, b=letters[1:300])
+as_tibble(df)
+```
+Come si vede, la stampa è più chiara perché contiene un'intestazione che ne dà le dimensioni e i tipi delle colonne. Inoltre, si arresta automaticamente al decimo elemento (mentre stampando un data frame si ottengono sempre tutti gli elementi, a meno di non usare `head()`).
+
+Per creare direttamente una `tibble` si usa la funzione omonima:
+```{r}
+df <- tibble(x=1:5, y=x^2, n=rnorm(length(x)))
+df
+```
+Come si vede, a differenza che con `data.frame()` è possibile far immediato riferimento a colonne precedentemente definite.
+
+Infine, è possibile creare anche una `tibble` per righe anziché per colonne, con la funzione `tribble()` (*TRansposed tIBBLE*):
+```{r}
+tribble(
+  ~x, ~y,  ~z,
+  "a", 2,  3.6,
+  "b", 1,  8.5
+) %>%
+  str()
+```
+Questa funzione è particolarmente utile soprattutto quando si vogliano creare manualmente piccole tabelle con dati eterogenei.
+
+# Pacchetto `readr`
+`r newthought("Le operazioni di I/O su file")` native di R operano su data frame. Questo pacchetto mette a disposizione analoghe funzioni che operano invece su `tibble`. 
+```{marginfigure}
+Per la precisione, siccome `tibble` eredita da `data.frame`, le funzioni di *scrittura* su file (come `write.table()` e `write.csv()`) possono accettare come primo parametro una `tibble` in maniera equivalente. 
+```
+Il pacchetto `readr` (come dice il nome) mette invece a disposizione analoghe funzioni che caricano file e restituiscono una `tibble`:
+
+* `read_csv()`: comma-separated values (CSV)
+* `read_tsv()`: tab-separated values (TSV)
+* `read_fwf()`: fixed-width files
+* `read_table()`: file con delimitatori generici
+* `read_log()`: web log file
+
+
+# Pacchetto `dplyr`
+`r newthought("Il pacchetto fornisce una grammatica")` per la manipolazione di dati in forma di `tibble`: modifica e aggiunta di colone, ordinamento, sommarizzazione.
+
+È uno del pacchetti più complessi e potenti di Tidyverse, e probabilmente quello con la curva di apprendimento più lunga (@dplyr).
+
+Molti pacchetti includono dei dataset di esempio. Il pacchetto `dplyr` comprende la `tibble` `starwars` che contiene dati sui personaggi della saga:
+```{r echo=FALSE}
+starwars
+```
+
+## Filtrare i dati (le righe)
+È possibile **filtrare** i dati estraendo solo le righe che soddisfano alcuni criteri:
+```{r}
+starwars %>%
+  filter(skin_color=="light", eye_color=="brown")
+```
+In R standard la stessa operazione si scriverebbe in modo decisamente meno leggibile:
+```{r eval=FALSE, include=TRUE}
+starwars[starwars$skin_color == "light" & starwars$eye_color == "brown", ]
+```
+
+## Riordinare le righe
+Per riordinare le righe di una `tibble` secondo una o più colonne (ad esempio, prima per `height` decrescente, poi per `mass`) si usa la funzione `arrange()`:
+```{r}
+starwars %>% arrange(desc(height), mass)
+```
+
+## Selezionare solo alcune colonne
+A volte è utile selezionare solo una parte delle colonne totali:
+```{marginfigure}
+Le funzioni `slice()`, `slice_head()`, `slice_tail()` e `slice_sample()` consentono di selezionare solo alcune righe (per indice, numero iniziale, numero finale o a caso, rispettivamente).
+```
+```{r}
+starwars %>% select(hair_color:eye_color) %>% 
+  slice_head(n=5) %>%
+  knitr::kable()
+```
+
+I nomi delle colonne da selezionare possono essere dati come sequenza (`select(hair_color, skin_color, eye_color)`) come intervallo (esempio sopra), o mediante funzioni di selezione (`starts_with()`, `ends_with()`, `matches()` e `contains()`).
+
+Le colonne possono anche essere rinominate:
+```{r}
+starwars %>% select(hair_color:eye_color) %>% 
+  rename("Hair color"=hair_color, "Skin color"=skin_color, "Eye color"=eye_color) %>%
+  slice_head(n=5) %>%
+  knitr::kable()
+```
+
+## Aggiungere nuove colonne
+Nuove colonne possono essere aggiunte, sulla base di colonne esistenti, mediante `mutate()`:
+```{r}
+starwars %>% 
+  mutate(height_m=height/100,
+         BMI=round(mass/height_m^2,1)) %>%
+  select("Name"=name, 
+         "Height"=height_m, 
+         "Mass"=mass, 
+         BMI) %>%
+  slice_sample(n=5) %>%
+  knitr::kable()
+```
+
+## Riordinare le colonne
+Soprattutto per la visualizzazione può essere utile riordinare le colonne:
+```{r}
+starwars %>% relocate(homeworld, .before=name) %>%
+  select(1:3) %>%
+  slice_head(n=5) %>%
+  knitr::kable()
+```
+Attenzione al punto prima di `before`: è parte del nome dell'argomento. In alternativa a `.before` si può ovviamente specificare `.after`, e la selezione delle colonne da spostare può essere fatta esattamente come per `select()`.
+
+## Raggruppare e creare sommari
+Una tipica operazione su tabelle di dati è la creazione di subtotali per gruppi. Ad esempio, per ottenere l'elenco delle combinazioni specie-sesso con altezza media maggiore di 2 metri:
+```{r}
+starwars %>%
+  group_by(species, sex) %>%
+  select(height, mass) %>%
+  summarise(
+    height = mean(height, na.rm = TRUE),
+    mass = mean(mass, na.rm = TRUE)
+  ) %>%
+  arrange(desc(height)) %>%
+  filter(height>200) %>%
+  knitr::kable()
+```
+
+# Pacchetto `tidyr`
+`r newthought("Il nome stesso Tidyverse")` deriva dal concetto di *tidy data*. È un modo "pulito" per organizzare i dati: come visto sopra, significa avere una variabile per colonna e un'osservazione per riga. Ad esempio, la seguente è una tabella *non*-tidy:
+```{r echo=FALSE}
+df <- tibble(country=LETTERS[1:5], 
+             "1999"=round(rnorm(length(country), 130,3),1),
+             "2000"=round(rnorm(length(country), 32,6),1))
+knitr::kable(df)
+```
+
+Per trasformarla in formato *tidy*:
+```{r}
+df <- pivot_longer(df, cols=2:3, 
+                    names_to="anno", 
+                    values_to="casi") %>%
+  select("paese"=country, anno:casi)
+df %>% knitr::kable()
+```
+
+È possibile anche l'operazione inversa:
+```{r}
+df %>% pivot_wider(names_from="anno", values_from="casi") %>%
+  knitr::kable()
+```
+
+Il motivo per cui il formato *tidy* è più comodo sarà più chiaro più avanti, quando parleremo di **modelli di regressione**.
+
+# Pacchetto `purrr`
+`r newthought("Questo pacchetto implementa")` la **programmazione funzionale** in R. Consente cioè di applicare una funzione a tutti gli elementi di un vettore o di una lista. Il principale vantaggio è che evita il ricorso a loop (cicli `for` e `while`), che sono generalmente molto più lenti, soprattutto su grandi quantità di dati. È un pacchetto molto ricco, ma la famiglia di funzioni più utili sono quelle con `map` nel nome.
+```{marginfigure}
+Per una panoramica di tutte le funzioni vedere il *cheat sheet* su \url{https://raw.githubusercontent.com/rstudio/cheatsheets/main/purrr.pdf}
+
+In R base, funzionalità simili, ma meno evolute, sono fornite dalle funzioni `lapply()`, `sapply()` e `tapply()`.
+```
+
+La funzione principale è `map()`: essa opera su **un vettore o su una lista** e restituisce una **lista**, dopo aver applicato una data funzione a tutti gli elementi in ingresso.
+
+La funzione può essere una funzione esistente o può essere definita al volo:
+```{r}
+map(1:3, sqrt)
+map(1:3, function(x) x^0.5)
+```
+
+Nel secondo caso, è possibile usare una sintassi abbreviata: `function(x) expr(x)` diventa `~expr(.)`, cioè si sostituisce `function(x)` con `~` e `x` con `.`.
+
+Se `map()` è la funzione base, spesso sono più utili le funzioni derivate come `map_dbl()`, `map_int()` e `map_chr()`, che restituiscono, rispettivamente, un vettore di numeri in virgola mobile, numeri interi o stringhe:
+```{r}
+map_dbl(1:5, ~sqrt(.))
+```
+
+Se si ha bisogno di operare in parallelo su due o più vettori si fa ricorso alle varianti `map2()` e `pmap()`, rispettivamente (e delle derivate che restituiscono vettori anziché liste):
+```{r}
+map2_dbl(1:3, 3:1, ~.x*.y)
+list(1:3, 3:1, LETTERS[1:3]) %>%
+  pmap_chr(~paste(..3, ":",..1, "*", ..2, "=", ..1*..2)) %>%
+  walk(~{cat(.); cat("\n")})
+```
+```{marginfigure}
+Si noti che molte funzioni native di R, incluse le operaioni aritmetiche, sono già parallelizzate: usare `map()` in questi casi è un inutile spreco di risorse: `sqrt(v)` è molto meglio di `map_dbl(v, ~sqrt(.))`. 
+
+L'uso di queste funzioni va quindi riservato ai casi in cui si voglia applicare ad un vettore una funzione **che non è già vettorializzata**, cioè adatta a lavorare in parallelo su tutti gli elementi di un vettore.
+```
+
+L'ultimo esempio mostra anche l'uso di `walk()`, che opera in maniera trasparente su tutti gli elementi (cioè, ciò che conta è l'operazione e non il risultato finale).
+
+
+# Pacchetto `ggplot2`
+`r newthought("Si tratta probabilmente del pacchetto più famoso")`: consente di ottenere grafici molto curati ed efficaci e rivoluziona l'approccio alla creazione di grafici comune ad R e molti altri linguaggi di alto livello (come Matlab), dove il grafico viene creato da una funzione (in R: `plot()`) e le proprietà del grafico sono specificate come opzioni della funzione di plotting stessa.
+
+La libreria `ggplot2` introduce il concetto di **grammatica**, analogamente a quanto visto per `dplyr`. Il nome `ggplot2` deriva infatti da *Grammar of Graphics*. L'idea è quella di costruire un grafico *sommando* una sequenza di operazioni, o *verbi*, ogni operazione rappresenta una specifica parte, o *strato*, del grafico finale. Vediamo un esempio:
+```{r fig.margin=T}
+tibble(v1=1:10, v2=v1^2) %>%
+  ggplot(mapping=aes(x=v1, y=v2)) +
+  geom_line() +
+  geom_point(aes(color=v1), size=3) +
+  labs(x="ascissa", y="ordinata", color="valore")
+```
+
+Come si vede, la creazione di un grafico inizia con il comando `ggplot()`, che accetta tipicamente i dati mediante una *pipe*. A sua volta, `ggplot()` specifica la **mappa** tra colonne nel data frame di ingresso e entità del grafico mediante la funzione `aes()` (sta per *aesthetics*). Il risultato di questo comando è un grafico vuoto. Ad esso è possibile sommare delle *geometrie* mediante la famiglia di comandi `geom_*()`, che usano i dati e la mappa in `ggplot()` per disegnare punti, linee, ecc. 
+
+Infine, comandi come `labs()` e `scale_*()` consentono di definire con precisione l'aspetto degli assi e delle scale.
+
+La libreria `ggplot2` è molto complessa e anche qui si rimanda agli approfondimenti sul maniale *R for Data Science* (@r4ds) e sul *cheat sheet* disponibile qui: \url{https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf}.
+
+In generale, `ggplot2` è progettata in modo da rendere rapido e facile realizzare grafici secondo criteri che ne garantiscono la comprensibilità e l'efficacia, e rendere invece più difficile, ma non impossibile, creare grafici con caratteristiche ritenute da evitare (come ad esempio gli assi spezzati).
+
+Inoltre consente mantenere coerente l'aspetto dei grafici (colori, font decorazioni) mediante dei **temi**, che possono essere scelti tra i predefiniti e che possono anche essere personalizzati:
+```{r fig.margin=T}
+theme_set(theme_bw())
+tibble(v1=1:10, v2=v1^2) %>%
+  ggplot(mapping=aes(x=v1, y=v2)) +
+  geom_line() +
+  geom_point(aes(color=v1), size=3) +
+  labs(x="ascissa", y="ordinata", color="valore") +
+  scale_color_viridis_b()
+```
+

@@ -12,3 +12,5 @@
 *.bbl
 *.blg
 *.toc
+*.bib
+!skeleton.bib

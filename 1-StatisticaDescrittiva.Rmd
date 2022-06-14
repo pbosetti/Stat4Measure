@@ -26,7 +26,6 @@ header-includes:
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
-library(tidyverse)
 library(glue)
 source("myfunctions.R")
 ```
