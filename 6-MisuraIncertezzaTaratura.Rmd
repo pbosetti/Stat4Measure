@@ -2,11 +2,13 @@
 title:
   Statistica per la Misura
   
-  Parte 1. --- Misura, incertezza e taratura
+  Parte 6. --- Misura, incertezza e taratura
 runningheader: "SpM --- Misura, incertezza e taratura" # only for pdf output
 subtitle: "SpM --- Misura, incertezza e taratura" # only for html output
-author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
-date: "Ultimo aggiornamento: `r Sys.Date()`"
+author:
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento 
+  ![](by-nc-sa.png){height=5mm}date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
     number_sections: yes

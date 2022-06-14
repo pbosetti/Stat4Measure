@@ -20,6 +20,16 @@ tukey.plot <- function(t) {
       coord_flip()
 }
 
+file_head <- function(filename, n=6) {
+  f <- file(filename, "r")
+  for (i in 1:n) {
+    line <- readLines(f, n=1)
+    cat(line)
+    cat("\n")
+  }
+  close(f)
+}
+
 # hack for setting LaTeX fontsize for code chuncks
 # see https://stackoverflow.com/questions/25646333/code-chunk-font-size-in-rmarkdown-with-knitr-and-latex
 def.chunk.hook  <- knitr::knit_hooks$get("chunk")
@@ -36,7 +46,7 @@ knitr::opts_chunk$set(
   warning=FALSE,
   echo=TRUE, 
   tidy=TRUE, 
-  tidy.opts=list(width.cutoff=I(45)),
+  tidy.opts=list(width.cutoff=I(50)),
   size="small",
   # size="footnotesize",
   # size="scriptsize",

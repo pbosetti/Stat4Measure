@@ -2,10 +2,13 @@
 title:
   Statistica per la Misura
   
-  Parte 1. --- Bootstrapping
-runningheader: "SpM --- Bootstrapping" # only for pdf output
-subtitle: "SpM --- Bootstrapping" # only for html output
-author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+  Parte 3. --- Statistica inferenziale
+runningheader: "SpM --- Statistica inferenziale" # only for pdf output
+subtitle: "SpM --- Statistica inferenziale" # only for html output
+author:
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento 
+  ![](by-nc-sa.png){height=5mm}
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
@@ -26,4 +29,16 @@ library(latex2exp)
 source("myfunctions.R")
 ```
 
-# Tecniche di Bootstrapping
+# Test di ipotesi
+
+# Test di Student
+
+# Test di Tukey
+
+# ANOVA
+
+## ANOVA a una via
+
+## ANOVA a due vie
+
+# Analisi dei residui

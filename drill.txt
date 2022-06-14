@@ -1,4 +1,4 @@
-# Trivelazione
+# Trivellazione
 # File creato il  Tue Jun  7 17:56:49 2022
 # Fattori:
 #   A = carico assiale, 40-60 N

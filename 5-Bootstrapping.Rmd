@@ -1,0 +1,31 @@
+---
+title:
+  Statistica per la Misura
+  
+  Parte 5. --- Bootstrapping
+runningheader: "SpM --- Bootstrapping" # only for pdf output
+subtitle: "SpM --- Bootstrapping" # only for html output
+author:
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento 
+  ![](by-nc-sa.png){height=5mm}date: "Ultimo aggiornamento: `r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    number_sections: yes
+    toc: yes
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html:
+bibliography: skeleton.bib
+link-citations: yes
+header-includes:
+  - \usepackage[italian]{babel}
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+library(latex2exp)
+source("myfunctions.R")
+```
+
+# Tecniche di Bootstrapping

@@ -1,11 +1,13 @@
 ---
 title:
-  Statistica per la Misura
-  
+  Statistica per la Misura,
   Parte 1. --- Satistica descrittiva
 runningheader: "SpM --- Statistica base" # only for pdf output
 subtitle: "SpM --- Statistica base" # only for html output
-author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+author: 
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento 
+  ![](by-nc-sa.png){height=5mm}
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
@@ -29,27 +31,45 @@ library(glue)
 source("myfunctions.R")
 ```
 
+```{=tex}
+\newtheorem{thm}{Teorema}
+\newtheorem{cor}{Corollario}
+\newtheorem{lem}{Lemma}
+```
 # Variabili stocastiche
 
-`r newthought('Una variabile stocastica')` è una variabile che assume valori casuali ad ogni osservazione, cioè tali per cui non è possibile prevedere il valore esatto della prossima osservazione, nemmeno conoscendo le osservazioni precedenti.
+`r newthought('Una variabile stocastica')` è una variabile che assume
+valori casuali ad ogni osservazione, cioè tali per cui non è possibile
+prevedere il valore esatto della prossima osservazione, nemmeno
+conoscendo le osservazioni precedenti.
 
-Le variabili stocastiche sono di particolare interesse per l'ingegneria e per l'industria in genere, dato che ogni *misurazione* produce, come risultato, un valore che ha un contenuto casuale ed è quindi rappresentabile come una variabile stocastica.
+Le variabili stocastiche sono di particolare interesse per l'ingegneria
+e per l'industria in genere, dato che ogni **misurazione** produce, come
+risultato, un valore che ha un contenuto casuale ed è quindi
+rappresentabile come una variabile stocastica.
 
 ```{marginfigure}
 La **misurazione** è il processo che porta alla valutazione oggettiva del **misurando**.
 Il risultato di una misurazione è chiamato **misura**.
 ```
 
-A sua volta, il contributo casuale ad una misura è chiamato *incertezza*.
+A sua volta, il contributo casuale ad una misura è chiamato
+**incertezza**.
 
-Dato che ogni attività produttiva è indissolubilmente legata a delle misurazioni, è quindi evidente quanto sia fondamentale trattare in maniera coerente e robusta i contributi casuali alle misure.
+Dato che ogni attività produttiva è indissolubilmente legata a delle
+misurazioni, è quindi evidente quanto sia fondamentale trattare in
+maniera coerente e robusta i contributi casuali alle misure.
 
 ```{r include=FALSE}
 N <- 30
 m <- 25
 ```
 
-Si noti che quando diciamo che ogni misura è affetta da una componente casuale non significa---ovviamente---che il valore di un misurando sia inconoscibile. Esiste infatti un *effetto scala*: supponiamo ad esempio misuriamo la lunghezza di un campione `r N` volte, ottenendo i risultati in Fig. \ref{fig:rep_measures1}.
+Si noti che quando diciamo che ogni misura è affetta da una componente
+casuale non significa---ovviamente---che il valore di un misurando sia
+inconoscibile. Esiste infatti un **effetto scala**: supponiamo ad
+esempio misuriamo la lunghezza di un campione `r N` volte, ottenendo i
+risultati in Fig. \ref{fig:rep_measures1}.
 
 ```{r rep_measures1, echo=FALSE, fig.margin=T, fig.cap=glue("Il risultato di {N} misurazioni consecutive di una lunghezza")}
 df <- tibble(i=1:N, x=rnorm(N, m, 0.01))
@@ -57,12 +77,19 @@ df %>% ggplot(aes(x=i, y=x)) +
   geom_point() +
   labs(x="indice", y="misura (mm)")
 ```
-I valori così ottenuti, pur raggruppandosi approssimativamente al *valore medio* `r m` sulla scala delle ordinate, sembrano effettivamente formare una nuvola molto ampia.
 
-Se tuttavia riportiamo *gli  stessi valori* su una scala più ampia, vediamo come l'elemento casuale *sembra scomparire* (vedi Fig. \ref{fig:rep_measures2}).
+I valori così ottenuti, pur raggruppandosi approssimativamente al
+**valore medio** `r m` sulla scala delle ordinate, sembrano
+effettivamente formare una nuvola molto ampia.
 
-In altre parole, la componente stocastica di una misura è affetta da un effetto scala: tanto più piccolo è il rapporto tra il *valore medio* misurato e la *variabilità* tipica dello strumento (cioè la sua *precisione*), tanto meno sarà apprezzabile l'effetto di casualità.
+Se tuttavia riportiamo *gli stessi valori* su una scala più ampia,
+vediamo come l'elemento casuale *sembra scomparire* (vedi
+Fig. \ref{fig:rep_measures2}).
 
+In altre parole, la componente stocastica di una misura è affetta da un
+effetto scala: tanto più piccolo è il rapporto tra il **valore medio**
+misurato e la *variabilità* tipica dello strumento (cioè la sua
+**precisione**), tanto meno sarà apprezzabile l'effetto di casualità.
 
 ```{r rep_measures2, echo=FALSE, fig.margin=T, fig.cap=glue("Il risultato di {N} misurazioni consecutive di una lunghezza, in scala più ampia")}
 df %>% ggplot(aes(x=i, y=x)) +
@@ -70,65 +97,129 @@ df %>% ggplot(aes(x=i, y=x)) +
   coord_cartesian(ylim=c(0, 50)) +
   labs(x="indice", y="misura (mm)")
 ```
-Questo semplice esempio ci fa capire come sia essenziale definire in maniera precisa ed efficace concetti intuitivi come *variabilità* e *valore medio* che abbiamo sopra espresso.
+
+Questo semplice esempio ci fa capire come sia essenziale definire in
+maniera precisa ed efficace concetti intuitivi come **variabilità** e
+**valore medio** che abbiamo sopra espresso.
 
 # Popolazioni, campioni e stimatori
 
 ## Popolazioni
-`r newthought('In statistica, una popolazione')` è un insieme di valori, oggetti o eventi di interesse per una qualche analisi o esperimento. Se vogliamo studiare la statura dei residenti nella città di Trento, ad esempio, la *popolazione* di interesse per questo studio è l'intero insieme degli abitanti di Trento. Se vogliamo invece studiare il comportamento meccanico della lega d'Alluminio prodotta da un certo impianto che stiamo gestendo, la popolazione di interesse può essere definita come l'intera quantità di lega prodotta a partire da un certo lotto di materia prima in condizioni analoghe.
 
-Tuttavia, spesso la definizione della popolazione di interesse è arbitraria, e dipende da cosa siamo interessati a studiare. Nel caso dell'impianto di produzione di lega, ad esempio, la definizione sopra data è adatta allo studio *specifico* del comportamento di un preciso lotto di produzione. Ma se invece volessimo includere nello studio anche gli effetti di variabilità delle materie prime (tra un lotto e l'altro), delle condizioni ambientali, degli operatori che vi lavorano, ecc., sarebbe più opportuno definire come popolazione un insieme molto ampio---più ampio possibile, in effetti---tale da comprendere tutti i casi che possano influire sulla variabilità complessiva del materiale prodotto.
+`r newthought('In statistica, una popolazione')` è un insieme di valori,
+oggetti o eventi di interesse per una qualche analisi o esperimento. Se
+vogliamo studiare la statura dei residenti nella città di Trento, ad
+esempio, la **popolazione** di interesse per questo studio è l'intero
+insieme degli abitanti di Trento. Se vogliamo invece studiare il
+comportamento meccanico della lega d'Alluminio prodotta da un certo
+impianto che stiamo gestendo, la popolazione di interesse può essere
+definita come l'intera quantità di lega prodotta a partire da un certo
+lotto di materia prima in condizioni analoghe.
+
+Tuttavia, spesso la definizione della popolazione di interesse è
+arbitraria, e dipende da cosa siamo interessati a studiare. Nel caso
+dell'impianto di produzione di lega, ad esempio, la definizione sopra
+data è adatta allo studio *specifico* del comportamento di un preciso
+lotto di produzione. Ma se invece volessimo includere nello studio anche
+gli effetti di variabilità delle materie prime (tra un lotto e l'altro),
+delle condizioni ambientali, degli operatori che vi lavorano, ecc.,
+sarebbe più opportuno definire come popolazione un insieme molto
+ampio---più ampio possibile, in effetti---tale da comprendere tutti i
+casi che possano influire sulla variabilità complessiva del materiale
+prodotto.
 
 Questo ci fa capire due cose:
 
-* la definizione della popolazione dipende dall'obiettivo dell'analisi/studio;
-* la dimensione di una popolazione è generalmente molto ampia e potenzialmente non limitata, nel senso che nel caso di un processo continuo può includere anche eventi futuri.
+-   la definizione della popolazione dipende dall'obiettivo
+    dell'analisi/studio;
+-   la dimensione di una popolazione è generalmente molto ampia e
+    potenzialmente non limitata, nel senso che nel caso di un processo
+    continuo può includere anche eventi futuri.
 
 ## Proprietà delle popolazioni
-Ovviamente, analizzare un set molto grande, non limitato o addirittura infinito, pone seri problemi pratici. Per questo motivo la statistica lavora su *campioni*, cioè sottoinsiemi poco numerosi della popolazione oggetto di studio. Un campione deve essere *estratto* dalla popolazione in modo da consentire, con un rischio definito di errore, la generalizzazione all'intera popolazione. Cioè il campione deve essere *rappresentativo* della popolazione, e la rappresentatività può essere garantita dalla casualità dell'estrazione.
 
-Le principali proprietà di una popolazione sono il suo valore medio, chiamato *valore atteso* e indicato con $\mu$, e la sua variabilità, chiamata *varianza* e indicata con $\sigma^2$. Dal unto di vista matematico possono essere definite mediante due *operatori*: l'operatore valore atteso $E$ e l'operatore varianza $V$. Per una popolazione di elementi discreti $x_i$, sono definiti come:
+Ovviamente, analizzare un set molto grande, non limitato o addirittura
+infinito, pone seri problemi pratici. Per questo motivo la statistica
+lavora su **campioni**, cioè sottoinsiemi poco numerosi della
+popolazione oggetto di studio. Un campione deve essere **estratto**
+dalla popolazione in modo da consentire, con un rischio definito di
+errore, la generalizzazione all'intera popolazione. Cioè il campione
+deve essere **rappresentativo** della popolazione, e la
+rappresentatività può essere garantita dalla casualità dell'estrazione.
+
+Le principali proprietà di una popolazione sono il suo valore medio,
+chiamato **valore atteso** e indicato con $\mu$, e la sua variabilità,
+chiamata **varianza** e indicata con $\sigma^2$. Dal unto di vista
+matematico possono essere definite mediante due **operatori**:
+l'operatore valore atteso $E$ e l'operatore varianza $V$. Per una
+popolazione di elementi discreti $x_i$, sono definiti come:
+
 ```{marginfigure}
-La lettera $E$ per valore atteso viene dall'inglese *expected value*. In generale si utilizzano lettere greche come $\mu$ e $\sigma$ per le proprietà della popolazione e le corrispondenti lettere romane per le proprietà dei campioni.
+La lettera $E$ per valore atteso viene dall'inglese **expected value**. In generale si utilizzano lettere greche come $\mu$ e $\sigma$ per le proprietà della popolazione e le corrispondenti lettere romane per le proprietà dei campioni.
 ```
+
+```{=tex}
 \begin{eqnarray}
 \mu =& E(x) := \sum_i x_i p(x_i) \\
 \sigma^2 =& V(x) := \sum_i (x_i -\mu)^2 p(x_i)
 \end{eqnarray}
-
-Nelle ultime equazioni $x_i$ indica il generico elemento della popolazione e $p(x_i)$ indica la *probabilità* di riscontrare tale elemento (@Kolmogorov). Un esempio di funzione probabilità di una variabile discreta definita solo sugli interi è in Fig. \ref{fig:binom}.
+```
+Nelle ultime equazioni $x_i$ indica il generico elemento della
+popolazione e $p(x_i)$ indica la **probabilità** di riscontrare tale
+elemento (@Kolmogorov). Un esempio di funzione probabilità di una
+variabile discreta definita solo sugli interi è in
+Fig. \ref{fig:binom1}.
 
 ```{marginfigure}
-La definizione di *probabilità* e *frequenza* è essenzialmente **assiomatica**.
+La definizione di **probabilità** e **frequenza** è essenzialmente *assiomatica*.
 Si noti che $p(x_i)\in[0,1]~\forall i$ e $f(x)\geq 0, x\in\mathbb{R}$.
 ```
 
-Un caso di popolazione di elementi discreti, o *popolazione a valori discreti*, è la misura del numero di spilli per confezione in un impianto che produce spilli, oppure il numero di difetti su piastrelle in ceramica, oppure semplicemente il risultato del lancio di un dado a 6 facce. In altre parole, si tratta di variabili stocastiche che **possono assumere esclusivamente valori interi**, o comunque associabili a valori interi.
+Un caso di popolazione di elementi discreti, o **popolazione a valori
+discreti**, è la misura del numero di spilli per confezione in un
+impianto che produce spilli, oppure il numero di difetti su piastrelle
+in ceramica, oppure semplicemente il risultato del lancio di un dado a 6
+facce. In altre parole, si tratta di variabili stocastiche che **possono
+assumere esclusivamente valori interi**, o comunque associabili a valori
+interi.
 
-```{r binom, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile discreta, a valori solo sugli interi"}
-df <- tibble(x=1:20, p=dbinom(x, 10, 0.5))
-df %>% ggplot(mapping=aes(x=x, y=p)) + 
+```{r binom1, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile discreta, a valori solo sugli interi"}
+tibble(x=1:20, p=dbinom(x, 10, 0.5)) %>% 
+  ggplot(mapping=aes(x=x, y=p)) + 
   geom_col(width=0.1) +
   geom_point() +
   labs(x="variabile discreta", y="probabilità")
 ```
+
+Se invece la misurazione mi fornisce una variabile stocastica continua,
+cioè a valori sull'insieme dei numeri reali, si tratta di **popolazione
+a valori continui**. In questo caso, gli operatori $E(x)$ e $V(x)$
+diventano: \begin{eqnarray}
+\mu =& E(x) := \int_{-\infty}^\infty x f(x)dx \\
+\sigma^2 =& V(x) := \int_{-\infty}^\infty (x -\mu)^2 f(x)dx
+\end{eqnarray} dove $f(x)$ è la **frequenza** di x, cioè l'analogo
+continuo della probabilità. Un esempio di funzione frequenza di una
+variabile stocastica continua è in Fig. \ref{fig:chisq}. Le funzioni di
+Figg. \ref{fig:binom1}--\ref{fig:chisq} sono chiamate **funzioni di
+densità di probabilità**, o **PDF** (da *Probability Density Function*).
+
 ```{r chisq, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile continua, a valori sui reali"}
-df <- tibble(x=seq(0,20,0.1), p=dchisq(x, 5))
-df %>% ggplot(mapping=aes(x=x, y=p)) + 
+tibble(x=seq(0,20,0.1), p=dchisq(x, 5)) %>% 
+  ggplot(mapping=aes(x=x, y=p)) + 
   geom_line() +
   labs(x="variabile continua", y="frequenza")
 ```
 
-Se invece la misurazione mi fornisce una variabile stocastica continua, cioè a valori sull'insieme dei numeri reali, si tratta di *popolazione a valori continui*. In questo caso, gli operatori $E(x)$ e $V(x)$ diventano:
-\begin{eqnarray}
-\mu =& E(x) := \int_{-\infty}^\infty x f(x)dx \\
-\sigma^2 =& V(x) := \int_{-\infty}^\infty (x -\mu)^2 f(x)dx
-\end{eqnarray}
-dove $f(x)$ è la *frequenza* di x, cioè l'analogo continuo della probabilità. Un esempio di funzione frequenza di una variabile stocastica continua è in Fig. \ref{fig:chisq}. Le funzioni di Figg. \ref{fig:binom}--\ref{fig:chisq} sono chiamate *funzioni di densità di probabilità*, o **PDF** (da *Probability Density Function*).
-
-Si noti che dal confronto tra $E(x)$ e $V(x)$ risulta
-\begin{equation}
+Si noti che dal confronto tra $E(x)$ e $V(x)$ risulta \begin{equation}
 \sigma^2 = E\left[(x-\mu)^2\right]
+\end{equation}
+
+Inoltre, si noti che probabilità e frequenza devono *sommare a 1*:
+rispettivamente: \begin{equation}
+\begin{array}{l}
+\sum_i p(x_i) = 1 \\
+\int_{-\infty}^\infty f(x)dx = 1
+\end{array} \label{eq:sum_one}
 \end{equation}
 
 Gli operatori valore atteso e varianza godono delle seguenti proprietà:
@@ -143,42 +234,63 @@ E(x+y)&=&E(x)+E(y)=\mu_x+\mu_y\\
 \mathrm{Cov}(x,y)&=&E[(x-\mu_x)(y-\mu_y)] \label{eq:cov}\\
 V(x+y)&=&V(x)+V(y)+2\textrm{ Cov}(x,y)\\
 V(x-y)&=&V(x)+V(y)-2\textrm{ Cov}(x,y)
-\end{eqnarray}
-dove $c$ indica una costante.
+\end{eqnarray} dove $c$ indica una costante.
+
 ```{marginfigure}
 Covarianza e correlazione sono anche indicate come $\sigma_{xy}$ e $\rho_{xy}$, rispettivamente.
 ```
 
-In particolare, la Eq. (\ref{eq:cov}) definisce l'operatore *covarianza*, che è un indice di quanto due variabili stocastiche siano interdipendenti (cioè il valore assunto da una dipende dal valore assunto dall'altra). Più utile della covarianza (che non è limitata) è la *correlazione*:
-\begin{equation}
+In particolare, la (\ref{eq:cov}) definisce l'operatore **covarianza**,
+che è un indice di quanto due variabili stocastiche siano
+interdipendenti (cioè il valore assunto da una dipende dal valore
+assunto dall'altra). Più utile della covarianza (che non è limitata) è
+la **correlazione**: \begin{equation}
 \mathrm{Corr}(x, y) = \frac{E[(x-\mu_x)(y-\mu_y)]}{\sigma_x\sigma_y} = \frac{\mathrm{Cov}(x,y)}{\sigma_x\sigma_y}
-\end{equation}
-che ha il vantaggio di essere compresa nell'intervallo $[-1,1]$: 
+\end{equation} che ha il vantaggio di essere compresa nell'intervallo
+$[-1,1]$:
 
-* vicina a zero significa nessuna correlazione
-* vicina a 1 significa forte correlazione *positiva* (se aumenta $x$ aumenta anche $y$)
-* vicina a -1 significa forte correlazione *negativa* (se aumenta $x$ diminuisce $y$).
+-   vicina a zero significa nessuna correlazione
+-   vicina a 1 significa forte correlazione **positiva** (se aumenta $x$
+    aumenta anche $y$)
+-   vicina a -1 significa forte correlazione **negativa** (se aumenta
+    $x$ diminuisce $y$).
 
 ## Campioni
-Come abbiamo visto sopra, per motivi pratici si studia una popolazione sempre ricorrendo ad un campione. Intuitivamente, tanto più grande è il campione, tanto più esso sarà rappresentativo della popolazione stessa. Il numero di possibili campioni *differenti* di dimensione $n$ che è possibile estrarre da una popolazione di $N$ elementi è definito dal *coefficiente binomiale*:
-\begin{equation}
+
+Come abbiamo visto sopra, per motivi pratici si studia una popolazione
+sempre ricorrendo ad un campione. Intuitivamente, tanto più grande è il
+campione, tanto più esso sarà rappresentativo della popolazione stessa.
+Il numero di possibili campioni *differenti* di dimensione $n$ che è
+possibile estrarre da una popolazione di $N$ elementi è definito dal
+**coefficiente binomiale**: \begin{equation}
 \binom{N}{n}=\frac{N!}{(N-n)!n!}
 \end{equation}
 
-La *media* e la *varianza* di un campione consentono di stimare il valore atteso e la varianza della popolazione da cui il campione è stato estratto. Essi sono definiti come:
-\begin{eqnarray}
+La **media** e la **varianza** di un campione consentono di stimare il
+valore atteso e la varianza della popolazione da cui il campione è stato
+estratto. Essi sono definiti come: \begin{eqnarray}
 \bar x &=& \frac{1}{n}\sum_{i=1}^n x_i \label{eq:s_mean}\\
 S^2 &=& \frac{\sum_{i=1}^n (x_i - \bar x)^2}{n-1} \label{eq:s_var}
 \end{eqnarray}
 
 Un po' di terminologia:
 
-* spesso al posto della varianza campionaria si usa la sua radice quadrata, detta *deviazione standard*: $S_x=\sqrt{S^2_x}$; essa ha il vantaggio di avere le stesse unità di misura della variabile stocastica base.
-* media e varianza campionaria sono chiamate *stimatori* per la popolazione
-* un singolo valore assunto da uno stimatore è chiamato *stima*
-* uno stimatore è anche chiamato *statistica*, cioè la media campionaria è una statistica della popolazione di riferimento
+-   spesso al posto della varianza campionaria si usa la sua radice
+    quadrata, detta **deviazione standard**: $S_x=\sqrt{S^2_x}$; essa ha
+    il vantaggio di avere le stesse unità di misura della variabile
+    stocastica base.
+-   media e varianza campionaria sono chiamate **stimatori** per la
+    popolazione
+-   un singolo valore assunto da uno stimatore è chiamato **stima**
+-   uno stimatore è anche chiamato **statistica**, cioè la media
+    campionaria è una statistica della popolazione di riferimento
 
-Si noti che nelle Eqq. (\ref{eq:s_mean}--\ref{eq:s_var}) i valori $x_i$ sono *estratti casualmente* dalla popolazione. Di conseguenza, le stime campionarie assumono variabili differenti per campioni differenti e---dato che la differenza tra due campioni è casuale---di conseguenza anche le stime campionarie (media e varianza) sono delle variabili stocastiche.
+Si noti che nelle Eqq. (\ref{eq:s_mean}--\ref{eq:s_var}) i valori $x_i$
+sono *estratti casualmente* dalla popolazione. Di conseguenza, le stime
+campionarie assumono variabili differenti per campioni differenti
+e---dato che la differenza tra due campioni è casuale---di conseguenza
+anche le stime campionarie (media e varianza) sono delle variabili
+stocastiche.
 
 ```{r include=FALSE}
 N <- 5000
@@ -186,7 +298,6 @@ n <- c(20, 500)
 mu <- 10
 ns <- 50
 ```
-
 
 ```{r rand_mean, echo=FALSE, fig.margin=T, fig.cap=glue("Media campionaria come variabile casuale: {ns} campioni di {n[1]} elementi (quadrati chiari) o {n[2]} elementi (cerchi scuri) estratti da una popolazione di {N} elementi. La linea media rappresenta il valore atteso della popolazione")}
 set.seed(123)
@@ -205,51 +316,827 @@ tibble(i=samples, m=m) %>% ggplot() +
   labs(x="# campione", y=TeX("$\\bar{x}_i$"))
   
 ```
-Come si vede in Fig. \ref{fig:rand_mean}, ripetendo la stima della media su diversi campioni si ottiene decisamente una variabile casuale. Inoltre, è anche evidente che più grande è il campione (`r n[2]` contro `r n[1]` elementi), più ridotta è la varianza dello stimatore media attorno al valore atteso della popolazione. Si parla in questo caso di *convergenza in distribuzione* dello stimatore al parametro della popolazione che esso stima. 
-Un ragionamento analogo vale ovviamente per la varianza campionaria: è una variabile casuale che converge in distribuzione alla varianza della popolazione.
 
-Dato che la media campionaria è una variabile casuale, è naturale chiedersi, a questo punto, quale siano *il valore atteso e la varianza della media campionaria*. Risulta rispettivamente:
-\begin{eqnarray}
+Come si vede in Fig. \ref{fig:rand_mean}, ripetendo la stima della media
+su diversi campioni si ottiene decisamente una variabile casuale.
+Inoltre, è anche evidente che più grande è il campione (`r n[2]` contro
+`r n[1]` elementi), più ridotta è la varianza dello stimatore media
+attorno al valore atteso della popolazione. Si parla in questo caso di
+*convergenza in distribuzione* dello stimatore al parametro della
+popolazione che esso stima. Un ragionamento analogo vale ovviamente per
+la varianza campionaria: è una variabile casuale che converge in
+distribuzione alla varianza della popolazione.
+
+Dato che la media campionaria è una variabile casuale, è naturale
+chiedersi, a questo punto, quale siano *il valore atteso e la varianza
+della media campionaria*. Risulta rispettivamente: \begin{eqnarray}
 \mathrm E(\bar x) &=& \mathrm E(\frac{x_1+x_2+\dots+x_n}{n}) = \frac{1}{n}\left[\mathrm E(x_1+x_2+\dots+x_n) \right]\\
 &=& \frac{1}{n}\left[\mathrm E(x_1)+\mathrm E(x_2)+\dots+\mathrm E(x_n) \right] = \frac{1}{n} n\mathrm E(x) \\
 \mathrm E(\bar x)&=& \mu
-\end{eqnarray}
-e:
-\begin{eqnarray}
+\end{eqnarray} e: \begin{eqnarray}
 \mathrm V(\bar x) &=& \mathrm V(\frac{x_1+x_2+\dots+x_n}{n}) = \frac{1}{n^2}\left[\mathrm V(x_1+x_2+\dots+x_n) \right]\\
 &=& \frac{1}{n^2}\left[\mathrm V(x_1)+\mathrm V(x_2)+\dots+\mathrm V(x_n) \right] = \frac{n\mathrm V(x)}{n^2} = \frac{\mathrm V(x)}{n} \\
 \mathrm V(\bar x) &=& \frac{s_x^2}{n} \label{eq:var_mean}
 \end{eqnarray}
 
-In particolare, la Eq. (\ref{eq:var_mean}) è di particolare importanza, soprattutto nel campo delle misure, e può essere riassunta come $s_{\bar x}=s_x/\sqrt{n}$, cioè la deviazione standard della media campionaria è uguale alla deviazione standard campionaria diviso la radice quadrata del numero di campioni.
+In particolare, la (\ref{eq:var_mean}) è di particolare importanza,
+soprattutto nel campo delle misure, e può essere riassunta come
+$s_{\bar x}=s_x/\sqrt{n}$, cioè la deviazione standard della media
+campionaria è uguale alla deviazione standard campionaria diviso la
+radice quadrata del numero di campioni.
+
 ```{marginfigure}
-Esistono altri stimatori del valore atteso: ad esempio la *mediana* (valore maggiore della metà delle osservazioni totali) e la *moda* (l'elemento osservato più di frequente). Tuttavia si dimostra che la media campionaria sia lo stimatore con varianza minima.
+Esistono altri stimatori del valore atteso: ad esempio la **mediana** (valore maggiore della metà delle osservazioni totali) e la **moda** (l'elemento osservato più di frequente). Tuttavia si dimostra che la media campionaria sia lo stimatore con varianza minima.
 ```
 
-Come ultima nota, quando si fa riferimento a stimatori o statistiche, si parla del loro *numero di gradi di libertà* (o DoF, *Degrees of Freedom*). I gradi di libertà di una statistica sono il numero di elementi *indipendenti* che compaiono nella sua definizione. È particolarmente interessante il caso della varianza: dalla sua definizione risulta che
-\[
+Come ultima nota, quando si fa riferimento a stimatori o statistiche, si
+parla del loro **numero di gradi di libertà** (o DoF, *Degrees of
+Freedom*). I gradi di libertà di una statistica sono il numero di
+elementi *indipendenti* che compaiono nella sua definizione. È
+particolarmente interessante il caso della varianza: dalla sua
+definizione risulta che $$
 \sigma^2=E\left(\frac{\sum(x_i - \bar x)^2}{n-1}\right)=E\left(\frac{SS}{\nu}\right)
-\]
-dove $\nu=n-1$ è il numero di gradi di libertà della statistica al numeratore, $SS$, chiamata *somma quadratica* (*Sum of Squares*). Cioè la varianza è il valore atteso della somma quadratica divisa per il suo numero di gradi di libertà, cioè di elementi indipendenti. Che questi ultimi siano $n-1$ è dimostrato dalla seguente relazione:
-\[
+$$ dove $\nu=n-1$ è il numero di gradi di libertà della statistica al
+numeratore, $SS$, chiamata **somma quadratica** (*Sum of Squares*). Cioè
+la varianza è il valore atteso della somma quadratica divisa per il suo
+numero di gradi di libertà, cioè di elementi indipendenti. Che questi
+ultimi siano $n-1$ è dimostrato dalla seguente relazione: $$
 \sum_{i=1}^n(x_i-\bar x) = \sum_{i=1}^n(x_i)-n\bar x=:0
-\]
-dove l'ultima uguaglianza è per definizione di $\bar x$. Quest'ultima relazione ci dice che non tutti gli $n$ elementi nella definizione di $SS$ possono essere indipendenti, dato che il valore di uno di essi è prevedibile dai restanti $n-1$ grazie alla definizione di $\bar x$
+$$ dove l'ultima uguaglianza è per definizione di $\bar x$. Quest'ultima
+relazione ci dice che non tutti gli $n$ elementi nella definizione di
+$SS$ possono essere indipendenti, dato che il valore di uno di essi è
+prevedibile dai restanti $n-1$ grazie alla definizione di $\bar x$
+
 ```{marginfigure}
 È evidente che la differenza tra $n$ e $n-1$ gradi di libertà tende a zero all'aumentare della dimensione del campione. Nei fatti, tale differenza diventa praticamente inefficace per campioni con più di 50--100 elementi. Per piccoli campioni, tuttavia, la differenza è senz'altro significativa.
 ```
-Si noti che se il valore atteso $\mu_x$ è noto possiamo sostituirlo alla sua stima $\bar x$ nell'espressione dello scarto quadratico. In tal caso tutti gli elementi della somma quadratica sono indipendenti e la formula per il calcolo della varianza campionaria diventa:
-\[
+
+Si noti che se il valore atteso $\mu_x$ è noto possiamo sostituirlo alla
+sua stima $\bar x$ nell'espressione dello scarto quadratico. In tal caso
+tutti gli elementi della somma quadratica sono indipendenti e la formula
+per il calcolo della varianza campionaria diventa: $$
 S^2 = \frac{\sum(x_i - \mu_x)^2}{n},~~~\textrm{con }\nu=n
-\]
-dato che 
-\[
+$$ dato che $$
 \sum_{i=1}^{n}(x_i-\mu_x)=\sum_{i=1}^{n}(x_i)-n\mu_x\neq 0
-\]
-Il concetto di gradi di libertà sarà molto usato nei prossimi capitoli.
+$$ Il concetto di gradi di libertà sarà molto usato nei prossimi
+capitoli.
 
 # Distribuzioni
 
-## Distribuzioni discrete
+`r newthought('Valore atteso e varianza')` non sono le uniche due
+proprietà di una popolazione. È evidente, infatti, che due popolazioni
+pur avendo gli stessi parametri valore atteso e varianza possono avere
+*forme* differenti, come mostrato in Fig. \ref{fig:distrib1}.
 
-## Distribuzioni continue
+```{r include=FALSE}
+N <- 1000
+k <- 20
+```
+
+```{r distrib1, echo=FALSE, fig.margin=T, fig.cap=glue("Confronto tra due popolazioni di {N} elementi con uguale valore atteso {k} e varianza {2*k}, ma diversa forma, o distribuzione")}
+a <- -sqrt(6*k) + k
+b <- sqrt(6*k) + k
+
+tibble(pop1=runif(N, a, b), pop2=rchisq(N, k)) %>%
+  pivot_longer(cols=1:2, names_to="pop", values_to="value") %>% 
+  add_column(i=1:(2*N), .before="pop") %>%
+  arrange(pop) %>%
+  add_column(ig=1:(2*N), .after="i") %>%
+  ggplot() + 
+  geom_point(aes(x=ig, y=value, col=pop, shape=pop)) +
+  labs(x="indice", y="valore", color="popolazione") +
+  scale_shape(name="popolazione") 
+```
+
+La forma assunta dai valori di una popolazione è chiamata
+**distribuzione**. Si dice quindi che le due popolazioni in
+Fig. \ref{fig:distrib1} hanno differenti distribuzioni, o che *sono
+distribuite in maniera differente*.
+
+Per una ampia varietà di fenomeni è possibile dare una descrizione
+matematica della distribuzione assunta dai valori casuali che essi
+generano. Queste funzioni di distribuzione sono classificate
+principalmente per *tipo* di variabile casuale: a valori discreti oppure
+a valori continui.
+
+# Distribuzioni discrete
+
+`r newthought('Le distribuzioni discrete')` descrivono variabili
+stocastiche a valori discreti, cioè che possono assumere solo valori
+nell'insieme dei numeri interi o, comunque, associabili ad essi.
+Tipicamente, hanno a che fare con un conteggio.
+
+## Distribuzione binomiale, o di Bernoulli
+
+È la distribuzione di un **processo di Bernoulli**, ovvero una serie di
+$n$ eventi con risultati $z_1, z_2, \dots, z_n$ tali per cui:
+
+-   gli eventi $z_i$ sono tutti *indipendenti*, cioè non si influenzano
+    a vicenda
+-   il risultato $z_i$ di un evento può assumere solo due valori
+    alternativi (successo/fallimento, vero/falso, testa/croce, ...) ed è
+    quindi rappresentabile con 0 o con 1
+-   la probabilità di successo $p_s\in(0,1)$ di ciascun evento è
+    costante
+
+```{marginfigure}
+Ad esempio, una sequenza di lanci di una moneta, con risultato testa o croce con probabilità uguale e costante, è un processo di Bernoulli.
+```
+
+Dato il numero di eventi $n$ il risultato di un processo di Bernoulli
+può quindi essere un qualunque valore intero compreso tra 0 (tutti
+fallimenti) e $n$ (tutti successi). La **distribuzione binomiale**
+descrive la probabilità di ottenere un risultato per ciascun intero
+nell'intervallo $[0,n]$. In formule, il risultato è \begin{equation}
+x = z_1 + z_2 + \dots +z_n
+\end{equation} e si dice che $x$ è distribuita come una binomiale con
+parametri $n$ e $p_s$: \begin{equation}
+x\sim\mathrm{Binom}(n,p_s)
+\end{equation} scritto anche come \begin{equation}
+x\sim\mathcal{B}(n,p_s)
+\end{equation} quando la sua funzione di distribuzione è (vedi
+Fig. \ref{fig:binom}): \begin{equation}
+p(x)=\binom{n}{x}p_s^x(1-p_s)^{n-x},~~~x\in{0,1\dots,n}
+\end{equation}
+
+```{r binom, echo=F,fig.margin=T, fig.cap="PDF della distribuzione binomiale $\\mathcal{B}(20, 0.5)$"}
+tibble(q=0:20, p=dbinom(q, 20, 0.5)) %>%
+  ggplot(aes(x=q, y=p)) + 
+  geom_col(width=0.1) +
+  geom_point() +
+  labs(x=TeX("x"), y=TeX("p(x)"))
+```
+
+Si noti che queste definizioni rispettano la (\ref{eq:sum_one}),
+infatti: \begin{equation}
+1 = (p_s+(1-p_s))^n = \sum_{k=0}^n \binom{n}{k}p_s^k(1-p_s)^{n-k}
+\end{equation}
+
+Il **valore atteso** e la **varianza** della distribuzione di Bernoulli
+sono: \begin{equation}
+\mu=np_s,~~~\sigma^2=np_s(1-p_s)
+\end{equation}
+
+## Distribuzione di Poisson
+```{marginfigure}
+Si noti che l'intervallo di riferimento non deve essere necessariamente temporale. Ad esempio, la d. di Posson si applica alla distribuzione di difetti su una data lunghezza di filo di ferro, sapendo che il nuero medio di difetti per la stessa lunghezza è $\lambda$.
+Di seguito, con $\mathbb{N}^+$ e $\mathbb{R}^+$ intendiamo gli **insiemi dei numeri naturali e reali incluso lo 0**, rispettivamente.
+```
+
+La distribuzione di Poisson è una distribuzione discreta che esprime le
+probabilità di avere un numero $x\in\mathbb{N}^+$ di eventi che si
+verificano successivamente ed indipendentemente in un dato intervallo di
+tempo, sapendo che mediamente se ne verifica un numero
+$\lambda\in\mathbb{R}^+$ nello stesso intervallo. È nota anche come
+**legge degli eventi rari**.
+
+
+```{r pois, echo=F,fig.margin=T, fig.cap="PDF della distribuzione di Poisson $\\mathcal{P}(5)$"}
+tibble(q=0:20, p=dpois(q, 5)) %>%
+  ggplot(aes(x=q, y=p)) + 
+  geom_col(width=0.1) +
+  geom_point() +
+  labs(x=TeX("x"), y=TeX("p(x)"))
+```
+
+Si dice che $x\sim\mathrm{Poisson}(\lambda)$ oppure
+$x\sim\mathcal{P}(\lambda)$ quando la sua funzione di distribuzione è
+(vedi Fig. \ref{fig:pois}): \begin{equation}
+p(x)=\frac{e^{-\lambda}\lambda^x}{x!},~~~\forall x\in\mathbb{N}^+
+\end{equation}
+
+Il **valore atteso** e la **varianza** della distribuzione di Poisson
+sono: \begin{equation}
+\mu=\lambda,~~~\sigma^2=\lambda
+\end{equation}
+
+In genere, dimostra che la distribuzione di Poisson è il limite della
+distribuzione di Bernoulli: \begin{equation}
+\lim_{n \to +\infty} \mathcal{B}(n, \lambda/n) = \mathcal{P}(\lambda)
+\end{equation} Cioè una distribuzione di Poisson con parametro
+$\lambda=np$ approssima una distribuzione binomiale a parametri $(n, p)$
+quando il numero di osservazioni diventa sufficientemente grande (in
+pratica, $n>100$).
+
+## Distribuzione geometrica
+
+Considerando un processo di Bernoulli, anziché valutare la probabilità
+di ottenete un certo numero di successi ci possiamo chiedere quale sia
+la probabilità di ottenere un successo dopo una serie di fallimenti
+$x \in \mathbb{N}^+$. La distribuzione di probabilità risultante si
+chiama **distribuzione geometrica**.
+
+```{r geom, echo=F,fig.margin=T, fig.cap="PDF della distribuzione geometrica $\\mathcal{G}(0.1)$"}
+tibble(q=0:20, p=dgeom(q, 0.1)) %>%
+  ggplot(aes(x=q, y=p)) + 
+  geom_col(width=0.1) +
+  geom_point() +
+  labs(x=TeX("x"), y=TeX("p(x)"))
+```
+
+Si dice che $x\sim\mathrm{Geom}(p_s)$ oppure $x\sim\mathcal{G}(p_s)$,
+essendo $p_s$ la probabilità di successo di un singolo evento, quando la
+sua funzione di distribuzione è (vedi Fig. \ref{fig:geom}):
+\begin{equation}
+p(x)=p_s(1-p_s)^{x-1},~~~x \in\mathbb{N}^+
+\end{equation}
+
+Ovviamente, $p(0)=p_s$, cioè la probabilità di zero fallimenti è uguale
+alla probabilità di successo al primo tentativo.
+
+Il **valore atteso** e la **varianza** della distribuzione geometrica
+sono: \begin{equation}
+\mu=(1-p_s)/p_s,~~~\sigma^2=(1-p_s)/p_s^2
+\end{equation}
+
+# Distribuzioni continue
+
+`r newthought('Le distribuzioni continue')` descrivono variabili
+stocastiche a valori continui, cioè che possono assumere solo valori
+nell'insieme dei numeri reali. Tipicamente, le variabili continue sono
+il risultato di una misurazione.
+
+## Distribuzione uniforme
+
+In realtà, la distribuzione uniforme può essere propria sia di variabili
+discrete che di variabili continue, e descrive la condizione in cui
+tutti i valori ammessi per la variabile casuale in oggetto sono
+ugualmente probabili.
+
+```{r unif, echo=F,fig.margin=T, fig.cap="PDF della distribuzione uniforme $\\mathcal{U}(2,4)$. L'area sottesa alla curva vale 1"}
+tibble(q=seq(0,6,0.01), p=dunif(q, 2,4)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_step(direction = "mid") +
+  labs(x=TeX("x"), y=TeX("f(x)"))
+```
+
+Si dice che $x\sim\mathcal{U}(a,b)$ quando la sua funzione di
+distribuzione è (vedi Fig. \ref{fig:unif}): \begin{equation}
+f(x)=\begin{cases}
+1/(b-a),&x\in[a, b] \\
+0,&\textrm{altrimenti}
+\end{cases}
+\end{equation}
+
+Il **valore atteso** e la **varianza** della distribuzione uniforme
+sono: \begin{equation}
+\mu=(b+a)/2,~~~\sigma^2=\frac{(b-a)^2}{12}
+\end{equation}
+
+## Distribuzione normale, o Gaussiana
+
+La distribuzione normale è una delle distribuzioni più comuni in virtù
+del **teorema del limite centrale**. Rappresenta il caso in cui la
+probabilità di riscontrare valori via via più lontani dal valore atteso
+decresce asintoticamente a 0.
+
+Si dice che $x\sim\mathcal{N}(\mu, \sigma^2)$ quando la sua funzione di
+distribuzione è (vedi Fig. \ref{fig:normal}): \begin{equation}
+f(x) =\frac{1}{\sigma \sqrt{2 \pi}}e^{-\frac{1}{2}\left[\frac{x-\mu}{\sigma}\right]^2}
+\end{equation}
+
+```{r normal, echo=F,fig.margin=T, fig.cap="PDF della distribuzione normale $\\mathcal{N}(0,1)$. L'area sottesa alla curva vale 1"}
+tibble(q=seq(-3.5,3.5,0.01), p=dnorm(q, 0, 1)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_step(direction = "mid") +
+  labs(x=TeX("x"), y=TeX("f(x)"))
+```
+
+Il **valore atteso** e la **varianza** della distribuzione normale sono
+ovviamente i due parametri $\mu$ e $\sigma^2$, rispettivamente.
+
+È molto comune l'operazione di **standardizzazione**: se
+$x\sim\mathcal{N}(\mu, \sigma^2)$ allora \begin{equation}
+\frac{x-\mu}{\sigma}\sim\mathcal{N}(0,1)
+\end{equation} e la distribuzione $\mathcal{N}(0,1)$ è detta **normale
+standard**.
+
+Come sopra anticipato, vale il seguente
+
+```{=tex}
+\begin{thm}[del Limite Centrale]
+Se $x_1, x_2, \dots,x_n$ sono $n$ variabili casuali indipendenti e identicamente distribuite (IID) con $E(x_i)=\mu$ e $V(x_i)=\sigma^2~~\forall i\in\{1,2,\dots,n\}$ (entrambi finiti), e $y=x_1+x_2+\dots+x_n$, allora:
+\[
+z_n=\frac{u-n\mu}{\sqrt{n\sigma^2}}
+\]
+approssima una distribuzione $\mathcal{N}(0,1)$, nel senso che se $F_n(z)$ è la funzione di distribuzione di $z_n$ e $\Phi(z)$ è la funzione di distribuzione di $\mathcal{N}(0,1)$, allora:
+\[
+\lim_{n\rightarrow+\infty}\frac{F_n(z)}{\Phi(z)}=1
+\]
+\end{thm}
+```
+
+```{marginfigure}
+Il teorema del limite centrale è di fondamentale importanza soprattutto nell'ambito delle misure: infatti, siccome possiamo assumere che il risultato di una misurazione dipenda da numerose variabili aleatorie e ne sia in qualche modo la somma; di conseguenza, più una misurazione è complessa e più le misure risultanti saranno distribuite in maniera normale. Ciò vale sia come predizione che come giustificazione di un'osservazione pratica: di fatto, la grande maggioranza delle misure è distribuita normalmente; quando non lo è tipicamente significa che è affetta da fenomeni indesiderati (ad esempio, un risultato oscillante dovuto alla competizione alternata di due fenomeni distinti).
+```
+
+Il teorema dice che la distribuzione normale gioca un ruolo centrale tra
+le altre distribuzioni perché è il limite a cui esse---quali che
+siano---tendono quando sono sommate in numero sufficientemente ampio. Si
+noti anche che le ipotesi che le distribuzioni sommande siano IID e
+abbiano uguali parametri sono comunque deboli, nel senso che
+rimuovendole si ritarda la convergenza ma, all'atto pratico, il
+risultato rimane lo stesso.
+
+## Distribuzione Chi quadro
+
+L'operazione di standardizzazione sopra descritta per la distribuzione
+normale sfrutta l'assunto che una distribuzione non cambi in seguito a
+operazioni di scalatura o traslazione. Cioè, moltiplicando o sommando
+una costante (quali sono $\mu$ o $\sigma^2$) ad una variabile casuale,
+la sua distribuzione non cambia (anche se cambiano i suoi parametri!).
+
+Lo stesso non può dirsi vero quando si sommano o moltiplicano variabili
+casuali: in questi casi la distribuzione risultante è diversa non sono
+nei parametri, ma anche nella forma.
+
+Ad esempio, consideriamo la variabile casuale
+$x = z_1^2+z_2^2+\dots+z_k^2$, con
+$z_i\sim\mathcal(N)(0,1)~~\forall i\in\{1, 2, \dots,k\}$. Allora risulta
+che $x\sim\mathcal{X}^2_k$ con la funzione di distribuzione (vedi
+Fig. \ref{fig:chisq2}): \begin{equation}
+f(x)=\frac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}e^{-y/2}
+\end{equation}
+
+```{r chisq2, echo=F,fig.margin=T, fig.cap="PDF della distribuzione Chi quadro $\\mathcal{X}^2_{10}$. L'area sottesa alla curva vale 1"}
+tibble(q=seq(-0,40,0.1), p=dchisq(q, 10)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_step(direction = "mid") +
+  labs(x=TeX("x"), y=TeX("f(x)"))
+```
+
+Il **valore atteso** e la **varianza** della distribuzione Chi quadro
+sono: \begin{equation}
+\mu=k,~~~\sigma^2=2k
+\end{equation}
+quindi, all'aumentare di $k$ il picco della funzione di distribuzione si sposta a destra, si allarga e (per mantenere l'area costante) si abbassa.
+
+Il parametro $k$ è anche chiamato *numero di gradi di libertà*. Inoltre,
+è opportuno ricordare il seguente lemma, che sarà utile più oltre:
+
+```{=tex}
+\begin{lem}
+Considerando la somma quadratica di un campione di $n$ elementi $y_i$, ciascuno proveniente da una distribuzione $\mathcal{N}(\mu, \sigma^2)$, risulta che:
+\[
+\frac{(y_i-\bar y)^2}{\sigma^2}\sim \mathcal{N}(0,1)~~\forall i\in\{1,2,\dots,k\}
+\]
+e quindi:
+\[
+\frac{\mathit{SS}}{\sigma^2}=\frac{\sum_{i=1}^n(y_i-\bar y)^2}{\sigma^2} \sim \mathcal{X}^2_{n-1}
+\]
+\end{lem}
+```
+
+## Distribuzione T di Student
+```{r student, echo=F,fig.margin=T, fig.cap="PDF della distribuzione T di Stuent $t_{3}$. L'area sottesa alla curva vale 1. La curva tratteggiata è la PDF di $\\mathcal{N}(0,1)$"}
+tibble(q=seq(-3.5,3.5,0.1), p=dt(q, 3), n=dnorm(q, 0, 1)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_line() +
+  geom_line(aes(x=q, y=n),lty=2) +
+  labs(x=TeX("x"), y=TeX("f(x)"))
+```
+Un'altra composizione di variabili casuali di interesse è il caso in cui si considerino una normale e una Chi quadro nei seguenti termini:
+\begin{equation}
+x=\frac{z}{\sqrt{x/k}},~~~z\sim\mathcal{N}(0,1),~x\sim\mathcal{X}^2_k
+\end{equation}
+allora $x$ risulta distribuita come una T di Student con $k$ gradi di libertà $x\sim t_k$, e con funzione di densità di distribuzione (vedi Fig. \ref{fig:student}):
+\begin{equation}
+f(x)=\frac{\Gamma\left((k-1)/2\right)}{\sqrt{k\pi}\Gamma(k/2)}\frac{1}{((x^2/k)+1)^{(k+1)/2}}
+\end{equation}
+
+Il **valore atteso** e la **varianza** della distribuzione normale sono
+0 e $k/(k-2)$, rispettivamente.
+
+Si dimostra che la T di Student è un caso particolare della $\mathcal{N}(0,1)$:
+\begin{equation}
+\lim_{k\rightarrow+\infty}t_k=\mathcal{N}(0,1)
+\end{equation}
+In realtà tale convergenza è molto rapida, e già per $k>30$ la differenza tra le due funzioni di distribuzione diventa trascurabile nelle applicazioni pratiche.
+
+## Distribuzione F di Snedecor
+Infine, per le applicazioni che vedremo nei prossimi capitoli è di interesse la distribuzione del rapporto tra due variabili casuali distribuite come Chi quadro. Se si hanno due variabili casuali $x_u\sim\mathcal{X}^2_u$ e $x_v\sim\mathcal{X}^2_v$ e si definisce $x$ come:
+\begin{equation}
+x=\frac{x_u/u}{x_v/v}
+\end{equation}
+allora
+```{r snedecor, echo=F,fig.margin=T, fig.cap="PDF della distribuzione F di Snedecor $\\mathcal{F}_{10,10}$. L'area sottesa alla curva vale 1"}
+tibble(q=seq(0,5,0.01), p=df(q, 10,10)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_line() +
+  labs(x=TeX("x"), y=TeX("f(x)"))
+```
+\begin{equation}
+x\sim\mathcal{F}_{u,v}
+\end{equation}
+è una cariabile casuale distribuita come una F di Snedecor, con funzione di distribuzione (vedi Fig. \ref{fig:snedecor}):
+\begin{equation}
+f(x)=\frac{\Gamma\left(\frac{u+v}{2}\right)\left(\frac{u}{v}\right)^{u/2}x^{(u/2)-1}}{\Gamma\left( \frac{u}{2} \right)\Gamma\left( \frac{v}{2} \right) \left(\frac{u}{v}x+1\right)^{(u+v)/2}}.
+\end{equation}
+
+# Funzioni di distribuzione
+Per ogni distribuzione *continua* è possibile calcolare e rappresentare tre funzioni di riferimento per rappresentarne la forma (vedi Fig. \ref{fig:distfunc}):
+
+1. la funzione **densità di distribuzione** (*Probability Density Function*, PDF), $f(x)$, vista nelle sezioni precedenti
+2. la funzione **di ripartizione** (*Cumulative Distribution Function*, CDF), $F(x)$, che è l'integrale della PDF
+3. la funzione **quantile**, $F^{-1}(x)$, che è l'inverso della CDF
+
+In particolare, è possibile definire due funzioni di ripartizione: cosiddette **coda inferiore** (*lower tail*) e **coda superiore** (*upper tail*):
+\begin{eqnarray}
+F_-(x) &=& \int_{-\infty}^x f(\xi)d\xi \\
+F_+(x) &=& \int^{+\infty}_x f(\xi)d\xi
+\end{eqnarray}
+Le quali hanno le corrispondenti inverse (funzione quantile superiore e inferiore) $F_-^{-1}(x)$ e $F_+^{-1}(x)$
+
+```{r distfunc, echo=F,fig.margin=T, fig.cap="Funzioni di ripartizione inferiore e superiore e funzione di densità della distribuzione $\\mathcal{N}(0,1)$"}
+tibble(
+  q=seq(-3.5,3.5,0.01), 
+  p=dnorm(q, 0, 1),
+  cu=pnorm(q, 0, 1, lower.tail=F),
+  cl=pnorm(q, 0, 1, lower.tail=T)) %>%
+  ggplot(aes(x=q, y=p)) +
+  geom_area(fill=gray(0.75)) +
+  geom_line() +
+  geom_line(aes(x=q, y=cu, color="superiore")) +
+  geom_line(aes(x=q, y=cl, color="inferiore")) +
+  labs(x=TeX("x"), y=TeX("f(x)"), color="CDF")
+```
+
+Per le *distribuzioni discrete*, si parla di *funzione di probabilità* $p(x),~x\in\mathbb{N}$, che restituisce la probabilità di un dato valore $x$. Le funzioni di ripartizione sono definite ovviamente mediante sommatorie anziché integrali (e risultano funzioni a gradino, con salti in corrispondenza dei numeri naturali).
+
+Nel caso delle *distribuzioni continue* la $f(x)$ non restituisce la probabilità di un valore, bensì la *densità di probabilità* in quell'intorno.
+Ne consegue che per distribuzioni continue non è possibile calcolare la probabilità di un unico valore esatto, dato che per un intorno di ampiezza nulla, la probabilità è nulla quale che sia la densità. È invece possibile calcolare la probabilità di ottenere un valore in un dato intervallo $(a,b)$:
+\begin{equation}
+P(a\leq x\leq b) = \int_a^b f(\xi)d\xi
+\end{equation}
+
+Ne consegue che le funzioni di ripartizione sono molto più utili per distribuzioni continue che per distribuzioni discrete, in quanto possono essere utilizzate per calcolare la probabilità di ottenere un valore inferiore (o superiore) ad un certo valore, oppure la probabilità di ottenere un valore in un intervallo:
+\begin{eqnarray}
+P(x\leq a) &=& F_-(a) \\
+P(x\geq a) &=& F_+(a) \\
+P(a\leq x\leq b) &=& F_-(a) - F_-(b) = F_+(b)-F_+(a)
+\end{eqnarray}.
+
+Infine, la funzione quantile mi dà il valore della variabile casuale (continua o discreta che sia) maggiore o uguale ad una data frazione del totale (minore o uguale per la coda bassa). Ad esempio, il quantile di 0.5 mi restituisce il valore, in una data popolazione o campione, maggiore o uguale della metà di tutte le osservazioni, e corrisponde quindi alla **mediana**.
+
+
+# Statistica descrittiva con R
+`r newthought('Il linguaggio R dispone')` di un'ampia selezione di funzioni per trattare e generare variabili casuali per tutte le distribuzioni sopra elencate, più molte altre. Nella prossima sezione vedremo come utilizzare queste funzioni per generare numeri casuali secondo la distribuzione desiderata, oppure come calcolare la funzione di distribuzione, di ripartizione o il quantile. Successivamente, vedremo come generare campioni e come calcolare le stime più utilizzate.
+
+Si noti che nei prossimi capitoli utilizzeremo le funzioni base per la realizzazione dei grafici, mentre vedremo più avanti come utilizzare le funzioni più evolute della libreria `tidyverse` (@R-tidyverse,@tidyverse2019), con la quale sono stati realizzati i grafici precedenti in questa Parte del corso.
+
+
+
+## Distribuzioni
+Le funzioni di R per gestire le distribuzioni hanno nomi che seguono uno schema comune: `<r|d|p|q><distrib>(x,...)`, dove la prima lettera è:
+
+* `r` per il generatore di numeri casuali; il primo argomento è il numero di valori da generare, seguono i *parametri* della distribuzione
+* `d` per la PDF; il primo argomento è il valore della variabile casuale, seguono i *parametri* della distribuzione
+* `p` per la CDF; il primo argomento è il valore della variabile casuale, seguono i *parametri* della distribuzione, più un argomento per scegliere la coda inferiore (default) o superiore
+* `q` per il quantile: il primo argomento è una probabilità ($\in[0,1]$), seguono i *parametri* della distribuzione, più un argomento per scegliere la coda inferiore (default) o superiore
+
+Alla prima lettera segue il nome della distribuzione, ad esempio:
+
+* `binom` per la binomiale
+* `pois` per Poisson
+* `geom` per la geometrica
+* `unif` per la uniforme
+* `norm` per la normale
+* `chisq` per la Chi quadro
+* `t` per la T di Student
+* `f` per la F di Snedecor
+
+Ad esempio, per generare un vettore di numeri casuali secondo una distribuzione normale:
+```{marginfigure}
+Ricorda: per visualizzare il risultato di un'assegnazione (che normalmente è muta), basta mettere l'assegnazione tra parentesi tonde
+```
+```{r}
+(v <- rnorm(10, 1, 0.1))
+```
+
+È facile verificare che se eseguiamo una seconda volta la stessa assegnazione otteniamo un vettore `v` *diverso*:
+```{r}
+v <- rnorm(10, 1, 0.1)
+v[1:5]
+```
+```{marginfigure}
+I computer non generano veri e propri numeri casuali, ma attingono da sequenze infinite di numeri che hanno la proprietà di non ripetersi mai, in modo che non sia possibile prevedere il numero successivo dall'osservazione dei precedenti (come per le cifre decimali di un numero irrazionale). Per questo motivo si chiamano **numeri pseudo-casuali**. Il **seme** è semplicemente la posizione iniziale nella sequenza da cui si inizia a generare i numeri casuali.
+```
+
+Ciò è dovuto al fatto che le funzioni `r<dist>` creano sequenze di numeri (pseudo-)casuali e quindi ogni volta che sono invocate restituiscono valori differenti, pur se distribuiti secondo la popolazione di riferimento. Se vogliamo rendere la generazione *ripetibile* dobbiamo fissare il **seme** del generatore di numeri casuali, cioè la posizione di partenza nella sequenza. La seguente coppia di comandi restituisce sempre lo stesso vettore `v`:
+```{r}
+set.seed(0)
+(v <- rnorm(10, 1, 0.1))
+```
+
+Dal punto di vista statistico, le funzioni `r<dist>` possono quindi essere viste come un modo per simulare l'estrazione di un campione di data numerosità da una popolazione di riferimento. Un campione può essere *visualizzato* mediante tecniche grafiche, in particolare utilizzando:
+
+* un **grafico a dispersione**, mediante le funzioni `plot()` e `points()`
+* un **istogramma**, mediante la funzione `hist()`
+
+```{marginfigure}
+Consultare l'help in linea delle funzioni per familiarizzare con le numerose opzioni.
+```
+
+
+Un grafico a dispersione riporta i valori del campione in funzione dell'indice dell'osservazione (un intero progressivo), visualizzati come simboli (tipicamente punti):
+
+```{r, fig.margin=F}
+v <- rnorm(100, 1, 1)
+plot(v, typ="p", xlab="indice", ylab="x")
+```
+Se si vogliono aggiungere al grafico ulteriori serie di dati è necessario usare la funzione `points()`. In generale, la logica è che il grafico e la prima serie vengono creati con `plot()`, specificando il tipo di grafico con l'opzione `typ=`, mentre successive serie vengono *aggiunte* con le funzioni `points()` e `lines()`:
+```{r}
+N <- 100
+v1 <- rnorm(N, 5, 1)
+v2 <- rchisq(N, 5)
+plot(v1, typ="p", col="red", ylim=c(0,12), xlab="indice", ylab="x")
+points(v2, col="blue", pch=2)
+```
+
+Tuttavia, quando si hanno più serie è *opportuno* raccogliere i dati in un data frame:
+```{marginfigure}
+Questa *opportunità* può non essere evidente in esempi semplici come quelli riportati. Tuttavia, nei casi reali spesso si ha a che fare con decine di variabili differenti ed è quindi molto più comodo raggrupparle in un data frame: garantisce che tutti i vettori in analisi abbiano la stessa lunghezza e semplifica le operaizoni in importazione ed esportazione su file.
+```
+```{r}
+df <- data.frame(indice=1:N, v1=rnorm(N, 5, 1), v2=rchisq(N, 5))
+str(df)
+plot(df$v1, typ="p", col="red", ylim=c(0,12), xlab="indice", ylab="x")
+points(df$v2, col="blue", pch=2)
+```
+Si noti che `plot()` accetta i dati in tre modi:
+
+* `plot(v)`: grafico a dispersione dei valori di `v` contro la loro posizione nel vettore (indice)
+* `plot(x, y)`: grafico a dispersione di `y` (ordinate) contro `x` (ascisse)
+* `plot(y~x, data=df)`: grafico a dispersione della colonna `y` (ordinate) contro la colonna `x` (ascisse) del data frame `df`
+
+L'ultima versione è quella più flessibile e generica. Quindi, il modo migliore per realizzare il grafico precedente è:
+```{r}
+plot(v1~indice, data=df, 
+     typ="p", 
+     ylim=range(df$v1, df$v2),
+     ylab="x",
+     col="red")
+points(v2~indice, data=df, col="blue", pch=2)
+grid()
+```
+
+Un **istogramma** è un grafico a barre in cui l'altezza di ogni barra è proporzionale al numero di valori osservati che cadono nell'intervallo corrispondente alla barra stessa. Si ottiene con la funzione `hist()`:
+```{marginfigure}
+Studiare attentamente l'help di `hist()`. In particolare, l'opzione `freq=T` (default) riporta l'altezza delle barre come *conteggio* delle osservazioni, mentre `freq=F` riporta la *densità di frequenza*, cioè il conteggio diviso l'ampiezza della barra. È poi possibile specificare il numeri di barre o addirittura i singoli intervalli con l'opzione `breaks`.
+```
+```{r}
+hist(df$v2,
+     xlab="valori x in v2",
+     ylab="frequenza",
+     main="Istogramma")
+```
+
+Le funzioni di distribuzione (densità, ripartizione e quantile) sono di solito visualizzate con linee continue per le distribuzioni continue o con barre verticali per le discrete. Vediamo alcuni esempi.
+
+Vogliamo studiare la probabilità di ricevere un certo numero di telefonate in un periodo di 10 minuti in un centralino che in media riceve 54 telefonate all'ora:
+```{r}
+df <- data.frame(chiamate=0:20)
+df$prob <- dpois(df$chiamate, 54/6)
+plot(prob~chiamate, data=df, typ="h")
+```
+Quindi la probabilità di ricevere, ad esempio, 10 chiamate è:
+```{r}
+dpois(10, 54/6)
+```
+
+Se nel centralino lavorano 15 persone, potrebbe essere interessante calcolare la probabilità di ricevere *più di 15 telefonate*. Ciò può essere fatto usando la funzione di ripartizione, coda superiore:
+```{marginfigure}
+La curva integrale di una funzione dicreta è solitamente rappresentata a step, mediante l'opzione `typ="s"`.
+
+La funzione `abline()` consente di aggiungere al grafico attivo una retta mediante i suoi parametri `a` (intercetta) e `b` (pendenza), oppure orizzontale con ordinata `h=`, oppure verticale con ascissa `v=`.
+```
+```{r}
+df$prob_cum <- ppois(df$chiamate, 54/6, lower.tail=F)
+plot(prob_cum~chiamate, data=df, typ="s", ylab="probabilità cumulata")
+abline(h=ppois(15, 54/6, lower.tail=F), lty=2, col="red")
+ppois(15, 54/6, lower.tail=F)
+```
+Quindi c'è il `r round(ppois(15, 54/6, lower.tail=F) *100, 2)`% di probabilità che un chiamante trovi occupato.
+
+Analoga è l'applicazione nel caso delle distribuzioni continue. Supponiamo di avere una linea di produzione che ottiene delle barre tonde tornite con un diametro medio di 10 mm e deviazione standard 0.05 mm: qual è la frazione di barre che ci possiamo attendere in una tolleranza di $\pm0.01$ mm?
+```{r}
+m <- 10
+s <- 0.05
+t <- 0.01
+curve(pnorm(x, m, s), from=m-3*s, to=m+3*s)
+abline(v=c(m+t, m-t), lty=2, col=gray(0.5))
+pnorm(m+t, m, s) - pnorm(m-t, m, s)
+```
+
+
+
+La funzione **quantile**, come visto sopra, è l'inversa della funzione di ripartizione e, di conseguenza, è definita solo nell'intervallo $(0, 1)$, con valori infiniti agli estremi:
+```{r}
+x <- seq(0.0001, 0.9999, 0.001)
+plot(x, qnorm(x, 10, 0.1), typ="l",
+     xlab="probabilità cumulata",
+     ylab="x")
+abline(v=c(0, 1), lty=2, col=gray(0.5))
+grid()
+```
+Cioè, ad esempio: data una distribuzione $\mathcal{N}(10, 0.1)$, il numero maggiore dell'80% delle osservazioni è:
+```{r}
+qnorm(0.8, 10, 0.1)
+```
+Tale numero è anche chiamato 0.8 quantile, o *80esimo percentile*.
+
+## Campioni e stimatori
+Nella pratica si ha sempre a che fare con i dati di un campione, molto raramente dell'intera popolazione. Anzi, come si vedrà nella Parte successiva, l'obiettivo è solitamente quello di inferire i parametri della popolazione intera dalle osservazioni condotte su un campione.
+
+Le stesse funzioni di generazione di numeri casuali (utili soprattutto per *simulare* degli esperimenti) producono di fatto un vettore di dati che si può assimilare ad un campione di $n$ elementi o osservazioni o misure.
+
+A volte, tuttavia, è utile poter ridurre le dimensioni di un campione estraendo da esso un ulteriore campione, più piccolo, selezionato in modo casuale. Questa operazione si chiama **ricampionamento** e può essere effettuata mediante la funzione `sample()`:
+```{r}
+v <- rnorm(5000)
+head(v)
+s <- sample(v, size=100)
+head(s)
+```
+In questo caso, `s` è un *campione estratto a caso* da `v` contenente 100 elementi.
+
+È possibile effettuare due tipi di campionamento:
+```{marginfigure}
+La probabilità che un elemento sia estratto più volte scala secondo la distribuzione geometrica. Di conseguenza, per popolazioni molto grandi la differenza tra campionamento in blocco o con reinserimento diventa trascurabile.
+```
+
+* **in blocco**: corrisponde a estrarre tutti gli elementi contemporaneamente, quindi ogni elemento può essere estratto 0 o 1 volta (mai di più); in `sample()` si ottiene con l'opzione `replace=FALSE` (default)
+* **con reinserimento**: ogni elemento, dopo essere stato selezionato, viene re-inserito nella popolazione di partenza, avendo quindi una probabilità non-nulla di essere estratto una seconda volta (o più); n `sample()` si ottiene con l'opzione `replace=TRUE`
+
+
+Se si tralascia la dimensione del campione (secondo argomento), `sample()` restituisce un campione della stessa dimensione del vettore di ingresso, ma con gli elementi in sequenza casuale.
+Inoltre se il primo elemento di `sample()` è un intero positivo $n$ anziché un vettore, la funzione campiona i numeri interi $1, 2,\dots,n$. 
+Da questi ultime due annotazioni consegue che per generare 10 numeri interi casuali (in blocco) si può fare:
+```{r}
+sample(10)
+```
+oppure, per campionare 10 numeri casuali dai primi 100 interi:
+```{r}
+sample(100, 10)
+```
+
+Ciò è molto utile soprattutto in due casi: quando si vuole riordinare in maniera casuale un data frame e quando si vuole ricampionare un intero data frame (anziché un solo vettore).
+Nel primo caso, si procede come segue:
+```{r}
+N <- 100
+df <- data.frame(i=1:N, x=rnorm(N))
+df$y <- df$x ^ 2
+df$i_rnd <- sample(N)
+str(df)
+```
+ed ora basta riordinare `df` secondo la colonna `i_rnd`:
+```{r}
+df <- df[order(df$i_rnd),]
+str(df)
+```
+
+Nel secondo caso è sufficiente una indicizzazione del data frame:
+```{r}
+df_s <- df[sample(N, 10),]
+str(df_s)
+```
+
+Dato che abbiamo introdotto il **concetto di ordinamento**, notiamo che in R ci sono due funzioni base per l'ordinamento: `sort()` e `order()`.
+La prima è dedicata all'ordinamento di vettori e *non funziona sui data frame*:
+```{r}
+(v <- runif(5))
+sort(runif(5), decreasing=T)
+```
+
+La seconda invece funziona anch'essa su vettori, ma anziché restituire i *valori* ordinati, restituisce *gli indici* dei valori ordinati. 
+```{r}
+order(v, decreasing=T)
+```
+Come visto sopra può quindi essere utilizzata per riordinare le righe di un data frame, passando gli indici all'operatore di indicizzazione `[]`.
+
+
+All'inizio di questa Parte si è visto che gli *stimatori* più comunemente utilizzati sono media, varianza, deviazione standard e mediana. A questi, per le variabili discrete si aggiunge la moda (cioè il valore più frequente).
+
+Il calcolo delle prime quattro è abbastanza immediato:
+```{r}
+v = rnorm(50, 3, 0.2)
+mean(v)
+median(v)
+var(v)
+sd(v)^2
+sd(v)
+```
+
+Consultando l'help in linea per queste funzioni troviamo l'opzione `na.rm`: consente di specificare come vogliamo trattare eventuali valori mancanti (`NA`) nel vettore di ingresso:
+```{r}
+v[c(2, 4, 6)] <- NA
+v[1:6]
+mean(v)
+mean(v, na.rm=T)
+```
+
+Il calcolo della moda è meno semplice, dato che non esiste una funzione dedicata. Tuttavia è possibile calcolarla utilizzando la funzione `table()`, che restituisce una tabella che riporta quante volte compare ogni singolo valore in un dato vettore:
+```{marginfigure}
+Qui si usa `sample()` per generare il campione di dati perché abbiamo bisogno di dati proveienti da una popolazione discreta.
+```
+```{r}
+v <- sample(5, size=10, replace=T) + 10
+(tbl <- sort(table(v), decreasing=T))
+```
+
+Il risultato di `table()` è un *vettore nominato*, in cui ogni elemento (il conteggio) ha un nome (il valore conteggiato). I nomi (che sono stringhe) possono essere estratti con la funzione `names()`:
+```{r}
+as.numeric(names(tbl)[1])
+```
+
+```{marginfigure}
+Si noti che in inglese la moda è *mode*; tuttavia la funzione `mode()` è già deinita in R e rappresenta lo *storage mode* di una variabile. Per questo motivo usiamo qui il nome italiano.
+
+Inoltre, si noti che, siccome `table()` è insensibile alla presenza di `NA`, non è ncessario implementare un modo per gestire la presenza di `NA` nel vettore di input.
+```
+Possiamo creare una funzione che riassume questi passaggi:
+```{r}
+moda <- function(x) {
+  t <- sort(table(v), decreasing=T)
+  as.numeric(names(t)[1])
+}
+moda(v)
+v[2] <- NA
+moda(v)
+```
+
+Un altro stimatore molto utile è la funzione `quantile()`: essa consente il calcolo dei **quantili campionari**, cioè i valori maggiori di una data proporzione del campione complessivo.  
+```{marginfigure}
+Come la media campionaria è uno stimatore del valore atteso della popolazione, i quantili campionari sono gli stimatori dei quantili teorici, ottenuti dalla funzione `q<norm|unif|...>()`.
+
+Si noti che `quantile()` riporta le frazioni in percento: in senso stretto, questi valori sono quindi chiamati **percentili**.
+```
+Come default, `quantile()` calcola i **quartili**, cioè i valori che dividono il campione in 4 insiemi della stessa dimensione:
+```{r}
+v <- rnorm(20)
+(q <- quantile(v))
+```
+significa che il `r names(q[2])` degli elementi in `v` è maggiore di `r q[2]`.
+
+Il parametro `probs` può essere un valore qualsiasi o anche un singolo valore:
+```{r}
+quantile(v, 0.99)
+quantile(v, seq(0, 1, 0.2))
+range(v)
+```
+Come mostra il risultato di `range()`, i quantili 0 e 1 (percentili 0% e 100%) rappresentano il minimo e il massimo del vettore, rispettivamente.
+
+Vediamo ora un esempio completo. Vogliamo confrontare, anche graficamente, i parametri di una popolazione con le stime ottenute da un campione. Cominciamo con il generare il campione:
+```{r}
+N <- 100
+m <- 23.5
+s <- 1.2
+df <- data.frame(i=1:N, x=rnorm(N, m, s))
+```
+
+Ora confrontiamo i parametri media e deviazione standad con le stime su un grafico a dispersione:
+```{r}
+m_s = mean(df$x)
+s_s = sd(df$x)
+plot(x~i, data=df, typ="p", ylim=c(-3, +3)*s+m)
+abline(h=(-3:3)*s+m, col="red")
+abline(h=(-1:1)*s_s + m_s, col="green")
+```
+
+Ora confrontiamo la frazione di valori teoricamente compresa tra $\mu\pm3\sigma$, $\mu\pm2\sigma$ e $\mu\pm\sigma$:
+```{r}
+q <- pnorm((3:1)*s+m, mean=m, sd=s) - pnorm((-3:-1)*s+m, mean=m, sd=s)
+names(q) <- c("±3sigma", "±2sigma", "±sigma")
+round(q*100, 1)
+```
+con le corrispondenti quantità campionarie:
+```{r}
+df$bin <- NA
+for (i in 3:1) {
+  df[df$x >= m_s-i*s_s & df$x <= m_s+i*s_s, ]$bin <- i
+}
+q_s <- rev(cumsum(table(df$bin)))
+names(q_s) <- names(q)
+q_s
+```
+
+Confrontiamo ora la funzione di densità di probabilità della popolazione con l'istogramma del campione, che ne è una stima:
+```{r}
+x <- seq(min(df$x), max(df$x), length.out=100)
+hist(df$x, freq=F, 
+     main="", 
+     xlab="x",
+     ylab="densità di probabilità")
+lines(x, dnorm(x, m, s))
+```
+
+
+
+```{r bib, include=FALSE}
+# create a bib file for the R packages used in this document
+knitr::write_bib(c('tidyverse'), file = '1-libs.bib')
+```

@@ -2,10 +2,13 @@
 title:
   Statistica per la Misura
   
-  Parte 1. --- Statistica inferenziale
+  Parte 3. --- Statistica inferenziale
 runningheader: "SpM --- Statistica inferenziale" # only for pdf output
 subtitle: "SpM --- Statistica inferenziale" # only for html output
-author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+author:
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento 
+  ![](by-nc-sa.png){height=5mm}
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:

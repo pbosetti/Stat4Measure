@@ -9,3 +9,6 @@
 *.html
 *_cache
 *_files
+*.bbl
+*.blg
+*.toc

@@ -25,19 +25,7 @@ header-includes:
 
 ```{r setup, include=FALSE}
 library(tufte)
-# hack for setting LaTeX fontsize for code chuncks
-# see https://stackoverflow.com/questions/25646333/code-chunk-font-size-in-rmarkdown-with-knitr-and-latex
-def.chunk.hook  <- knitr::knit_hooks$get("chunk")
-knitr::knit_hooks$set(chunk = function(x, options) {
-  x <- def.chunk.hook(x, options)
-  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
-})
-# invalidate cache when the tufte version changes
-knitr::opts_chunk$set(
-  cache.extra = packageVersion('tufte'),
-  size="small"  
-)
-options(htmltools.dir.version = FALSE)
+source("myfunctions.R")
 ```
 
 # Introduzione
@@ -85,26 +73,26 @@ chiama *RStudio* e la collezione si chiama *Tidyverse*.
 Prima di procedere è quindi necessario installare, in sequenza, R
 (@R-base) ed RStudio (@RStudio).[^1]
 
-L'installazione del solo R fornisce già un'interfaccia grafica con console
-interattiva ed editor per la creazione di script. Tuttavia, si tratta di
-un'interfaccia molto semplice e limitata, per cui si preferisce installare
-*anche* RStudio, un ambiente di sviluppo molto più ricco e moderno. Si noti che
-RStudio **non funziona senza aver prima installato R base**.
-
 [^1]: Inizia con
     [cran.mirror.garr.it/CRAN](https://cran.mirror.garr.it/CRAN/),
     quindi installa
     [rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/).
     Entrambi sono disponibili per Windows, MacOS e Linux.
-    
+
+L'installazione del solo R fornisce già un'interfaccia grafica con
+console interattiva ed editor per la creazione di script. Tuttavia, si
+tratta di un'interfaccia molto semplice e limitata, per cui si
+preferisce installare *anche* RStudio, un ambiente di sviluppo molto più
+ricco e moderno. Si noti che RStudio **non funziona senza aver prima
+installato R base**.
 
 # Primi passi in R
 
 `r newthought('R è nato come linguaggio interattivo')`, in cui
-l'operatore inserisce una serie di espressioni un una *console* e ottiene
-immediatamente la valutazione dell'espressione, una alla volta. Cominciamo
-quindi ad utilizzare R in questa modalità, lanciando RStudio e cliccando nel
-pannello denominato *Console*.
+l'operatore inserisce una serie di espressioni un una *console* e
+ottiene immediatamente la valutazione dell'espressione, una alla volta.
+Cominciamo quindi ad utilizzare R in questa modalità, lanciando RStudio
+e cliccando nel pannello denominato *Console*.
 
 Ogni linguaggio si basa sul concetto di assegnazione, cioè quello di
 salvare un valore in una variabile. In R l'assegnazione si ottiene con
@@ -150,23 +138,25 @@ Quest'ultimo fatto ci dice due cose:
     semplicemente un vettore di lunghezza 1,
 2.  in R, il primo indice di un vettore è 1 (come in MATLAB e non 0 come
     in C/C++ e linguaggi simili).
-    
+
 Le variabili possono contenere valori di tipi, o *classi*, diversi.
 
 # Classi native in R
 
 Il linguaggio R è dotato di 6 classi native, più una:
 
-* **character** - una sequenza di caratteri che formano del testo: `"a"`, `"string"`, `'my text'` * **numeric** - un valore numerico reale: `1`, `0.5` 
-* **integer** - un valore numerico intero: `10L` 
-* **logical** - `TRUE` oppure `FALSE` (abbreviato `T`, `F`) 
-* **complex** - un valore complesso: `3+5i` 
-* **function** - una *funzione*
+-   **character** - una sequenza di caratteri che formano del testo:
+    `"a"`, `"string"`, `'my text'` \* **numeric** - un valore numerico
+    reale: `1`, `0.5`
+-   **integer** - un valore numerico intero: `10L`
+-   **logical** - `TRUE` oppure `FALSE` (abbreviato `T`, `F`)
+-   **complex** - un valore complesso: `3+5i`
+-   **function** - una *funzione*
 
-Oltre a questi sei tipi c'è anche la classe **raw**, che indica una sequenza di
-byte grezzi. Ogni variabile, o *istanza*, di questi tipi è intrinsecamente un
-vettore, con l'eccezione delle classi function e raw. Uno scalare è
-semplicemente un vettore di lunghezza 1.
+Oltre a questi sei tipi c'è anche la classe **raw**, che indica una
+sequenza di byte grezzi. Ogni variabile, o *istanza*, di questi tipi è
+intrinsecamente un vettore, con l'eccezione delle classi function e raw.
+Uno scalare è semplicemente un vettore di lunghezza 1.
 
 ## Valori speciali
 
@@ -179,16 +169,16 @@ generico oggetto, mentre il secondo è riservato a *valori mancanti all'interno
 di una sequenza o vettore*.
 ```
 
-
-* `NA`: valore mancante
-* `NULL`: nullo, niente, non definito
-* `Inf`: infinito
-* `NaN`: *Not a Number*, come ad esempio il risultato di `0/0`
+-   `NA`: valore mancante
+-   `NULL`: nullo, niente, non definito
+-   `Inf`: infinito
+-   `NaN`: *Not a Number*, come ad esempio il risultato di `0/0`
 
 # Vettori
 
-Un vettore può essere creato con la funzione `c()`: essa accetta un numero
-variabile di argomenti, che rappresentano gli elementi del vettore, in ordine:
+Un vettore può essere creato con la funzione `c()`: essa accetta un
+numero variabile di argomenti, che rappresentano gli elementi del
+vettore, in ordine:
 
 ```{marginfigure}
 Le *funzioni* in R sono rappresentate da un *nome* seguito da un elenco tra 
@@ -206,8 +196,8 @@ v2 <- c(5, 6)
 c(v1, v2, 7, 8)
 ```
 
-Spesso è utile creare delle *sequenze ordinate di interi*: ciò può essere 
-ottenuto con l'*operatore* sequenza `:` (due punti):
+Spesso è utile creare delle *sequenze ordinate di interi*: ciò può
+essere ottenuto con l'*operatore* sequenza `:` (due punti):
 
 ```{r}
 (v3 <- 1:10)
@@ -215,32 +205,32 @@ ottenuto con l'*operatore* sequenza `:` (due punti):
 (v4 <- 20:11)
 ```
 
-Se si desidera un passo diverso da 1 è necessario usare la funzione `seq()`:
+Se si desidera un passo diverso da 1 è necessario usare la funzione
+`seq()`:
 
 ```{r}
 (v5 <- seq(1, 10, 0.5))
 ```
 
-Molto utile è anche `seq_along()`, che crea una sequenza da 1 alla lunghezza di
-un altrio vettore:
+Molto utile è anche `seq_along()`, che crea una sequenza da 1 alla
+lunghezza di un altrio vettore:
 
 ```{r}
 seq_along(v5)
 ```
 
-
 ## Coercizione
 
-Quando si mescolano tipi differenti in un vettore, R opera una *coercizione*,
-cioè trasforma i valori in un tipo comune:
+Quando si mescolano tipi differenti in un vettore, R opera una
+*coercizione*, cioè trasforma i valori in un tipo comune:
 
 ```{r}
 c(1L, 7, "2")
 c(T, 0)
 ```
 
-In certi casi la coercizione può essere forzata con la famiglia di funzioni che 
-iniziano con `as.`:
+In certi casi la coercizione può essere forzata con la famiglia di
+funzioni che iniziano con `as.`:
 
 ```{r}
 as.numeric(c("a", "1"))
@@ -263,9 +253,10 @@ della funzione `matrix()`. Come passare queste opzioni alle funzioni
 verrà ilustrato più avanti.
 ```
 
-Quando è necessario creare matrici con più di due dimensioni si usa la 
-funzione `array()`, il cui secondo argomento è un vettore di lunghezza pari al 
-numero di dimensioni e i cui valori sono le lunghezze nelle varie dimensioni:
+Quando è necessario creare matrici con più di due dimensioni si usa la
+funzione `array()`, il cui secondo argomento è un vettore di lunghezza
+pari al numero di dimensioni e i cui valori sono le lunghezze nelle
+varie dimensioni:
 
 ```{r}
 array(1:8, c(2,2,2))
@@ -273,14 +264,16 @@ array(1:8, c(2,2,2))
 
 # Introspezione
 
-Spesso è utile ottenere informazioni su un oggetto: ciò può essere fatto con le
-funzioni di *introspezione*:
+Spesso è utile ottenere informazioni su un oggetto: ciò può essere fatto
+con le funzioni di *introspezione*:
 
-* `mode()`: restituisce lo *storage mode*, cioè il modo in cui R internamente memorizza un dato
-* `typeof()`: restituisce il tipo base
-* `class()`: restituisce la classe di un oggetto; per i tipi base è uguale a `typeof()`)
-* `length()`: restituisce il numero di elementi
-* `attributes()` e `attr()`: restituiscono i *metadati*
+-   `mode()`: restituisce lo *storage mode*, cioè il modo in cui R
+    internamente memorizza un dato
+-   `typeof()`: restituisce il tipo base
+-   `class()`: restituisce la classe di un oggetto; per i tipi base è
+    uguale a `typeof()`)
+-   `length()`: restituisce il numero di elementi
+-   `attributes()` e `attr()`: restituiscono i *metadati*
 
 ```{r}
 typeof(m1)
@@ -288,14 +281,14 @@ class(m1)
 length(m1)
 ```
 
-Come si vede, un oggetto può appartenere a più classi. Vedremo più oltre ciò 
-cosa significa in pratica.
+Come si vede, un oggetto può appartenere a più classi. Vedremo più oltre
+ciò cosa significa in pratica.
 
-Ad ogni oggetto possono essere assegnati dei *metadati*, ossia delle 
-informazioni aggiuntive. Queste informazioni possono appartenere a loro volta ad
-una qualsiasi classe o tipo di R. Inoltre, un oggetto può avere più metadati 
-associati, ognuno con un dato nome. 
-`attributes(x)` restituisce tutti i metadati di `x`, invece `attr(x, "name")`
+Ad ogni oggetto possono essere assegnati dei *metadati*, ossia delle
+informazioni aggiuntive. Queste informazioni possono appartenere a loro
+volta ad una qualsiasi classe o tipo di R. Inoltre, un oggetto può avere
+più metadati associati, ognuno con un dato nome. `attributes(x)`
+restituisce tutti i metadati di `x`, invece `attr(x, "name")`
 restituisce l'attributo di `x` chiamato `"name"`.
 
 ```{marginfigure}
@@ -311,16 +304,16 @@ Per chi viene da altri linguagi di programmazione è bene ricordarsi questa
 differenza.
 ```
 
-In realtà, una matrice o un'array non sono altro che vettori con lo speciale 
-attributo `dim`, che ne specifica le dimensioni:
+In realtà, una matrice o un'array non sono altro che vettori con lo
+speciale attributo `dim`, che ne specifica le dimensioni:
 
 ```{r}
 attributes(m1)
 attr(m1, "dim")
 ```
 
-Le stesse due funzioni sono disponibili anche nella "variante freccia", che 
-consentono di *modificare gli attributi*:
+Le stesse due funzioni sono disponibili anche nella "variante freccia",
+che consentono di *modificare gli attributi*:
 
 ```{r}
 v <- 1:8
@@ -329,6 +322,7 @@ v
 ```
 
 È possibile definire attributi a piacere:
+
 ```{marginfigure}
 La funzione `list()` serve per creare una lista di coppie chiave=valore.
 ```
@@ -340,9 +334,9 @@ attributes(v)
 
 # Funzioni
 
-In R una funzione è una variabile come un'altra, e può quindi essere creata, 
-assegnata ad una variabile, riassegnata successivamente, cancellata. Si dice
-che le funzioni sono *first class object*.
+In R una funzione è una variabile come un'altra, e può quindi essere
+creata, assegnata ad una variabile, riassegnata successivamente,
+cancellata. Si dice che le funzioni sono *first class object*.
 
 Una nuova funzione può essere creata con la keyword `function`:
 
@@ -351,10 +345,11 @@ my_fun <- function(x) x^2
 my_fun(1:5)
 ```
 
-Se il *corpo* della funzione richiede più espressioni, è necessario inserirle 
-dentro un *blocco*, cioè una coppia di `{}`, andando a capo tra una istruzione
-e l'altra. La funzione ritorna automaticamente l'ultima espressione valutata, 
-oppure è possibile restituire esplicitamente un valore con `return()`:
+Se il *corpo* della funzione richiede più espressioni, è necessario
+inserirle dentro un *blocco*, cioè una coppia di `{}`, andando a capo
+tra una istruzione e l'altra. La funzione ritorna automaticamente
+l'ultima espressione valutata, oppure è possibile restituire
+esplicitamente un valore con `return()`:
 
 ```{r}
 my_fun <- function(x) {
@@ -363,36 +358,38 @@ my_fun <- function(x) {
 }
 ```
 
-Come si vede, è spesso utile sfruttare le caratteristiche delle funzioni e degli 
-operatori nativi di R (che, come l'elevazione a potenza `^`, sono 
-*vettorializzati*) per realizzare funzioni a loro volta vettorializate.
+Come si vede, è spesso utile sfruttare le caratteristiche delle funzioni
+e degli operatori nativi di R (che, come l'elevazione a potenza `^`,
+sono *vettorializzati*) per realizzare funzioni a loro volta
+vettorializate.
 
 ```{marginfigure}
 Una funzione è *vettorializzata* quando opera automaticamente su uno scalare o 
 su un vettore, elemento per elemento.
 ```
 
-Dato che una funzione è di fatto una variabile, può essere a sua volta passata
-come argomento ad un'altra funzione:
+Dato che una funzione è di fatto una variabile, può essere a sua volta
+passata come argomento ad un'altra funzione:
 
 ```{r}
 my_apply <- function(x, f) f(x)
 my_apply(10, my_fun)
 ```
 
-In quest'ultimo esempio, `my_apply(10, my_fun)` applica la funzione `my_fun` al
-valore `10`.
+In quest'ultimo esempio, `my_apply(10, my_fun)` applica la funzione
+`my_fun` al valore `10`.
 
 ## Argomenti delle funzioni
 
-Come si vede sopra, gli argomenti delle funzioni sono passati tra parentesi e
-separati da virgole. I due argomenti dell'esempio precedente sono passati, 
-come avviene per molti altri linguaggi, *per posizione*: quando cioè si effettua 
-la una chiamata a `my_fun`, il primo argomento viene associato al parametro `x`
-e il secondo al parametro `f`, e così via.
+Come si vede sopra, gli argomenti delle funzioni sono passati tra
+parentesi e separati da virgole. I due argomenti dell'esempio precedente
+sono passati, come avviene per molti altri linguaggi, *per posizione*:
+quando cioè si effettua la una chiamata a `my_fun`, il primo argomento
+viene associato al parametro `x` e il secondo al parametro `f`, e così
+via.
 
-In R, però, è possibile---e molto utile!---passare argomenti *per nome* anziché 
-per posizione, con la seguente sintassi:
+In R, però, è possibile---e molto utile!---passare argomenti *per nome*
+anziché per posizione, con la seguente sintassi:
 
 ```{marginfigure}
 L'operatore `=` come assegnazione è valido solo al *top-level*. In una chiamata
@@ -407,11 +404,11 @@ interi.
 my_apply(f=my_fun, x=20)
 ```
 
-Si noti che in questo caso è **necessario** usare l'uguale e non si può 
+Si noti che in questo caso è **necessario** usare l'uguale e non si può
 utilizzare l'operatore freccia `->`.
 
-È inoltre possibile associare dei valori di default a uno o più parametri di una 
-funzione:
+È inoltre possibile associare dei valori di default a uno o più
+parametri di una funzione:
 
 ```{r}
 f <- function(x, y, n=10, test=F) {
@@ -419,11 +416,11 @@ f <- function(x, y, n=10, test=F) {
 }
 ```
 
-In tale funzione i parametri `x` e `y` sono obbligatori, mentre `n` e `test` 
-sono opzionali, e se mancano assumono i corrispondenti valori di default.
-La funzione `ifelse()`, inoltre, valuta il primo argomento: se è vero, 
-restituisce il suo secondo argomento; se è falso, restituisce il terzo. 
-Vediamo come si può usare `f`:
+In tale funzione i parametri `x` e `y` sono obbligatori, mentre `n` e
+`test` sono opzionali, e se mancano assumono i corrispondenti valori di
+default. La funzione `ifelse()`, inoltre, valuta il primo argomento: se
+è vero, restituisce il suo secondo argomento; se è falso, restituisce il
+terzo. Vediamo come si può usare `f`:
 
 ```{r}
 f(2, 10) # equivale a f(2, 10, 10, F)
@@ -438,26 +435,27 @@ fallisce, stampa il messaggio di errore e continua. Senza il `try()`
 l'espressione dell'esempio terminerebbe l'esecuzione del programma o script.
 ```
 
-Questa sintassi risulterà estremamente comoda: infatti, funzioni avanzate spesso
-richiedono un gran numero di argomenti e ciò, passando gli argomenti solo per 
-posizione, risulterebbe complesso, poco leggibile e soggetto ad errori. 
-Potendo invece passare gli argomenti per nome e disponendo di default ben
-scelti, risulta semplice e leggibile anche chiamare funzioni con una decina
-di argomenti o più.
-
+Questa sintassi risulterà estremamente comoda: infatti, funzioni
+avanzate spesso richiedono un gran numero di argomenti e ciò, passando
+gli argomenti solo per posizione, risulterebbe complesso, poco leggibile
+e soggetto ad errori. Potendo invece passare gli argomenti per nome e
+disponendo di default ben scelti, risulta semplice e leggibile anche
+chiamare funzioni con una decina di argomenti o più.
 
 ## Funzioni freccia
-Abbiamo sopra visto che esistono funzioni come `dim(v) <- c(2,3)`: cosa sono? 
-come si dichiarano? Si tratta delle cosiddette **funzioni freccia**, o 
-*replacement functions*. In questo caso l'assegnazione `<-` fa parte del nome 
-della funzione (con o senza spazio, non ha importanza), cioè il nome della 
-funzione è `dim<-`, ed è una funzione differente da `dim`. In generale, cioè, 
-scrivere `my_fun(...) <- value` è un errore, *a meno che* non si sia definita
-anche la funzione `my_fun<-`.
 
-Come si definiscono le funzioni freccia? vediamo un esempio. Vogliamo creare una 
-funzione che eleva a potenza una variabile *modificando direttamente* la 
-variabile stessa:
+Abbiamo sopra visto che esistono funzioni come `dim(v) <- c(2,3)`: cosa
+sono? come si dichiarano? Si tratta delle cosiddette **funzioni
+freccia**, o *replacement functions*. In questo caso l'assegnazione `<-`
+fa parte del nome della funzione (con o senza spazio, non ha
+importanza), cioè il nome della funzione è `dim<-`, ed è una funzione
+differente da `dim`. In generale, cioè, scrivere `my_fun(...) <- value`
+è un errore, *a meno che* non si sia definita anche la funzione
+`my_fun<-`.
+
+Come si definiscono le funzioni freccia? vediamo un esempio. Vogliamo
+creare una funzione che eleva a potenza una variabile *modificando
+direttamente* la variabile stessa:
 
 ```{r}
 `pwr<-` <- function(obj, value) obj ** value
@@ -468,28 +466,29 @@ a
 
 Attenzione a quanto segue:
 
-* il nome della funzione, inclusa la freccia, deve essere *protetto* con i 
-*backtick* `` ` `` (altrimenti avremmo due frecce in sequenza, che 
-confondono l'interprete)
-* il primo argomento **deve chiamarsi `obj`**, ed è il valore che viene 
-modificato, e l'ultimo argomento **deve chiamarsi `value`**, e rappresenta il 
-lato destro dell'assegnazione.
+-   il nome della funzione, inclusa la freccia, deve essere *protetto*
+    con i *backtick* `` ` `` (altrimenti avremmo due frecce in sequenza,
+    che confondono l'interprete)
+-   il primo argomento **deve chiamarsi `obj`**, ed è il valore che
+    viene modificato, e l'ultimo argomento **deve chiamarsi `value`**, e
+    rappresenta il lato destro dell'assegnazione.
 
-Infine, nel corpo di una funzione è spesso necessario gestire il flusso di 
-esecuzione mediante gli **operatori di controllo di flusso**:
+Infine, nel corpo di una funzione è spesso necessario gestire il flusso
+di esecuzione mediante gli **operatori di controllo di flusso**:
 
-* `if(cond) expr`
-* `if(cond) true.expr  else  false.expr`
-* `for(var in vector) expr`
-* `while(cond) expr`
-* `repeat expr`
-* `break`
-* `next`
+-   `if(cond) expr`
+-   `if(cond) true.expr  else  false.expr`
+-   `for(var in vector) expr`
+-   `while(cond) expr`
+-   `repeat expr`
+-   `break`
+-   `next`
 
-Si tratta dei medesimi operatori disponibili pressoché in ogni linguaggio di 
-programmazione. Rimandando all'help in linea per i dettagli, rimarchiamo qui 
-solo la principale particolarità di R nella sintassi di `for` con un modo molto 
-lento per calcolare la somma dei numeri da 1 a 10:
+Si tratta dei medesimi operatori disponibili pressoché in ogni
+linguaggio di programmazione. Rimandando all'help in linea per i
+dettagli, rimarchiamo qui solo la principale particolarità di R nella
+sintassi di `for` con un modo molto lento per calcolare la somma dei
+numeri da 1 a 10:
 
 ```{r}
 s <- 0
@@ -501,14 +500,14 @@ s
 
 # Indicizzazione
 
-Dato che ogni variabile in R (con l'eccezione delle funzioni) è intrinsecamente 
-un vettore, è evidentemente necessario poter estrarre singoli valori o 
-sottoinsiemi dai vettori. Per questo si utilizzano gli operatori di 
-*indicizzazione*.
+Dato che ogni variabile in R (con l'eccezione delle funzioni) è
+intrinsecamente un vettore, è evidentemente necessario poter estrarre
+singoli valori o sottoinsiemi dai vettori. Per questo si utilizzano gli
+operatori di *indicizzazione*.
 
-Il principale operatore di indicizzazione è la coppia di parentesi quadrate, 
-`[]`, tra le quali va inserito l'*indice*, cioè la posizione, dell'elemento da 
-estrarre. Il primo elemento ha indice 1:
+Il principale operatore di indicizzazione è la coppia di parentesi
+quadrate, `[]`, tra le quali va inserito l'*indice*, cioè la posizione,
+dell'elemento da estrarre. Il primo elemento ha indice 1:
 
 ```{r}
 v <- 10:1
@@ -522,26 +521,26 @@ m <- matrix(1:10, nrow=2, ncol=5)
 m[2,2]
 ```
 
-Se un indice è omesso, vengono restituito tutti gli elementi corrispondenti
-all'indice mancante (intera riga o colonna):
+Se un indice è omesso, vengono restituito tutti gli elementi
+corrispondenti all'indice mancante (intera riga o colonna):
 
 ```{r}
 m[2,]
 ```
 
-La vera potenza dell'operatore `[]` deriva però da poter accettare *vettori* 
-di indici, consentendo di estrarre sottoinsiemi:
+La vera potenza dell'operatore `[]` deriva però da poter accettare
+*vettori* di indici, consentendo di estrarre sottoinsiemi:
 
 ```{r}
 v[c(1,3,7)]
 ```
 
-Oltre che vettori di indici è possibile anche passare vettori booleani, dove
-`TRUE` significa *estrai*, `FALSE` significa *tralascia*. In questo caso il 
-vettore booleano può essere lungo quanto il vettore originale ma può anche
-essere più corto; in questo secondo caso, esso viene *riciclato*, assumendo 
-cioè che si ripeta ciclicamente fino a coprire la lunghezza del vettore 
-originario:
+Oltre che vettori di indici è possibile anche passare vettori booleani,
+dove `TRUE` significa *estrai*, `FALSE` significa *tralascia*. In questo
+caso il vettore booleano può essere lungo quanto il vettore originale ma
+può anche essere più corto; in questo secondo caso, esso viene
+*riciclato*, assumendo cioè che si ripeta ciclicamente fino a coprire la
+lunghezza del vettore originario:
 
 ```{r}
 v[c(T,F)]   # uno sì e uno no
@@ -550,12 +549,12 @@ v[c(T,F,T,F,T,F,T,F,T,F)]
 v[c(T,F,F)] #uno sì e due no
 ```
 
-Ovviamente, il vettore booleano può anche essere il risultato di un'espressione:
+Ovviamente, il vettore booleano può anche essere il risultato di
+un'espressione:
 
 ```{marginfigure}
 L'operatore `%%` restituisce il resto della divisione intera.
 ```
-
 
 ```{r}
 v %% 2 == 0
@@ -563,25 +562,23 @@ v[v %% 2==0]
 v[v > 5]
 ```
 
-
-
 # Classi aggiuntive: `factor`, `list`, `data.frame`
 
-Alcune classi, pur non corrispondendo a tipi base di R, sono estremamente utili
-e comuni. È il caso di `factor`, che rappresenta un *fattore*, cioè una
-variabile che può assumere solo un numero discreto di valoro, o *livelli*; 
-`list`, che rappresenta una lista di coppie nome-valore; e `data.frame`, che
-rappresenta una *tabella* di vettori colona di uguale lunghezza ma di tipo 
-potenzialmente differente.
+Alcune classi, pur non corrispondendo a tipi base di R, sono
+estremamente utili e comuni. È il caso di `factor`, che rappresenta un
+*fattore*, cioè una variabile che può assumere solo un numero discreto
+di valoro, o *livelli*; `list`, che rappresenta una lista di coppie
+nome-valore; e `data.frame`, che rappresenta una *tabella* di vettori
+colona di uguale lunghezza ma di tipo potenzialmente differente.
 
 ## Fattori
 
-**La classe `factor`** è utile per definire condizioni omogenee in un 
-esperimento: ad esempio `(maschio,femmina)`, oppure `(alto,basso)`, oppure 
-`(mattina,pomeriggio,sera)`, oppure ancora `(A,B,C,D,E,F,G)` e così via. I 
-livelli sono in numero finito e possono essere *non-ordinati* (*unordered*), 
-oppure *ordinati* (*ordered*). In questo secondo caso sono in relazione di 
-grandezza l'uno rispetto all'altro.
+**La classe `factor`** è utile per definire condizioni omogenee in un
+esperimento: ad esempio `(maschio,femmina)`, oppure `(alto,basso)`,
+oppure `(mattina,pomeriggio,sera)`, oppure ancora `(A,B,C,D,E,F,G)` e
+così via. I livelli sono in numero finito e possono essere
+*non-ordinati* (*unordered*), oppure *ordinati* (*ordered*). In questo
+secondo caso sono in relazione di grandezza l'uno rispetto all'altro.
 
 ```{marginfigure}
 La funzione `factor()` converte un vettore di stringhe in un vettore di fattori.
@@ -598,11 +595,11 @@ typeof(uf)
 uf[1] < uf[2]
 ```
 
-Si noti che internamente i fattori sono memorizzati come interi, come riportato 
-da `typeof()`.
+Si noti che internamente i fattori sono memorizzati come interi, come
+riportato da `typeof()`.
 
-I fattori ordinati sono del tutto equivalenti, ma consentono di comparare due
-livelli:
+I fattori ordinati sono del tutto equivalenti, ma consentono di
+comparare due livelli:
 
 ```{r}
 of <- factor(LETTERS[1:5], ordered=T)
@@ -614,7 +611,8 @@ of[2] < of[1]
 
 ## Liste
 
-**La classe `list`** è un contenitore utile a raccogliere elementi eterogenei:
+**La classe `list`** è un contenitore utile a raccogliere elementi
+eterogenei:
 
 ```{r}
 l <- list(A="uno", B="due", C=3, D=1:4)
@@ -623,9 +621,11 @@ l
 
 Le liste possono essere indicizzate in tre modi:
 
-1. con la notazione `$`: si estraggono gli elementi per nome
-2. con l'operatore `[]`: estrae per posizione e **restituisce una lista**
-3. con l'operatore `[[]]`: estrae per posizione e restituisce l'elemento
+1.  con la notazione `$`: si estraggono gli elementi per nome
+2.  con l'operatore `[]`: estrae per posizione e **restituisce una
+    lista**
+3.  con l'operatore `[[]]`: estrae per posizione e restituisce
+    l'elemento
 
 Vediamo gli esempi:
 
@@ -637,16 +637,17 @@ l[[4]]
 
 ## Data frame
 
-**La classe `data.frame`** è una della classi più utilizzate in R, ed è un modo
-molto flessibile per organizzare anche grandi quantità di dati, tipicamente
-risultanti da misurazioni. Può essere visualizzata come una tabella di 
-$m\times n$ elementi, ottenuta combinando $n$ vettori colonna di $m$ elementi 
-ciascuno, e in cui i vettori potenzialmente possono essere di tipi differenti 
-(interi, razionali, stringhe, fattori, date, ecc.). Rispetto ad una matrice, 
-un data frame ha quindi due principali differenze:
+**La classe `data.frame`** è una della classi più utilizzate in R, ed è
+un modo molto flessibile per organizzare anche grandi quantità di dati,
+tipicamente risultanti da misurazioni. Può essere visualizzata come una
+tabella di $m\times n$ elementi, ottenuta combinando $n$ vettori colonna
+di $m$ elementi ciascuno, e in cui i vettori potenzialmente possono
+essere di tipi differenti (interi, razionali, stringhe, fattori, date,
+ecc.). Rispetto ad una matrice, un data frame ha quindi due principali
+differenze:
 
-* le colonne hanno un nome, oltre ad una posizione
-* le colonne possono essere di tipo differente
+-   le colonne hanno un nome, oltre ad una posizione
+-   le colonne possono essere di tipo differente
 
 Vediamo anzitutto come si crea un data frame:
 
@@ -661,30 +662,31 @@ si crea il data frame con la colonna `x` e si aggiunge poi la colonna
 `df$y <- df$x^2`.
 ```
 
-
 ```{r}
 v <- 1:5
 df <- data.frame(name=letters[v], x=v, y=v^2)
 df
 ```
 
-È possibile accedere agli elementi di un data frame come se fosse una matrice:
+È possibile accedere agli elementi di un data frame come se fosse una
+matrice:
 
 ```{r}
 df[2,3]
 ```
 
-Ma spesso è più utile accedere alle colonne *per nome*. Come per le liste, si
-usa in questo caso l'operatore `$`. Il risultato (la colonna estratta) è un 
-vettore, che può a sua volta essere indicizzato con i metodi visti sopra:
+Ma spesso è più utile accedere alle colonne *per nome*. Come per le
+liste, si usa in questo caso l'operatore `$`. Il risultato (la colonna
+estratta) è un vettore, che può a sua volta essere indicizzato con i
+metodi visti sopra:
 
 ```{r}
 df$name
 df$x[df$y>10]
 ```
 
-È ovviamente possibile modificare singoli valori o intere colonne, come pure 
-aggiungere nuove colonne:
+È ovviamente possibile modificare singoli valori o intere colonne, come
+pure aggiungere nuove colonne:
 
 ```{marginfigure}
 Spesso i data frame possono essere molto lunghi, con decine di migliaia di 
@@ -696,7 +698,6 @@ del data frame, cioè l'elenco delle colone con il rispettivo tipo e un estratto
 dei loro primi valori.
 ```
 
-
 ```{r}
 df$x[1] <- 10
 df$y <- df$x^2
@@ -704,8 +705,119 @@ df$z <- df$x^3
 df
 ```
 
+# Data I/O
+
+`r newthought("L'obiettivo principale di un'analisi statistica")` è
+ricavare degli indicatori consuntivi da una (grande) quantità di dati.
+Di conseguenza, è evidente che per un software di analisi come R sia
+particolarmente importante disporre di funzionalità per il caricamento
+di dati dall'esterno e, in seconda battuta, per il salvataggio di dati.
+
+## Dati tabulati
+
+Un caso comune è quello in cui si vogliano scambiare dati con altri
+software. In questo caso si fa ricorso a **formati neutri**, cioè
+formati file non proprietari che sacrificano la complessità delle
+funzioni supportate con la *portabilità*, cioè la compatibilità con
+molti software. Per lo scambio di dati il formato forse più comune è il
+CSV (*Comma-Separate Values*), un formato di testo ASCII in cui ogni
+riga contiene un uguale numero di *campi* (valori numerici o stringhe)
+separati da virgole: è un formato molto adatto a rappresentare matrici o
+tabelle rettangolari, analogamente quindi ad un data frame.
+
+Nel mondo dei computer esistono due famiglie di *localizzazioni* (in
+inglese: *locale*): quelle che usano il punto come separatore dei
+decimali e quelle che usano la virgola. Per le seconde, ovviamente, il
+formato CSV non può usare ancora la virgola come separatore di campo: in
+questo caso, il formato CSV prevede il punto e virgola come separatore
+di campo (e la virgola come separatore decimale).
+
+Una generalizzazione del formato CSV è il cosiddetto **flat file
+ASCII**: un file di testo puro che usa una generica stringa o carattere
+come separatore di campo, ad esempio uno spazio o una tabulazione, o una
+virgola seguita da uno spazio, ecc.
+
+In tutti questi formati una linea che inizia con un `#` è considerata un
+commento.
+
+R fornisce funzioni per importare e esportare file sia in formato CSV
+che come *flat file*. Consideriamo il file che inizia così:
+
+```{r echo=FALSE, comment=''}
+file_head("t_values_en.csv")
+```
+
+È chiaramente un CSV con la virgola come separatore di campo (locale
+inglese), quindi può essere importato in un data frame così:
+
+```{r}
+df <- read.csv("t_values_en.csv")
+str(df)
+```
+
+Se il file di origine è stato generato, ad esempio, da Excel con
+impostazioni italiane, allora il CSV avrà il punto e virgola come
+separatore di campo. In questo caso, va utilizzata la funzione
+`read.csv2()`.
+
+```{marginfigure}
+Si veda anche la funzione `read.fwf()` per l'importazione del formato *Fixed Width Formatted* (fwf), cioè file in cui i campi hanno una larghezza (numero di caratteri) fissa.
+```
+
+File generici, cioè che non seguono le convenzioni CSV, possono esser importati con la funzione generica `read.table()`, specificando le opzioni necessarie a definire il separatore di campo appropriato. Ad esempio, per il file:
+```{r echo=FALSE, comment=''}
+file_head("drill.txt", n=15)
+```
+```{marginfigure}
+In questo esempio si noti come sia buona norma inserire all'inizio del file una serie di commenti che descrivono il contenuto del file e la modalità di raccolta dei dati. 
+
+Inoltre, l'opzione `header=T` specifica di trattare la prima linea valida (commenti esclusi) come **intestazione**, cioè un vettore di stringhe da utilizzare come nomi delle colonne, e che diventeranno i nomi delle colonne del data frame.
+```
+L'importazione può essere fatta così:
+```{r}
+df <- read.table("drill.txt", header=T, sep=" ")
+str(df)
+```
+
+Si noti inoltre che il primo parametro delle funzioni `read.*()`, cioè il nome del file, può anche essere un URL valido: è cioè possibile caricare un file direttamente da un indirizzo HTTP o HTTPS. Ciò consente di creare script di analisi e report automatico che caricano i dati, ad es. giornalmente, da un sito web o da un'interfaccia HTTP di un generico database:
+```{marginfigure}
+La funzione `knitr::kable()` crea una tabella formattata da un data frame. È utile quando, come in questo caso, si vuole visualizzare un data frame come una tabella in un documento formattato (in questo caso redatto in $\LaTeX$).
+```
+```{r}
+df<-read.table("http://repos.dii.unitn.it:8080/data/diet.dat", header=T)
+knitr::kable(df[1:6,])
+```
 
 
+L'operazione inversa all'importazione, cioè l'**esportazione**, è fatta a partire da un data frame con le funzioni opposte alle precedenti: `write.csv()`, `write.csv2()` e `write.table()`. Per tali funzioni il primo argomento è il data frame da esportare, il secondo è il nome del file di destinazione:
+```{r}
+filename <- "example.txt"
+df <- data.frame(x=1:10, y=(1:10)^2)
+write.table(df, filename, sep=" ", row.names=F, quote=F)
+```
+
+Il file che si ottiene è:
+```{r echo=FALSE, comment=""}
+file_head(filename)
+```
+
+
+## Serializzazione di strutture dati native
+Per **serializzazione** in informatica si intende il processo di convertire una struttura dati in memoria in una sequenza di byte che può essere salvata su file e successivamente **de-serializzata** recuperando la struttura dati originaria. In altre parole è il salvataggio (in formato binario) dello stato di un software.
+
+In R ciò può essere fatto con le seguenti funzioni:
+
+* `dump()`: converte un elenco di oggetti (passato come vettore di *nomi*) in una rappresentazione R e la salva su file (di default, `dumpdata.R`); questo file può essere ricaricato mediante `source()`; è l'unica delle tre che non produce un file binario ma uno *script* R.
+* `save()`: salva uno o più oggetti in formato binario, ricaricabili con `load()`
+* `save.image()`: salva *tutto* l'ambiente in un file (default `.RData`): consente di chiudere la sessione e riavviare in seguito recuperando esattamente tutto quanto fatto precedentemente.
+
+L'ultima funzione è particolarmente interessante, dato che è possibile configurare RStudio in modo che salvi automaticamente lo stato all'uscita e lo recuperi all'inizio della successiva esecuzione. Ciò rende l'**ambiente** (*environment*, cioè l'elenco delle variabili definite in una data sessione) persistente, cioè in grado di sopravvivere alla chiusura dell'applicazione.
+
+Infine, si noti che:
+
+* gli script creati con `dump()` tendono ad essere molto grandi, e sono quindi sconsigliati per strutture dati di grandi dimensioni, per le quali è preferibile il formato CSV;
+* i file binari creati con `save()` e `save.image()` sono più efficienti in termini di spazio e sono adatti a creare salvataggi temporanei di strutture dati anche grandi, ma non hanno nessuna garanzia di compatibilità con future versioni di R e non sono quindi indicati per l'archiviazione di dati;
+* i file ASCII sono in generale meno efficienti (ma possono essere compressi), però hanno il vantaggio di essere sempre leggibili, con qualsiasi versione di software e di sistema operativo.
 
 
 ```{r bib, include=FALSE}
