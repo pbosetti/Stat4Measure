@@ -26,6 +26,7 @@ header-includes:
 ```{r setup, include=FALSE}
 library(tufte)
 source("myfunctions.R")
+options(width=60)
 ```
 
 # Introduzione

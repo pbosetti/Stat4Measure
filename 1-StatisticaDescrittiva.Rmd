@@ -27,6 +27,7 @@ header-includes:
 library(tufte)
 library(latex2exp)
 library(glue)
+library(tidyverse)
 source("myfunctions.R")
 ```
 
@@ -616,7 +617,7 @@ Come sopra anticipato, vale il seguente
 
 ```{=tex}
 \begin{thm}[del Limite Centrale]
-Se $x_1, x_2, \dots,x_n$ sono $n$ variabili casuali indipendenti e identicamente distribuite (IID) con $E(x_i)=\mu$ e $V(x_i)=\sigma^2~~\forall i\in\{1,2,\dots,n\}$ (entrambi finiti), e $y=x_1+x_2+\dots+x_n$, allora:
+Se $x_1, x_2, \dots,x_n$ sono $n$ variabili casuali indipendenti e identicamente distribuite (IID) con $E(x_i)=\mu$ e $V(x_i)=\sigma^2~~\forall i=1,2,\dots,n$ (entrambi finiti), e $y=x_1+x_2+\dots+x_n$, allora:
 \[
 z_n=\frac{u-n\mu}{\sqrt{n\sigma^2}}
 \]
@@ -653,7 +654,7 @@ nei parametri, ma anche nella forma.
 
 Ad esempio, consideriamo la variabile casuale
 $x = z_1^2+z_2^2+\dots+z_k^2$, con
-$z_i\sim\mathcal(N)(0,1)~~\forall i\in\{1, 2, \dots,k\}$. Allora risulta
+$z_i\sim\mathcal(N)(0,1)~~\forall i=1, 2, \dots,k$. Allora risulta
 che $x\sim\mathcal{X}^2_k$ con la funzione di distribuzione (vedi
 Fig. \ref{fig:chisq2}): \begin{equation}
 f(x)=\frac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}e^{-y/2}
@@ -680,7 +681,7 @@ Il parametro $k$ è anche chiamato *numero di gradi di libertà*. Inoltre,
 \begin{lem}
 Considerando la somma quadratica di un campione di $n$ elementi $y_i$, ciascuno proveniente da una distribuzione $\mathcal{N}(\mu, \sigma^2)$, risulta che:
 \[
-\frac{(y_i-\bar y)^2}{\sigma^2}\sim \mathcal{N}(0,1)~~\forall i\in\{1,2,\dots,k\}
+\frac{(y_i-\bar y)^2}{\sigma^2}\sim \mathcal{N}(0,1)~~\forall i=1,2,\dots,k
 \]
 e quindi:
 \[
@@ -779,6 +780,9 @@ P(x\leq a) &=& F_-(a) \\
 P(x\geq a) &=& F_+(a) \\
 P(a\leq x\leq b) &=& F_-(a) - F_-(b) = F_+(b)-F_+(a)
 \end{eqnarray}.
+```{marginfigure}
+Nelle Parti seguenti, indicheremo a pedice anche la distribuzione di riferimento, come ad esempio in $F_{\mathcal{N}+}()$ per la funzione di ripartizione coda superiore della distribuzione normale
+```
 
 Infine, la funzione quantile mi dà il valore della variabile casuale (continua o discreta che sia) maggiore o uguale ad una data frazione del totale (minore o uguale per la coda bassa). Ad esempio, il quantile di 0.5 mi restituisce il valore, in una data popolazione o campione, maggiore o uguale della metà di tutte le osservazioni, e corrisponde quindi alla **mediana**.
 

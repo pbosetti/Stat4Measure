@@ -27,7 +27,15 @@ header-includes:
 library(tufte)
 library(latex2exp)
 library(tidyverse)
+library(glue)
 source("myfunctions.R")
+options(width=60)
+```
+```{=tex}
+\newtheorem{thm}{Teorema}
+\newtheorem{cor}{Corollario}
+\newtheorem{lem}{Lemma}
+\newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
 ```
 
 # Test di ipotesi
@@ -74,7 +82,7 @@ William Sealy Gosset, a.k.a. Student (1876--1937)
 ```
 Il suo problema, di tipo eminentemente industriale, era determinare quando le immancabili differenze delle caratteristiche della birra tra lotti di produzione (ad es. il grado alcolico) fossero sufficientemente grandi da concludere che il processo di produzione era mutato (in maniera indesiderata) tra un lotto e l'altro.
 
-In generale, dati due campioni $y_{1,i},~~i \in{1,2,\dots,n_2}$ e $y_{2,j},~~j \in{1,2,\dots,n_2}$, data la coppia di ipotesi in (\ref{eq:h0h1}), si può scrivere che:
+In generale, dati due campioni $y_{1,i},~i={1,2,\dots,n_2}$ e $y_{2,j},~j={1,2,\dots,n_2}$, data la coppia di ipotesi in (\ref{eq:h0h1}), si può scrivere che:
 \begin{equation}
 t_0=\frac{\bar y_1 - \bar y_2}{S_p\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\label{eq:tconzero}
 \end{equation}
@@ -106,9 +114,11 @@ Supponiamo di ottenere $t_0=`r t0`$ per un totale di $k=`r k`$ gradi di libertà
 ta2 <- qt(alpha/2, k)
 tibble(x=seq(-5,5,0.1), pt=pt(x, k)) %>%
   ggplot(aes(x=x, y=pt)) + 
+  geom_rect(aes(xmin=-Inf, xmax=ta2, ymin=-Inf, ymax=Inf), alpha=0.002, fill="red") +
+  geom_rect(aes(xmin=-ta2, xmax=Inf, ymin=-Inf, ymax=Inf), alpha=0.002, fill="red") +
   geom_line() +
   geom_vline(xintercept=c(-ta2,ta2), lty=2, color="red") +
-  geom_vline(xintercept=t0, lty=2, color="blue")
+  geom_vline(xintercept=t0, lty=2, color="blue") 
 ```
 Cioè: valori esterni all'intervallo indicato dalle linee rosse hanno una probabilità complessiva $\alpha$ (metà sui negativi e metà sui positivi), quindi se la statistica di test $t_0$ (linea blu) cade all'interno di questo intervallo allora vale $H_0$, altrimenti, se cade all'esterno, è possibile rifiutare $H_0$ con una probabilità d'errore di tipo I minore di $\alpha$.
 Il valore soglia $t_{\alpha/2, n_1+n_2-2}$ può essere calcolato con la funzione quantile di T, coda inferiore: `qt(alpha/2, k)`. Si noti che quando Gosset ha sviluppato questa tecnica i computer ancora non esistevano, quindi la tecnica si basava su tabelle calcolate a priori che riportavano il valore della funzione quantile per diversi gradi di libertà (per riga) e diverse probabilità $\alpha$ (per colonna), in modo simile alla seguente:
@@ -119,7 +129,7 @@ Il calcolo della funzione quantile della T di Student coinvolge una funzione inv
 tbl <- read_csv("t_values_en.csv")
 tbl %>% 
   slice_head(n=10) %>%
-  select("DoF"=`...1`,2:8) %>%
+  select("DoF"=`...1`,4:10) %>%
 knitr::kable()
 ```
 Da cui si vede, ad esempio, che la soglia per $k=5$ e $\alpha=0.01$ è pari a `r round(qt(0.01, 5, lower.tail=F), 3)`.
@@ -142,15 +152,749 @@ pt(abs(t0), k, lower.tail = F)*2
 Cioè il `r round(pt(abs(t0), k, lower.tail = F)*200,2)`% di probabilità di falso positivo.
 Tale valore corrisponde alla probabilità di un errore di tipo I, ed è chiamato *p-value*. La scelta se rifiutare l'ipotesi nulla viene fatta direttamente sulla base del *p-value*: **tanto più esso è piccolo, tanto più si rafforza l'ipotesi alternativa $H_1$**.
 
-## Funzioni di R
+## Varianti del test di Student
+L'equazione (\ref{eq:tconzero}) corrisponde al caso più generico, cioè quello del test *a due campioni, a due lati e con uguale varianza della popolazione*. Queste tre caratteristiche hanno delle alternative:
+
+* test a due campioni oppure a un campione;
+* test a due lati oppure a un lato;
+* test su due campioni **omoschedastici** (cioè provenienti da popolazione con uguale varianza) oppure no.
+
+Per quanto riguarda il numero di campioni, nel caso di un solo campione la (\ref{eq:h0h1}) diventa:
+\begin{equation}
+\begin{array}{rl}
+H_0:& \mu = \mu_0 \\
+H_1:& \mu \neq \mu_0
+\end{array}\label{eq:h0h1onesample}
+\end{equation}
+dove $\mu_0$ è un valore di riferimento, e la statistica di test si calcola come:
+\begin{equation}
+t_0=\frac{\bar y - \mu_0}{S/sqrt(n)}
+\end{equation}
+
+Per quanto riguarda il numero di lati, nel caso dei test ad un lato la (\ref{eq:h0h1}) diventa una delle due possibili:
+\begin{equation}
+\begin{array}{rl}
+H_0:& \mu_1 = \mu_2 \\
+H_1:& \mu_1 \gtrless \mu_2
+\end{array}
+\end{equation}
+con il criterio di rifiuto di $H_0$ e il *p-value*:
+```{marginfigure}
+In queste equazioni, si considera il segno + quando $H_1: \mu_1 >\mu_2$ e viceversa.
+Si noti che lo stesso vale per il test ad un campione.
+```
+\begin{eqnarray}
+t_0 &\gtrless& \pm t_{\alpha, k} \\
+p\mathrm{-value} &=& F_{t,\pm}(t_0, k)
+\end{eqnarray}
+
+Infine, nel caso di due campioni la (\ref{eq:h0h1}) vale solo nel caso in cui i due campioni provengano da popolazioni con la medesima varianza. Nel caso in cui ciò non sia verificato, va sostituita con le **formule di Welch**:
+\begin{eqnarray}
+t_0 &=& \frac{\bar y_1 - \bar y_2} {\sqrt{S_1^2/n_1 + S_2^2/n_2}} \\
+\nu &=& \frac{(S_1^2/n_1 + S_2^2/n_2)^2} {\frac{(S_1^2/n_1)^2}{n_1-1}+\frac{(S_2^2/n_2)^2}{n_2-1}}
+\end{eqnarray}
+
+Per capire se valga o meno l'ipotesi di omoschedasticità è necessario effettuare un **test della varianza** preliminare (cioè *prima* del T-test):
+\begin{equation}
+\begin{array}{rl}
+H_0:& \sigma_1^2 = \sigma_2^2 \\
+H_1:& \sigma^2_1 \neq \sigma^2_2
+\end{array}
+\end{equation}
+\begin{equation}
+F_0=\frac{S^2_1}{S^2_2}\sim\mathcal{F}(n_1-1, n_2-1)
+\end{equation}
+
+## Il test di Student accoppiato
+Nel caso di un test a due campioni, a volte---e se i campioni hanno la stessa dimensione---è possibile e preferibile **accoppiare** i valori dei campioni due a due, quando ogni coppia sia raccolta in condizioni il più possibile simili.
+```{marginfigure}
+È il caso tipico di quando si vogliono confrontare due strumenti di misura per capire se si comportano o meno nello stesso modo. Per farlo, si effettua la misura su $n$ misurandi diversi con entrambi gli strumenti e si effettua un test di Student. Tuttavia, siccome anche i misurandi sono potenzialmente affetti da varianza, è possibile che la varianza dei misurandi finisca per mascherare la varianza degli strumenti. In questi casi si accoppiano le misure calcolando le differenze e realizzando un test ad un lato.
+```
+Possiamo esprimere ogni misura $y_{ij}$ come un contributo del campione ($\mu_i$), più un contributo della ripetizione ($\beta_j$), più il disturbo, o **residuo**, $\varepsilon_{ij}$
+\begin{equation}
+y_{ij}=\mu_i+\beta_j+\varepsilon_{ij};\hspace{9pt} \left\{ \begin{array}{l}i=1,2\\j=1,2,\dots ,n\end{array} \right.
+\end{equation}
+
+La differenza tra due valori di ogni coppia è:
+\begin{equation}
+d_j=y_{1j}-y_{2j}; \hspace{9pt}j=1,2,\dots,n
+\end{equation}
+e il valore atteso delle differenze è quindi:
+\begin{equation}
+\begin{array}{rcl}
+\mu_d &=& E(d_j)\\
+      &=& E(y_{1j}-y_{2j})\\
+      &=& E(y_{1j}-y_{2j})\\
+      &=& E(y_{1j})-E(y_{2j})\\
+      &=& (\mu_1+\beta_j)-(\mu_2+\beta_j)\\
+      &=& \mu_1-\mu_2
+\end{array}
+\end{equation}
+
+Di conseguenza, le ipotesi sono:
+\begin{equation}
+\begin{array}{rl}
+H_0:& \mu_d = 0 \\
+H_1:& \mu_d \neq 0
+\end{array}
+\end{equation}
+e si ricade nel caso di un test ad un lato, effettuato sulle differenze a coppie.
+
+## Intervallo di confidenza
+Un terzo modo per sciogliere un test di ipotesi (oltre al confronto di $t_0$ e alla valutazione del *p-value*) è quello di calcolare l'**intervallo di confidenza** associato al test. È probabilmente il modo più completo ed elegante.
+
+Se si considera un generico parametro ignoto della popolazione $\vartheta$, siamo interessati a definire due statistiche $L$ e $U$, tali per cui la probabilità:
+\begin{equation}
+P(L\leq\vartheta\leq U)= 1-\alpha
+\end{equation}
+in questo caso l'intervallo $[L,U]$ è detto **intervallo di confidenza** per il parametro $\vartheta$.
+
+Consideriamo un T-test ad un campione. Sappiamo che:
+\[
+t_0=\frac{\bar x - \mu}{S/\sqrt{n}}\sim t_{n-1}
+\]
+Se $c$ è il $1-\alpha/2$ quantile della distribuzione $t$, ovvero $t_{\alpha/2, n-1}$, allora, per definizione:
+\[
+P(-c\leq t_0\leq c) = 1-\alpha
+\]
+
+Sostituendo $t_0$ otteniamo:
+\begin{equation}
+P(\bar x - cS/\sqrt{n} \leq \mu \leq \bar x + cS\sqrt{n}) = 1-\alpha
+\end{equation}
+e quindi l'intervallo di confidenza è $[\bar x - cS/\sqrt{n}, \bar x + cS/\sqrt{n}]$. In pratica, significa che il valore atteso della popolazione (ignoto!) ha la probabilità $1-\alpha$ di ricadere nell'intervallo di confidenza. Se il $\mu_0$ del corrispondente test sta al di fuori dell'intervallo di confidenza, allora possiamo rifiutare $H_0$ con un errore inferiore a $\alpha$.
+
+Analogamente, per un test a due campioni risulta:
+\[
+P\left( -t_{\alpha/2,n_1+n_2-2}\leqslant\frac{(\bar y_1-\bar y_2)-(\mu_1-\mu_2)}{S_p\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\leqslant t_{\alpha/2,n_1+n_2-2} \right)=1-\alpha
+\]
+e, quindi, l'intervallo di confidenza $[L,U]$ è definito da:
+\[
+\begin{array}{l}
+L=(\bar y_1-\bar y_2)-t_{\alpha/2,n_1+n_2-2}S_p\sqrt{\frac{1}{n_1}+\frac{1}{n_2}} \\
+U=(\bar y_1-\bar y_2)+t_{\alpha/2,n_1+n_2-2}S_p\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}
+\end{array}
+\].
+
+## Il test in R
+R dispone di numerose funzioni native per effettuare test statistici, incluso il test di Student. Per quest'ultimo, la funzione di interesse è `t.test()`. La documentazione della funzione riporta:
+```
+t.test(x, y = NULL,
+       alternative = c("two.sided", "less", "greater"),
+       mu = 0, paired = FALSE, var.equal = FALSE,
+       conf.level = 0.95, ...)
+```
+dove `x` è il primo campione (vettore), `y` il secondo (opzionale, omesso per un test ad un campione), `alternative` specifica il tipo di ipotesi alternativa (uno o due lati), `mu` è il valore di riferimento $\mu_0$ per un test ad un campione, `paired` specifica se si vuole un test accoppiato, `var.equal` specifica se i campioni sono omoschedastici, e `conf.level` è uguale a $1-\alpha$. Con queste opzioni è possibile coprire tutte le possibilità viste nelle sezioni precedenti.
+
+Vediamo un esempio. Generiamo due campioni con media e varianza leggermente differente e verifichiamo le ipotesi in (\ref{eq:h0h1}):
+```{r twosamples, fig.margin=T, fig.cap="Distribuzione dei due campioni e delle due medie campionarie"}
+set.seed(321)
+m <- c(10.1, 10.2)
+s <- c(0.2, 0.1)
+n <- c(10, 14)
+s1 <- rnorm(n[1], m[1], s[1])
+s2 <- rnorm(n[2], m[2], s[2])
+ggplot() + 
+  geom_point(aes(x=1:n[1], y=s1, color="S1", shape="S1"), size=3) +
+  geom_point(aes(x=1:n[2], y=s2, color="S2", shape="S2"), size=3) +
+  geom_hline(mapping=aes(yintercept=mean(s1), color="S1")) +
+  geom_hline(mapping=aes(yintercept=mean(s2), color="S2")) +
+  labs(x="indice", y="valore", color="campione", shape="campione")
+```
+Per prima cosa è necessario verificare l'omoschedasticità con il test della varianza `var.test()`, poi si procede al test di Student, a due campioni a due lati:
+```{r}
+(vt <- var.test(s1, s2))
+```
+
+Dato che c'è il `r round(vt$p.value*100, 1)`% di probabilità d'errore rifiutando l'ipotesi di omoschedasticità, possiamo effettuare il test di Student con l'opzione `var.equal=T`:
+```{r}
+(tt <- t.test(s1, s2, var.equal = (vt$p.value > 0.05)))
+names(tt)
+```
+```{marginfigure}
+`names(tt)` restituisce i campi presenti nell'oggetto `tt` restituito da `t.test()`.
+```
+
+Si noti che i test statistici in R producono un report che riassume le caratteristiche del test e i risultati ottenuti, in particolare il *p-value* e l'intervallo di confidenza. Oltre che nel report, tutti i valori sono disponibili come *campi* dell'oggetto restituito dal test. Ad esempio, `tt$p.value` contiene il *p-value*, `tt$statistic` contiene la statistica di test $t_0$, e così via.
+
+Nel nostro caso, possiamo rifiutare $H_0$ con una probabilità di errore di tipo I pari a `r round(tt$p.value*100, 1)`%.
+
+# Boxplot
+`r newthought("Esiste un metodo grafico")` per visualizzare la situazione di un test a due campioni in maniera molto più efficace che in Fig. \ref{fig:twosamples}: il **boxplot**.
+
+In un *boxplot* ogni campione è rappresentato da una scatola che si estende in verticale dal primo al terzo quartile del campione, comprendendo cioè la metà centrale delle osservazioni. All'interno di questa scatola una linea più grossa rappresenta la mediana del campione. Infine, due **baffi** (o *whisker*) si estendono filo al punto massimo e al punto minimo, ma *non oltre* 1.5 volte la distanza interquartile (IQR, *inter-quartile range*), cioè l'altezza della scatola. Ogni valore più lontano di questa soglia dal relativo quartile è riportato come un punto, marcandolo come possibile **outlier**.
+```{marginfigure}
+Un *outlier*, o **anomalia**, è un valore considerato non compatibile con la distribuzione dei restanti valori in un campione, perché la sua distanza dalla media è eccessiva.
+```
+
+Per realizzare un *boxplot* è possibile usare la funzione standard `boxplot()`, oppure ricorrere a `ggplot2`, che ha un'apposita geometria `geom_boxplot()`. Per procedere è anzitutto necessario organizzare i dati in modo *tidy*, ricordandosi di usare come indice di campione un **fattore** e non un intero. In questo modo, `geom_boxplot()` raggruppa automaticamente i valori che hanno lo stesso livello di fattore nell'estetica `x`:
+```{marginfigure}
+La funzione `rep()` crea un vettore per *ripetizione* di un dato valore; inoltre, `c()` quando riceve due o più vettori li unisce in un unico vettore.
+```
+```{r, fig.margin=T}
+tibble(sample=factor(c(rep(1, n[1]), rep(2, n[2]))),
+       value=c(s1, s2)) %>% 
+  ggplot(aes(x=sample, y=value)) +
+  geom_boxplot(varwidth=T) +
+  labs(x="campione", y="valore")
+```
+Si noti che l'opzione `varwidth=T` adatta la *larghezza* dei box in maniera proporzionale alla dimensione dei campioni.
+Tipicamente, tanto meno i due box sono sovrapposti sull'asse delle ordinate, tanto più è forte l'ipotesi alternativa.
+
+# Anomalie
+`r newthought("Un campione può includere delle anomalie")`, cioè valori così distanti dalla media (troppo grandi o troppo piccoli) da essere ritenuti poco probabili nella distribuzione di riferimento, e quindi sospetti di originare da un errore di misura o di trascrizione del dato.
+
+Come visto sopra, un *boxplot* è un primo passo per identificare la presenza di *outlier.* Tuttavia esistono due procedure più robuste ed affidabili per decidere quando eliminare una sospetta anomalia dal campione: il criterio di Chauvenet e il test di Grubbs.
+
+Entrambi segnalano il punto più lontano come possibile anomalia. In ogni caso, è sempre sconsigliato applicare uno dei due metodi più di una volta, perché ciò modifica la distribuzione dei campioni e può portare alla rimozione di un numero eccessivo di elementi.
+
+## Criterio di Chauvenet
+Si tratta di un criterio relativamente antico, formulato attorno alla metà del 1800, quindi prima della nascita della statistica inferenziale.
+
+Dato un campione $\left<x_1, x_2,\dots,x_n\right>$ supposti con distribuzione normale, si calcola la massima differenza assoluta:
+\[
+s_0=\underset{i=1,\dots,n}{\max}\left(\frac{|x_i - \bar x|}{S_x}\right)
+\]
+
+Se gli $\left<x_1, x_2,\dots,x_n\right>$ sono distribuiti normalmente, è evidente che $|x_i-\bar x|/S_x\sim\mathcal{N}(0,1)$. Possiamo quindi calcolare la probabilità di un valore maggiore o uguale a $s_0$ dalla funzione di ripartizione, coda superiore:
+\[
+P_s=F_{\mathcal{N}+}(s_0)
+\]
+
+È chiaro che su $n$ osservazioni, se esse sono distribuite in maniera normale ci aspettiamo $nP_s$ valori più grandi di $s_0$. Quindi, se risulta $nP_s < 0.5$, mentre noi abbiamo **un** punto sospetto, allora possiamo scartare l'anomalia.
+
+```{marginfigure}
+Alcune utili funzioni: `which.max()` restituisce l'*indice* del valor massimo di un vettore; la combinazione `deparse(substitute(x))` dà il *nome* della variabile passata come argomento `x`; `glue()` (caricato con libreria `glue`) consente di comporre stringhe inserebdo valori tra parentesi graffe; infine `invisible()` usato al posto di `return()` restituisce un risultato in maniera invisibile, come ad esempio la funzione `t.test()`.
+```
+In R non esiste una funzione ma è semplice crearne una:
+```{r}
+chauvenet <- function(x, threshold=0.5) {
+  abs.diff <- (x-mean(x))/sd(x)
+  s0 <- max(abs.diff)
+  i0 <- which.max(abs.diff)
+  freq <- length(x)*pnorm(s0, 0, 1, lower.tail=F) 
+  result <- list(
+    s0 = s0,
+    index = i0,
+    value = x[i0],
+    reject = freq < threshold
+  )
+  arg = deparse(substitute(x))
+  print(glue("Chauvenet criterion applied to {arg}"))
+  print(glue("Suspect outlier: {arg}[{i0}] = {x[i0]}, s0 = {s0}"))
+  print(glue("Expected frequency: {round(freq,3)}, threshold {threshold}"))
+  print(glue("Decision: {d}", d=ifelse(result$reject, "reject it", "keep it")))
+  invisible(result)
+}
+cc <- chauvenet(s1)
+cc
+```
 
 
-# Test di Tukey
+## Test di Grubbs
+Il test di Grubbs è un vero e proprio test statistico, basato su una coppia di ipotesi ($H_1$ porta allo scarto della sospetta anomalia), su una statistica di test e sul calcolo di un *p-value*. 
+In breve:
+\begin{eqnarray}
+G_0 &=& \frac{\underset{i=1,\dots,n}{\max}|Y_i-\bar Y|}{s}\\
+G_0 &>& \frac{n-1}{n}\sqrt{\frac{t^2_{\alpha/(2n),n-2}}{n-2+t^2_{\alpha/(2n),n-2}}} \Rightarrow \neg H_0
+\end{eqnarray}
+```{marginfigure}
+$\neg H_0$ significa che $H_0$ è falsa.
+```
 
-# ANOVA
+
+Il test è disponibile nel pacchetto `outliers`, che va preliminarmente installato e caricato:
+```{r}
+library(outliers)
+range(s1)
+(gt <- grubbs.test(s1))
+```
+In questo caso particolare, il test segnala una probabilità d'errore del `r round(gt$p.value*100, 1)`% dello scartare il massimo dei valori, che è quello con lo scarto massimo.
+
+# Controllo di normalità
+`r newthought("Non è stato sufficientemente sottolineato")`, nei capitoli precedenti, quanto i test statistici siano **basati sull'ipotesi di normalità**. Infatti è chiaro che la (\ref{eq:}) è distribuita come una T di Student se e solo se il campione medesimo è distribuito in maniera normale. In forza del Teorema del Limite Centrale questa ipotesi non è troppo stringente nella maggior parte delle applicazioni reali. Tuttavia **deve** sempre essere verificata, perché quando accade che il o i campioni non sono normali è necessario approfondire e comprenderne il motivo.
+
+Ci sono tre metodi comuni per il controllo di normalità di un set di dati $\left<x_1, x_2,\dots,x_n\right>$: un metodo grafico e due test inferenziali, il test del Chi-quadro e il test di Shapiro-Wilk.
+
+Inoltre, prima ancora di verificare la normalità dei singoli campioni, nel caso di test a due campioni è anche necessario verificare che essi siano **indipendenti**.
+
+## Verifica di correlazione
+Due campioni sono indipendenti se i valori dell'uno non dipendono dai valori dell'altro. La verifica può essere fatta mediante un grafico che riporti i valori del primo campione contro i valori del secondo campione, **nell'ordine in cui sono stati acquisiti**:
+```{r, fig.margin=T}
+set.seed(0)
+N <- 50
+df <- tibble(s1 = rnorm(N, 3, 1),
+             s2 = rnorm(N, 5, 1),
+             s3 = 2 + s1 + rnorm(N, 0, 0.5))
+df %>% ggplot(aes(x=s1, y=s2)) +
+  geom_point(aes(x=s1, y=s2, color="s2", shape="s2"), size=3) +
+  geom_point(aes(x=s1, y=s3, color="s3", shape="s3"), size=3) +
+  labs(y="s2, s3", color="campione", shape="campione")
+```
+Il grafico a dispersione mostra chiaramente che il campione `s3` è correlato con `s1` (se aumenta `s1`, aumenta anche `s2`), mentre `s2` è ben disperso e non sembra essere correlato.
+
+Quantitativamente, si può ricorrere al **coefficiente di corelazione** $\rho$, visto nella prima Parte: un valore prossimo a zero significa scarsa correlazione, un valore prossimo a 1 o -1 significa forte correlazione (positiva o negatva). In genere, ci si allarma quando $|\rho| > 0.9$:
+```{r}
+cor(df$s1, df$s3)
+cor(df$s1, df$s2)
+```
+
+
+
+## Il grafico quantile-quantile (*Q-Q plot*)
+
+Dato un campione $\left<x_1, x_2,\dots, x_n\right>$, si costruisce una tabella con:
+
+* nella prima colonna i valori $x_i,~i=1,2,\dots,n$ in ordine crescente; sono chiamati **quantili campionari**
+* nella seconda colonna si calcola la ripartizione del campione: per ogni riga si riporta il numero di quantili campionari **minori** del quantile campionario corrente, calcolato come $i/n,~i=1,2,\dots,n$\footnote{In realtà, $i/n$ dà $1/n$ per il primo (anziché 0) e $n$ per l'ultimo, mentre $(i-1)/n$ dà 0 per il primo e $n-1$ per l'ultimo. Di conseguenza, si usa la **formula di Bloom**: $(i-a)(n+1-2a),~a=3/8$ che ha il merito di essere simmetrica.}
+* nella terza colonna si calcolano i quantili teorici della distribuzione di riferimento, solitamente $\mathcal{N}(0,1)$ corrispondenti alla ripartizione calcolata nella seconda colonna
+
+Ad esempio, usando la formula di Blom per la ripartizione:
+```{r}
+N <- 10
+tibble(
+  i = 1:N,
+  x = sort(rnorm(N)),
+  f = (i-3/8)/(N+1-3/4),
+  q = qnorm(f)
+) %>%
+  knitr::kable()
+```
+
+È evidente che quanto più il campione è normale, tanto più un grafico del quantili campionari contro i quantili teorici si allinea lungo una retta. Per facilitare l'analisi si aggiunge al grafico la linea che collega il primo e il terzo quartile del campione, che funge da riferimento.
+
+Lasciando come esercizio la costruzione del grafico a partire dalla precedente tabella, utilizziamo direttamente le funzioni `geom_qq()` e `geom_qq_line()`:
+```{r, fig.margin=T}
+set.seed(123)
+tibble(
+  sn = rnorm(200, 10, 2),
+  su = runif(200, 8, 12)
+) %>% ggplot() +
+  geom_qq(aes(sample=sn, color="normale")) + 
+  geom_qq_line(aes(sample=sn, color="normale")) +
+  geom_qq(aes(sample=su, color="uniforme")) + 
+  geom_qq_line(aes(sample=su, color="uniforme")) +
+  labs(x="Quantile teorico", y="Quantile campionario", color="distribuzione") 
+```
+Come si vede dalla figura il campione uniforme è più ricco di valori nelle code rispetto al campione normale: questo andamento è chiamato **platicurtico**. Viceversa, una distribuzione più stretta e alta della normale si dice **leptocurtica**, e nel grafico Q-Q mostra code che "scappano" verso il basso sui negativi e verso l'alto sui positivi. Infine, **distribuzioni asimmetriche**, o *gobbe*, mostrano deviazioni dalla normalità sulle due code che stanno dallo stesso lato della linea di riferimento.
+
+
+## Il test del Chi-quadro
+Dato un campione $\left<x_1, x_2,\dots, x_n\right>$, lo raggruppiamo in $k$ intervalli, o **classi**. Il numero $k$ è scelto in modo da avere almeno 4--5 elementi per ogni classe. Inoltre, gli intervalli corrispondenti ad ogni classe possono indifferentemente essere tutti larghi uguali oppure possono essere di dimensioni diverse.
+
+Successivamente contiamo quante osservazioni ricadono in ogni classe, $O_i,~i=1,2,\dots,k$, e calcoliamo il numero di osservazioni *attese* $E_i,~i=1,2,\dots,k$ in ciascuna classe sulla base della distribuzione di riferimento (normale per una verifica di normalità, ma può essere una distribuzione qualsiasi). 
+
+È evidente che le differenze tra $O_i$ e $E_i$ saranno tanto più grandi quanto più il campione non è distribuito come la distribuzione di riferimento. In particolare, risulta che la statistica di test:
+\begin{equation}
+X_0^2 = \sum_{i=1}^k \frac{(O_i-E_i)^2}{E_i}\sim\mathcal{X}^2_{k-p-1},
+\end{equation}
+dove $p$ è il numero di parametri nella distribuzione di riferimento (la normale ne ha due, la T di Student uno), e dalla quale è possibile calcolare il *p-value* associato all'ipotesi alternativa come $F_{\mathcal{X}^2+}(X^2_0)$.
+```{marginfigure}
+**NOTA**: il test Chi-quadro è sempre un test ad un lato.
+```
+Quando viene utilizzato per verificare la distribuzione il test del Chi-quadro è sempre un test ad un campione e viene anche chiamato *Goodness-of-Fit (GoF) test*.
+
+In R può essere calcolato in diversi modi. La principale interfaccia è la funzione `chisq.test()`, che nel caso di un GoF test accetta il vettore dei conteggi $O_i$ se ogni classe ha la stessa probabilità nella distribuzione di riferimento, altrimenti vuole un secondo vettore che rappresenta le probabilità attese $E_i/N$. Quindi possiamo procedere in due modi:
+
+* definire le classi in modo che siano equipopolate nella distribuzione di riferimento, e passare a `chisq.test()` solo il vettore dei conteggi, oppure
+* definire le classi in modo che siano equipopolate **nel campione**, calcolare la probabilità complessiva di ciascuna classe sulla distribuzione di riferimento e passare a `chisq.test()` il vettore dei conteggi e quello delle probabilità.
+
+Il primo caso, chiaramente il più conveniente, può essere affrontato mediante l'utilizzo combinato delle funzioni `qnorm()` (per calcolare gli intervalli equipopolati), `cut()` (per associare ogni valore nel vettore campione ad un fattore corrispondente alla classe a cui tale valore appartiene), e `tabulate()`, per contare quanti valori condividono la stessa classe:
+```{r}
+set.seed(0)
+N <- 100 
+sample <- runif(N, 8, 12)
+k <- floor(N/5)
+m <- mean(sample)
+s <- sd(sample)
+breaks <- qnorm(seq(0, 1, length.out=k+1), m, s)
+(O <- sample %>% cut(breaks=breaks) %>% tabulate())
+(E <- N/length(O))
+(X0 <- sum((O-E)^2/E))
+# p-value calcolato direttamente:
+(p <- pchisq(X0, k-2-1, lower.tail = F))
+# risultato di chisq.test():
+(xt <- chisq.test(O))
+```
+Dal confronto tra gli ultimi due risultati si vede che `chisq.test()` sebbene fornisca lo stesso valore della statistica di test $X_0^2=`r X0`$, calcola un *p-value* differente. Il motivo sta nel calcolo dei gradi di libertà: mentre noi abbiano correttamente valutato il *p-value* a partire da $k-p-1 = `r k-2-1`$ gradi di libertà, `chisq.test()` ne riporta $k-1=`r k-1`$.
+
+Se il *p-value* corretto è `r round(p, 3)`, come mai `chisq.test()` è sbagliata?
+
+Il motivo è che si tratta di una funzione nata principalmente per l'applicazione più estesa del test del Chi-quadro, che serve a verificare che due parametri di classificazione di un fenomeno siano indipendenti.
+
+Ad esempio, supponiamo di avere una tabella che riporta il numero di dipendenti che hanno un determinato piano assistenziale e un determinato tipo di contratto (stipendiato o a ore). Ci chiediamo se i due criteri siano correlati o no: questo test si chiama **test di contingenza**, è anch'esso un test Chi-quadro, e può essere analizzato con la funzione `chisq.test()`:
+```{r}
+set.seed(0)
+# generiamo dati indipendenti
+data <- tibble(
+  contratto = sample(2, 500, replace=T, prob=c(2,1)),
+  piano = sample(3, 500, replace=T, prob=c(3,2.5,1))
+) %>%
+  mutate(contratto=factor(contratto),
+         piano = factor(piano)) %>%
+  table() # table() si occupa di creare la tabella di contingenza!
+data
+chisq.test(data)
+# altro esempio, ma con dati che NON sono indipendenti
+m <- matrix(c(160,140,40,40,60,60), nrow=2, byrow=T)
+dimnames(m) <- list("contratto"=1:2, "piano"=1:3)
+m
+chisq.test(m)
+```
+
+
+## Il test di Shapiro-Wilk
+Si tratta di un semplice test che verifica l'ipotesi nulla di normalità. A differenza del test del Chi-quadro vale **solo** per verificare la normalità e non è adatto ad altre distribuzioni, ma è più efficiente nell'individuare deviazioni dalla normalità:
+```{r}
+shapiro.test(rnorm(10))
+shapiro.test(sample)
+```
+
+# Analisi della varianza
+`r newthought("Un test di Student rappresenta")` un esperimento la cui risposta dipende da un unico fattore che può avere uno o due livelli, corrispondente ad un test a uno o due campioni. 
+```{marginfigure}
+Un **fattore** è un ben determinato parametro che determina il risultato di un certo processo. Ad esempio, la massa trasportata determina la percorrenza chilometrica massima di un certo veicolo.
+
+Un fattore può assumere diversi **livelli** (vettura più o meno carica) e può essere un fattore *quantitativo* (ad esempio la massa trasportata) o qualitativo (ad esempio il tipo di benzina utilizzata). I fattori qualitativi non possono essere ordinati, perché non c'è una sequenza logica, e non possono essere interpolati, cioè dati due livelli non è possibile definire livelli intermedi.
+
+I livelli sono anche chiamati **trattamenti**.
+```
+È quindi interessante estendere il concetto di inferenza al caso in cui un fattore abbia più di due livelli, o addirittura il risultato di un processo dipenda da più di un fattore.
+
+È ad esempio il caso riportato in questo file di dati, in cui abbiamo la resistenza a trazione di filati misti con cinque diversi livelli di percentuale in cotone, e per ogni percentuale vengono realizzati 5 test:
+```{r echo=FALSE}
+df <- read_table("http://repos.dii.unitn.it:8080/data/cotton.dat", comment="#")
+df %>% 
+  mutate(Run=rep(1:5,5)) %>%
+  select("% Cotone"=Cotton, Run, Strength) %>%
+  pivot_wider(names_from = Run, names_prefix="#", values_from = Strength) %>%
+  knitr::kable()
+```
+In questo caso, dunque, il **fattore quantitativo** è la percentuale di cotone e i **livelli** sono cinque, ciascuno ripetuto cinque volte.
+
+Per prima cosa osserviamo questi dati mediante un *boxplot*:
+```{r, fig.margin=T}
+df <- read_table("http://repos.dii.unitn.it:8080/data/cotton.dat", comment="#")
+df %>% ggplot(aes(x=factor(Cotton), y=Strength)) + 
+  geom_boxplot() + 
+  labs(x="Contenuto in cotone (%)", y="Resistenza a trazione (N)")
+```
+
+Si noti che il data frame caricato contiene anche una colonna `Run`, che riporta una sequenza di numeri tra 1 e 25 in ordine casuale. Questa sequenza rappresenta **l'ordine con cui sono state eseguite le prove** che deve sempre essere casuale, altrimenti possibili fattori ambientali potrebbero mascherare l'effetto dei trattamenti.
+```{marginfigure}
+Nell'esempio deli filati in cotone, se effettuiamo le prove nell'ordine logico (cominciando col 15% e terminando con il 35%), e supponendo che nel corso della giornata l'umidità ambientale aumenti e che la resistenza del filato aumenti con l'umidità, potremmo avere la falsa impressione che le fibre testate a fine giornata abbiano una maggior resistenza. Se invece le prove vengono effetuate in ordine casuale, gli effetti ambientali si distribuiscono casualmente tra i vari trattamenti. Ciò ovviamente aumenta la varianza complessiva, ma senza penalizzare o privilegiare nessuno dei trattamenti.
+```
+
+Appare evidente che *non tutti i trattamenti* sono equivalenti. Ma come possiamo assegnare una probabilità a questa conclusione?
+
+Analogamente a quanto abbiamo fatto per il T-test accoppiato, cominciamo ad affrontare il problema formulando un **modello statistico** del processo.
+Come sempre, partiamo dall'**ipotesi di normalità** (che andrà poi verificata): siano $y_{ij}\sim\mathcal{N}{\mu_i, \sigma^2}, ~i=1,2,\dots,a, ~j=1, 2, \dots, n$ i valori riscontrati con la generica prova, dove $i$ è l'indice del trattamento e $j$ l'indice di ripetizione.
+
+Sotto queste ipotesi possiamo definire ogni singolo valore come:
+\begin{equation}
+y_{ij}=\mu_i+\varepsilon_{ij},~~\left\{\begin{array}{rcl}
+i &=& 1, 2, \dots, a \\
+j &=& 1, 2, \dots, n
+\end{array}\right.\label{eq:meansmodel}
+\end{equation}
+dove $\varepsilon_{ij}$ sono i **residui**, cioè la componente puramente stocastica, a media nulla, di ogni misura (mentre $\mu_i$ è deterministica). 
+In alternativa, separando ogni $\mu_i$ in un temine globale più un effetto del trattamento, possiamo sostituire $\mu_i=\mu+\tau_i$ ed ottenere:
+\begin{equation}
+y_{ij}=\mu+\tau_i+\varepsilon_{ij},~~\left\{\begin{array}{rcl}
+i &=& 1, 2, \dots, a \\
+j &=& 1, 2, \dots, n
+\end{array}\right.\label{eq:effectsmodel}
+\end{equation}
+
+La (\ref{eq:meansmodel}) è detta **modello delle medie** e la (\ref{eq:effectsmodel}) è detta **modello degli effetti**.
+
+È evidente che $E(y_{ij}) = \mu_i = \mu+\tau_i, ~i=1, 2, \dots, a$ e, quindi, $E(\varepsilon_{ij})=0$.
+
+Considerando il modello delle medie possiamo quindi formulare una coppia di ipotesi:
+\begin{equation}
+\begin{array}{rl}
+H_0:&\mu_1=\mu_2=\dots =\mu_a \\
+H_1:&\mu_i\neq\mu_j~~~\textrm{per almeno una coppia }(i, j)
+\end{array}\label{eq:hmeans}
+\end{equation}
+
+Mentre secondo il modello degli effetti, e in maniera equivalente:
+\begin{equation}
+\begin{array}{rl}
+H_0:&\tau_1=\tau_2=\dots =\tau_a = 0 \\
+H_1:&\tau_i\neq0~~~\textrm{per almeno un }i
+\end{array}\label{eq:heffects}
+\end{equation}
+
+Per sviluppare un test di inferenza associato alle ipotesi in (\ref{eq:hmeans}--\ref{eq:heffects}) dobbiamo procedere alla **decomposizione della somma quadratica totale corretta**, dopo aver introdotto qualche definizione e notazione. Sia:
+\begin{eqnarray}
+y_{i.}&=&\sum_{j=1}^n y_{ij},~\bar y_{i.}=y_{i.}/n,~i=1, 2, \dots, a \\
+y_{..}&=&\sum_{i=1}^a\sum_{j=1}^n y_{ij},~\bar y_{..}=y_{..}/N,~N=na
+\end{eqnarray}
+e
+\begin{equation}
+SS_T=\sum_{i=1}^a\sum_{j=1}^n (y_{ij}-\bar y_{..})^2 = (N-1)V(y_{ij})
+\end{equation}
+la **somma quadratica totale corretta**.
+
+Considerando che:
+\[
+SS_T=\sum_{i=1}^a\sum_{j=1}^n (y_{ij}-\bar y_{..})^2 = \sum_{i=1}^a\sum_{j=1}^n [(\bar y_{i.}-\bar y_{..})+(y_{ij}-\bar y_{i.})]^2
+\]
+ovvero
+\[
+SS_T= n\sum_{i=1}^a(\bar y_{i.}-\bar y_{..})^2 + \sum_{i=1}^a\sum_{j=1}^n (y_{ij}-\bar y_{i.})^2 + 2\sum_{i=1}^a\sum_{j=1}^n(\bar y_{i.}-\bar y_{..})(y_{ij}-\bar y_{i.})
+\]
+e siccome $\sum_{j=1}^n (y_{ij}-\bar y_{i.})=y_{i.}-n\bar y_{i.}=0$, ne consegue che la $SS_T$ può essere decomposta come:
+\begin{equation}
+SS_T=\sum_{i=1}^a\sum_{j=1}^n (y_{ij}-\bar y_{..})^2=n\sum_{i=1}^a(\bar y_{i.}-\bar y_{..})^2 + \sum_{i=1}^a\sum_{j=1}^n (y_{ij}-\bar y_{i.})^2=SS_{tr}+SS_E
+\end{equation}
+
+È evidente che i termini:
+\begin{eqnarray}
+MS_{tr}&=&\frac{SS_{tr}}{a-1} \\
+MS_E &=&\frac{SS_E}{N-a},
+\end{eqnarray}
+chiamati **somme quadratiche medie**, sono una stima della varianza tra i trattamenti e all'interno dei trattamenti, rispettivamente. Di conseguenza, se vale $H_0$, cioè se $\tau_i=0\forall i$, allora $MS_E$ e $MS_{tr}$ sono entrambi stime della stessa varianza di $N$ elementi casuali:
+\[
+E(MS_E)=E(MS_{tr})=\sigma^2
+\]
+
+Ricordando il lemma riportato nella definizione della distribuzione $\mathcal{X}^2$:
+\[
+\frac{\mathit{SS}}{\sigma^2}=\frac{\sum_{i=1}^n(y_i-\bar y)^2}{\sigma^2} \sim \mathcal{X}^2_{n-1}
+\]
+risulta che:
+\begin{align}
+\sum_{i=1}^{a}\sum_{j=1}^{n}\frac{(y_{ij}-\bar y_{..})^2}{\sigma^2} = \frac{SS_T}{\sigma^2} &\sim \chi^2_{N-1} \\
+\frac{SS_E}{\sigma^2} &\sim \chi^2_{N-a} \\
+\frac{SS_{tr}}{\sigma^2} &\sim \chi^2_{a-1} \\
+\end{align}
+
+Se le somme quadratiche $SS$ sono tutte indipendenti\footnote{Questo non è scontato, dato che $SS_T=SS_{tr}+SS_E$}, risulta che il rapporto
+\begin{equation}
+F_0 = \frac{SS_{tr}/(a-1)}{SS_E/(N-a)}=\frac{MS_{tr}}{MS_E}
+\end{equation}
+è distribuito come $\mathcal{F}_{a-1, N-a}$ e, analogamente al ragionamento seguito per il test di Student, la probabilità di riscontrare un valore maggiore o uguale a $F_0$ è il *p-value* associato ai test in (\ref{eq:heffects}) e (\ref{eq:hmeans}).
+
+Rimane solo da dimostrare che le somme quadratiche sono indipendenti. Per farlo abbiamo bisogno del
+```{=tex}
+\begin{thm}[di Cochran]
+Siano $Z_i\sim \mathcal{N}(0,1),~i=1,2,\dots,\nu$ campioni \strong{indipendenti}, con
+\[\sum_{i=1}^\nu Z_i^2=Q_1+Q_2+\dots+Q_s\]
+dove $s\leqslant \nu$ e $Q_i$ ha $\nu_i$ gradi di libertà ($i=1, 2,\dots,s$). 
+
+Allora, $Q_1,Q_2,\dots,Q_s$ sono variabili casuali \strong{independenti} distribuite come $\mathcal{X}^2$ con $\nu_1,\nu_2,\dots,\nu_s$ gradi di libertà, se e soltanto se
+\[ \nu=\nu_1+\nu_2+\dots+\nu_s\]
+\end{thm}
+\begin{lem}
+\emph{Notare che:} $\sum_{i=1}^\nu Z_i^2 \sim \mathcal{X}^2_\nu$.
+\end{lem}
+```
+
+Siccome $(N-a)+(a-1)=(N-1)$, dal teorema di Cochran consegue che $SS_{tr}/\sigma^2$ e $SS_E/\sigma^2$ sono variabili casuali indipendenti distribuite come $\mathcal{X}^2_{a-1}$ e $\mathcal{X}^2_{N-a}$, rispettivamente.
+
+\boxedpar{
+Dato che l'analisi sopra descritta è sostanzialmente una decomposizione della varianza associata all'esperimento in un termine relativo al trattamento più un termine relativo agli effetti casuali, questo tipo di procedura si chiama \strong{analisi della varianza} o, in breve, \strong{ANOVA}.
+}
+
 
 ## ANOVA a una via
+Il caso sopra illustrato dal punto di vista teorico corrisponde ad un esperimento con un solo fattore. In questo caso si parla di **ANOVA a una via** (*One-way ANOVA*).
+
+Ovviamente R dispone di funzioni per calcolare automaticamente la tabella ANOVA. Tornando all'esempio dei filati in cotone, possiamo calcolare la tabella ANOVA in questo modo. Per prima cosa è necessario formulare il **modello lineare**:
+```{r}
+df.lm <- lm(Strength~Cotton, data=df)
+```
+La notazione `Strength~Cotton` corrisponde al modello delle medie $y_{ij}=\mu_i+\varepsilon_{ij}$, avendo rimosso i residui e sostituito l'uguale con una tilde.
+
+A questo punto possiamo calcolare la tabella ANOVA:
+```{r}
+anova(df.lm)
+```
+
+La tabella ANOVA riporta 6 colonne:
+
+1. *Response*: è la risposta, cioè l'elenco dei fattori più i residui, o anche l'elenco dei termini in cui viene decomposta la somma quadratica totale corretta $SS_T$
+2. *Df*: il numero di gradi di libertà di ciascun termine della decomposizione
+3. *Sum Sq*: la somma quadratica di ciascun termine $SS_{\left[\right]}$
+4. *Mean Sq*: la somma quadratica media $MS_{\left[\right]}$, uguale alla colonna precedente diviso i gradi di libertà
+5. *F value*: il valore della statistica di test, cioè $MS_{\left[\right]} / MS_E$
+6. *Pr(>F)*: il *p-value* associato al F-test di ciascun termine (esclusi i residui)
+
+Si noti che la seconda **è evidentemente sbagliata**, dato che dovrebbe riportare $a-1$ e $N-a$. Il motivo è che nel data frame originale la colonna `Cotton` contiene dei numeri, quindi la funzione assume che si tratti di una variabile e non di un indice di raggruppamento. In altre parole, anziché un fattore con 5 livelli e 5 ripetizioni si ha un fattore con 25 campioni ripetuti una sola volta. Per risolvere questo problema è necessario specificare che `Cotton` è in realtà un **fattore**:
+```{r}
+df.lm <- lm(Strength~factor(Cotton), data=df)
+anova(df.lm)
+```
+
+Il risultato indica un *p-value* molto basso per il fattore `Cotton`: ciò significa che l'ipotesi alternativa, cioè che almeno un trattamento sia significativo, ha una probabilità d'errore molto bassa e può quindi essere accettata. La tabella in questo caso ha una settima colonna che riporta una chiave simbolica spiegata nella riga `Signif. codes`. Nel caso di una ANOVA ad una via, questa chiave ha poco significato; tuttavia è possibile costruire tabelle ANOVA per esperimenti molto complessi con parecchi fattori e altrettante righe: in questo caso la chiave simbolica serve per identificare rapidamente le righe corrispondenti a fattori significativi.
+
+
+## Test di Tukey
+Il test ANOVA a una via verifica l'ipotesi che *almeno un trattamento* sia significativo, cioè che il suo effetto $\tau_i$ sia maggiore della varianza complessiva inter-trattamento. Tuttavia non ci dice quali né quanti trattamenti siano significativi.
+
+In altre parole, siamo interessati a valutare tutte le seguenti coppie di ipotesi:
+\begin{equation}
+\left.
+\begin{array}{l}
+H_0:\mu_i=\mu_j \\
+H_1:\mu_i\neq \mu_j
+\end{array}
+\right\} ~~\forall i\neq j
+\end{equation}
+
+Si potrebbe pensare di effettuare una serie di test di Student tra tutte le combinazioni possibili di due livelli, tuttavia in questo modo la probabilità d'errore complessivo sarebbe la combinata delle singole probabilità, quindi la probabilità di commettere un errore di tipo I risulta aumentata. Questo concetto va sotto il nome di **Family-Wise Error Rate** (*FWER*).
+
+Tukey ha sviluppato una variante del test di Student corretta per FWER, che si basa sulla **distribuzione dell'intervallo studentizzato** $\mathcal{Q}$ anziché sulla distribuzione T di Student.
+
+Per ogni coppia $(i,j),~i\neq j$ si ha la statistica di test:
+\begin{equation}
+q_{0,ij}=\frac{|\bar y_{i.}-\bar y_{j.}|}{S_{p,ij}\sqrt{2/n}}\sim\mathcal{Q}_{a,k}
+\end{equation}
+dove $n$ è la dimensione dei campioni, uguale per tutti, $a$ è il numero di trattamenti e $k$ è il numero di gradi di libertà di $MS_E$, cioè $N-a=an-a$.
+
+Per ogni coppia si calcola quindi il *p-value* dalla PDF della distribuzione $\mathcal{Q}$ e si calcola l'intervallo di confidenza:
+\begin{multline}
+\bar y_{i.}-\bar y_{j.}-q_{\alpha,a,N-a}\frac{S_{p,ij}}{\sqrt{n}} \leqslant \mu_i-\mu_j \leqslant \\ 
+\leqslant \bar y_{i.}-\bar y_{j.}+q_{\alpha,a,N-a}\frac{S_{p,ij}}{\sqrt{n}}
+\end{multline}
+
+In R un test di Tukey può essere eseguito rapidamente mediante la funzione `TukeyHSD()` (HSD sta per *Honest Significant Difference*). Come illustrato dall'help in linea, questa funzione vuole come primo argomento un oggetto `aov`: si tratta di una interfaccia per l'analisi di varianza precedente alla funzione `anova()`. A differenza di quest'ultima, `aov()` vuole direttamente la *formula* che rappresenta il modello statistico:
+```{marginfigure}
+Si noti che l'ampiezza degli intervalli di confidenza ovviamente dipende dalla probabilità di falso negativo $\alpha$, il cui complemento a 1 può essere specificato con il parametro `conf.level`. Ridurre $\alpha$ comporta un aumento dell'ampiezza degli intervalli.
+```
+```{r}
+(tk <- TukeyHSD(aov(Strength~factor(Cotton), data=df)))
+```
+La tabella che si ottiene mostra le differenza tra le medie dei campioni, gli estremi dell'intervallo di confidenza e il *p-value* associato al singolo test, per ogni possibile coppia di campioni.
+
+L'oggetto restituito da `TukeyHSD()` può essere direttamente messo in grafico:
+```{r, fig.margin=T}
+# il parametro las=1 forza le etichette degli assi sempre orizzontali
+plot(tk, las=1)
+```
+La lettura del grafico di Tukey è semplice: per ogni coppia si ha l'intervallo di confidenza; quando tale intervallo attraversa la linea degli zeri verticale significa che la differenza tra i due trattamenti **non** è statisticamente significativa (vale $H_0$), e viceversa.
 
 ## ANOVA a due vie
+L'estensione più immediata dell'analisi della varianza è la cosiddetta **ANOVA a due vie**. Si tratta dell'analisi del caso in cui si abbiano due fattori, $A$ e $B$, ciascuno con un differente numero di trattamenti, $a$ e $b$, rispettivamente, tutti ripetuti $k$ volte.
 
-# Analisi dei residui
+In questo caso il **modello statistico** è:
+\begin{equation}
+y_{ijk}=\mu + \alpha_i+\beta_j+(\alpha\beta)_{ij}+\varepsilon_{ijk} \label{eq:statmodel}
+\end{equation}
+con $i=1,2,\dots,a$, $j=1, 2, \dots, b$ e $1, 2, \dots, k$. In questo caso, $(\alpha\beta)_{ij}$ è il termine che dipende dall'effetto incrociato, i **interazione**, dei due fattori
+
+Sulla traccia di quanto visto per il caso a una via, si decompone la somma quadratica totale corretta in quattro termini, rappresentanti le componenti di varianza associate al fattore $A$, al fattore $B$, all'interazione $AB$, e alla varianza inter-trattamento:
+\begin{equation}
+SS_T=SS_A+SS_B+SS_{AB}+SS_E
+\end{equation}
+
+Sulla base di questa decomposizione si possono definire quindi tre test statistici per la significatività di $A$, $B$ e $AB$, e le corrispondenti tre statistiche di test:
+\begin{equation}
+F_{0,X}=\frac{MS_X}{MS_E},~X=A,B,AB
+\end{equation}
+
+Considerando i gradi di libertà per ciascun termine riportati nella seguente tabella, le varie $F_{0,X}$ risultano tutte distribuite come $\mathcal{F}_{k_n,k_d}$ e si può procedere come al solito al calcolo del *p-value* associato.
+
+| Termine | Gradi di libertà |
+|---------|------------------|
+| A       | $a-1$            |
+| B       | $b-1$            |
+| AB      | $(a-1)(b-1)$     |
+| Errore  | $ab(n-1)$        |
+| Totale  | $abn-1$          |
+```{marginfigure}
+Le *formule* in R sono strumenti molto flessibili, dotati di una loro algebra (vedi `?formula`). In particolare, l'operatore `*` corrisponde alla somma `+` più l'interazione `:`; ad esempio `a*b` corrisponde a `a+b+a:b`.
+```
+
+In R, si procede come per il caso ad una via, con la differenza che il modello lineare va creato con una *formula* che rispecchi il modello statistico in (\ref{eq:statmodel}): in generale `resa ~ fattore1 + fattore2 + fattore1:fattore2`, sostituendo come sempre l'uguale con la tilde e omettendo i residui e esprimendo le interazioni con `:`.
+
+Per illustrare la procedura carichiamo una tabella di dati che rappresenta un esperimento di misura della vita di una batteria al cambiare della temperatura di esercizio e in funzione del tipo di elettrolita contenuto:
+```{r}
+df <- read_table("http://repos.dii.unitn.it:8080/data/battery.dat", comment="#")
+df %>% slice_head(n=6) %>% knitr::kable()
+```
+Le prime due colonne contengono l'ordine logico (`StandardOrder`) e l'ordine di esecuzione della prova (`RunOrder`), casuale. Le colonne `Temperature` e `Material` rappresentano la temperatura di esercizio (che è un **fattore quantitativo**) e il tipo di elettrolita (**fattore qualitativo**). La colonna `Repeat` è l'indice di ripetizione e la colonna `Response` è il risultato del test, cioè la vita della batteria (in minuti).
+
+Notiamo anzitutto che i fattori sono riportati come numeri, quindi vanno convertiti in oggetti di tipo `factor`; inoltre rinominiamo il materiale usando delle lettere\footnote{All'atto pratico, fattori e stringhe sono equivalenti}:
+```{r}
+df <- df %>% mutate(
+  Temperature=factor(Temperature),
+  Material=LETTERS[Material])
+```
+```{r include=FALSE}
+options(width=100)
+```
+A questo punto possiamo definire il modello lineare e calcolare la tabella ANOVA:
+```{r}
+df.lm <- lm(Response~Temperature*Material, data=df)
+anova(df.lm)
+```
+A quanto pare, sia i fattori che la loro interazione sono tutti significativi.
+```{r include=FALSE}
+options(width=60)
+```
+Spesso si rappresentano questo tipo di esperimenti con i cosiddetti **interaction plot**: si tratta di grafici in cui si riporta la resa dell'esperimento contro uno dei due fattori (possibilmente quantitativo), tenendo il secondo fattore come parametro e mediando sulle ripetizioni.
+Possiamo ottenere questo risultato raggruppando il data frame secondo i due fattori e calcolando i tempi di vita medi per ogni gruppo:
+```{r, fig.margin=T}
+df %>% group_by(Temperature, Material) %>%
+  summarise(Response=mean(Response), .groups="keep") %>%
+  ggplot(aes(x=Temperature, y=Response, color=Material)) +
+  geom_line(aes(group=Material))
+```
+Oltre a rappresentare l'effetto medio dei trattamenti, questi grafici di chiamano **interaction plot** proprio perché consentono rapidamente di identificare le interazioni tra fattori: quando due linee sono parallele significa che l'interazione è bassa, se invece sono convergenti o incrociate significa che l'interazione è alta.
+
+\boxedpar{
+Sebbene gli \emph{interaction plot} siano molto diffusi, è importante comprendere che sono validi \strong{solo} dopo aver dimostrato con l'analisi della varianza che il termine di interazione è significativo. Infatti, anche se il \emph{p-value} corrispondente all'interazione fosse alto potremmo comunque avere rette intersecanti, ma in maniera \strong{statisticamente non significativa}, cioè ripetendo una seconda volta lo stesso esperimento potremmo ottenere un risultato completamente differente, dato che stiamo essenzialmente osservando dei numeri casuali senza contenuto fisico.
+}
+
+Si noti infine che se uno dei termini risultasse non significativo sarebbe opportuno rivedere il modello: ad esempio, se l'interazione non è significativa dobbiamo modificare il modello in `Response~Temperature+Material`.
+
+# Analisi di adeguatezza del modello
+`r newthought("Si è detto che le analisi precedenti valgono")` sotto l'ipotesi di **normalità**. Cioè, all'interno di ogni trattamento la variabilità deve corrispondere ad una distribuzione normale. In un generico modello statistico come (\ref{eq:statmodel}), ciò equivale ad assumere che i **residui** (cioè l'unica componente stocastica) abbiano una distribuzione normale.
+Quest'ipotesi va ovviamente verificata prima di accettare una qualsiasi conclusione proposta dall'analisi della varianza.
+
+Inoltre, i residui devono essere **indipendenti** e non correlati con l'ordine di esecuzione delle prove né con il livello dei fattori stessi. Quest'ultimo caso, in particolare, significa evitare sovra- o sotto-adattamento.
+
+Siccome i residui dipendono dal modello adottato, l'insieme di questi controlli va sotto il nome di **analisi di adeguatezza del modello** (*Model Adequacy Checks*, MAC). Vedremo di seguito come effettuare queste verifiche in R riferendoci all'esempio dell'esperimento sulla vita delle batterie.
+
+## Normalità dei residui
+Ogni oggetto ti tipo modello lineare restituito dalla funzione `lm()` contiene il vettore dei residui $\varepsilon_{ijk}$. Per definizione è un vettore a media nulla, ma è necessario verificare che sia normale. Tipicamente si effettua un test di Shapiro-Wilk accompagnato da un grafico Q-Q:
+```{r, fig.margin=T}
+shapiro.test(df.lm$residuals)
+tibble(i=1:length(df.lm$residuals), residuals=df.lm$residuals) %>%
+  ggplot(aes(sample=residuals)) + 
+  geom_qq_line(color="red") +
+  geom_qq() + 
+  labs(x="quantili teorici", y="quantili campionari")
+```
+In questo caso, nulla fa ritenere che i residui non siano normali.
+
+
+## Assenza di *pattern*
+
+Un **pattern** è il segno di un'evidente correlazione. Siccome ci aspettiamo che i residui non dipendano né dal livello dei fattori né dall'ordine di esecuzione delle prove, ci aspettiamo di **non** osservare nessun pattern.
+
+Iniziamo con l'ordine di esecuzione (`RunOrder` nella tabella dati originale).
+```{r, fig.margin=T}
+mac <- tibble(
+  RunOrder=df$RunOrder,
+  Temperature=df$Temperature,
+  Material=df$Material,
+  Residuals=df.lm$residuals,
+  ) 
+mac %>%
+  ggplot(aes(x=RunOrder, y=Residuals)) +
+  geom_point()
+
+```
+Dato che otteniamo una nuvola di punti ben sparpagliata, possiamo ritenere che non ci sia un effetto dell'ordine sull'esperimento. In altre parole, le condizioni ambientali non controllate non hanno influenza sul risultato.
+
+```{r, fig.margin=T}
+mac %>% ggplot(aes(x=Temperature, y=Residuals)) +
+  geom_point()
+mac %>% ggplot(aes(x=Material, y=Residuals)) +
+  geom_point()
+```
+Anche in questo caso, i residui hanno varianza e media confrontabili sui diversi livelli, quindi possiamo confermare che il modello `Response~Temperature:Material` è adeguato.

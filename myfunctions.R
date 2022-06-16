@@ -46,7 +46,7 @@ knitr::opts_chunk$set(
   warning=FALSE,
   echo=TRUE, 
   tidy=TRUE, 
-  tidy.opts=list(width.cutoff=I(50)),
+  tidy.opts=list(width.cutoff=I(60)),
   size="small",
   # size="footnotesize",
   # size="scriptsize",

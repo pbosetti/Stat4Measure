@@ -27,6 +27,7 @@ header-includes:
 library(tufte)
 library(latex2exp)
 source("myfunctions.R")
+options(width=60)
 ```
 
 # Tidyverse, o la modernizzazione di R
@@ -300,6 +301,9 @@ tibble(v1=1:10, v2=v1^2) %>%
   geom_line() +
   geom_point(aes(color=v1), size=3) +
   labs(x="ascissa", y="ordinata", color="valore")
+```
+```{marginfigure}
+**Nota**: l'estetica (parametro `mapping`) è costruita con la funzione `aes()` e può essere passata a `ggplo()` quando è comune a tutte le geometrie seguenti, oppure può essere omessa in `ggplot()` e specificata nelle successive `geom_*()`, ognuna delle quali può avere un'estetica differente.
 ```
 
 Come si vede, la creazione di un grafico inizia con il comando `ggplot()`, che accetta tipicamente i dati mediante una *pipe*. A sua volta, `ggplot()` specifica la **mappa** tra colonne nel data frame di ingresso e entità del grafico mediante la funzione `aes()` (sta per *aesthetics*). Il risultato di questo comando è un grafico vuoto. Ad esso è possibile sommare delle *geometrie* mediante la famiglia di comandi `geom_*()`, che usano i dati e la mappa in `ggplot()` per disegnare punti, linee, ecc. 
