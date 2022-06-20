@@ -702,11 +702,14 @@ Dato che l'analisi sopra descritta è sostanzialmente una decomposizione della v
 ## ANOVA a una via
 Il caso sopra illustrato dal punto di vista teorico corrisponde ad un esperimento con un solo fattore. In questo caso si parla di **ANOVA a una via** (*One-way ANOVA*).
 
-Ovviamente R dispone di funzioni per calcolare automaticamente la tabella ANOVA. Tornando all'esempio dei filati in cotone, possiamo calcolare la tabella ANOVA in questo modo. Per prima cosa è necessario formulare il **modello lineare**:
+Ovviamente R dispone di funzioni per calcolare automaticamente la tabella ANOVA. Tornando all'esempio dei filati in cotone, possiamo calcolare la tabella ANOVA in questo modo. Per prima cosa è necessario formulare il **modello statistico** che descrive il fenomeno come nel modello degli effetti (\label{eq:effectsmodel}).
+
 ```{r}
 df.lm <- lm(Strength~Cotton, data=df)
 ```
-La notazione `Strength~Cotton` corrisponde al modello delle medie $y_{ij}=\mu_i+\varepsilon_{ij}$, avendo rimosso i residui e sostituito l'uguale con una tilde.
+La notazione `Strength~Cotton` si chiama **formula** e corrisponde al modello degli effetti (\label{eq:effectsmodel}) $y_{ij}=\mu + \tau_i+\varepsilon_{ij}$, avendo rimosso i residui e sostituito l'uguale con una tilde, e in cui il termine costante (o *intercetta*) è implicito.
+
+Nella prossima Parte vedremo più estesamente la sintassi delle formule di R e la funzione degli oggetti `lm`.
 
 A questo punto possiamo calcolare la tabella ANOVA:
 ```{r}

@@ -40,7 +40,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 
 knitr::opts_chunk$set(
   fig.align="center", 
-  fig.dim=c(5, 4), 
+  fig.dim=c(5, 4)*0.8, 
   out.height="2in",
   message=FALSE, 
   warning=FALSE,

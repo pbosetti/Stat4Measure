@@ -8,7 +8,8 @@ subtitle: "SpM --- Regressione" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
-  ![](by-nc-sa.png){height=5mm}date: "Ultimo aggiornamento: `r Sys.Date()`"
+  ![](by-nc-sa.png){height=5mm}
+date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
     number_sections: yes
@@ -21,16 +22,526 @@ link-citations: yes
 header-includes:
   - \usepackage[italian]{babel}
 ---
-
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
+library(tidyverse)
+library(glue)
 source("myfunctions.R")
+options(width=60)
+```
+```{=tex}
+\newtheorem{thm}{Teorema}
+\newtheorem{cor}{Corollario}
+\newtheorem{lem}{Lemma}
+\newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
 ```
 
 # Regressione lineare
+`r newthought("Una delle operazioni più comuni")` nella scienza e nell'ingegneria è quella di **adattare** il modello analitico di un fenomeno a dei dato sperimentali. In questo contesto, "adattare" (*to fit* in Inglese) significa calcolare i parametri del modello che minimizzano la distanza tra il modello stesso e i dati sperimentali osservati.
+
+In generale, in un modello analitico del tipo
+\begin{equation}
+y=f(x_1, x_2, \dots, x_n, c_1,c_2,\dots,c_m),
+\end{equation}
+la variabile dipendente $y$ è detta **risposta**, le variabili indipendenti $x_i$ sono dette **regressori** o anche **predittori**, mentre le $c_i$ sono i **parametri**, o anche **coefficienti**, del modello. Ad esempio, l'equazione $y=a+bx+cx^2$ rappresenta un modello polinomiale di secondo grado nel regressore $x$ e con i parametri $a, b, c$. Effettuare la regressione di questo modello significa quindi raccogliere una serie di coppie $(x,y)$ (entrambi variabili stocastiche) e trovare i parametri $a, b, c$ che minimizzano la differenza tra il modello il campione di coppie $(x,y)$.
+```{marginfigure}
+Si parla di **modello di regressione lineare** quando esso è lineare nei coefficienti: ad esempio, il modello polinomiale di secondo grado è lineare nei coefficienti, come pure un modello del tipo $y=c_0 + c_1x_1 + c_2x_2 + c_{12}x_1x_2$. Un modello come $y=\frac{c_1x_1\cos(c_2x_2)}{c_3x_3}$, invece, **non è** lineare nei coefficienti.
+```
+
+## Basi teoriche
+Supponiamo di avere un fenomeno la cui risposta dipende da $n$ regressori e $m$ coefficienti, come in (\ref{eq:model}). Supponiamo di misurare la risposta in $N$ combinazioni differenti dei regressori, chiamate **livelli**. Per tale processo definiamo un **modello statistico** che correla la risposta a ciascun livello con i corrispondenti regressori:
+\begin{multline}
+y_i = f(x_{1i},x_{2i},\dots,x_{ni},c_1, c_2,\dots,c_m) + \varepsilon_{i} = \\ 
+=\hat y_i + \varepsilon_i,~i=1,2,\dots,N\label{eq:model}
+\end{multline}
+dove $x_{ji}$ è il valore del $j$-esimo regressore alla $i$-esima ripetizione, $\hat y_i$ è il **valore regredito, o regressione** della risposta $y_i$ (che è **deterministico** o **sistematico**), e $\varepsilon_i$ è il **residuo**, cioè la componente puramente stocastica del modello, essendo le altre componenti deterministiche (vedi Fig. \ref{fig:modelreg}).
+```{r modelreg, echo=FALSE, fig.margin=T, fig.cap="Modello statistico: componente deterministica (linea rossa) e componente stocastica (residui, in blue)"}
+library(modelr)
+set.seed(1)
+df <- tibble(x=1:10, y=3+2*x+rnorm(length(x), sd=3))
+df.lm <- lm(y~x, data=df)
+df <- add_predictions(df, df.lm)
+df <- add_residuals(df, df.lm)
+ggplot(df, aes(x=x, y=y)) +
+  geom_line(aes(y=pred), color="red") +
+  geom_linerange(aes(ymin=pred, ymax=pred+resid), color="blue", size=1) +
+  geom_point(size=2)
+```
+
+L'adattamento del modello (\ref{eq:model}) può essere effettuato minimizzando un indice di prestazione $\Phi$ definito come:
+\begin{equation}
+\Phi(c_1,c_2,\dots,c_m)=\sum_{i=1}^N\varepsilon_i^2=y_i - f(x_{1i},x_{2i},\dots,x_{ni},c_1, c_2,\dots,c_m)
+\end{equation}
+
+Se la $f()$ è una funzione analitica e differenziabile possiamo realizzare l'adattamento minimizzando $\Phi(c_1,c_2,\dots,c_m)$, cioè calcolando i coefficienti $c_j$ che minimizzano la distanza tra ra risposta misurata $y_i$ e la risposta regredita (cioè il modello) $\hat y_i$.
+
+Consideriamo il caso più semplice di una **relazione lineare** tra la risposta ed un unico parametro, $x$. Allora il modello statistico è:
+\[
+y_i=(ax_i + b)+\varepsilon_i
+\]
+e i coefficienti $a$ e $b$ possono essere calcolati:
+\[
+\min_{a, b} \Phi(a, b) = \min_{a, b} \sum_{i=1}^N\left[y_i - (a x_i + b)\right]^2
+\]
+Il minimo (che è unico!) si calcola imponendo uguali a zero le derivate parziali di $\Phi$:
+\[
+\frac{\partial\Phi}{\partial a}(a, b) = 0,~~~\frac{\partial\Phi}{\partial b}(a, b) = 0
+\]
+Da cui risultano i valori critici:
+\[
+a^* = \frac{C_{xy}}{C_{xx}}, ~~~b^* = \bar y - a \bar x
+\]
+con $\bar x$ e $\bar y$ le medie di $x_i$ e $y_i$ e con
+\[
+C_{xx} = \sum_{i=1}^N(x_i - \bar x)^2, ~~~C_{xy} = \sum_{i=1}^N(x_i - \bar x)(y_i - \bar y)
+\]
+
+I due regressori $a,b$ possono anche essere calcolati come soluzione della equazione matriciale $\mathbf{A}k=y$, dove $\mathbf{A}$ è la matrice dei regressori, $\mathbf{k}$ il vettore colonna dei coefficienti e $\mathbf{y}$ il vettore colonna delle risposte:
+\begin{equation}
+\begin{bmatrix}
+x_1 & 1 \\
+x_2 & 1 \\
+\vdots & \vdots \\
+x_N & 1
+\end{bmatrix} \cdot 
+\begin{bmatrix}
+a  \\
+b 
+\end{bmatrix} =
+\begin{bmatrix}
+y_1 \\
+y_2 \\
+\vdots \\
+y_N
+\end{bmatrix}
+\end{equation}
+che può essere risolta come:
+\begin{align}
+\mathbf A^T \mathbf A\cdot \mathbf{k} &= \mathbf A^T \cdot \mathbf{y} \\
+(\mathbf A^T \mathbf A)^{-1} \mathbf A^T \mathbf A\cdot \mathbf{k} &= (\mathbf A^T \mathbf A)^{-1} \mathbf A^T \cdot \mathbf{y} \\
+\mathbf{k} &= (\mathbf A^T \mathbf A)^{-1} \mathbf A^T \cdot \mathbf{y} 
+\end{align}
+
+L'ultima operazione $(\mathbf A^T \mathbf A)^{-1} \mathbf A^T$ è anche chiamata **pseudo-inversa** di $\mathbf A$.
+
+La formulazione matriciale della regressione ha il vantaggio di essere direttamente generalizzabile a qualsiasi modello polinomiale, infatti se:
+\begin{equation}
+\mathbf A = \begin{bmatrix}
+x_1^n & x_1^{n-1} & \dots & x_1 & 1 \\
+x_2^n & x_2^{n-1} & \dots & x_2 & 1 \\
+\vdots & \vdots & \vdots & \vdots & \vdots \\
+x_N^n & x_N^{n-1} & \dots & x_N & 1 \\
+\end{bmatrix} 
+\end{equation}
+e i vettori colonna sono $\mathbf{k}=[c_n, c_{n-1},\dots,c_1]^T$ e $\mathbf{y}=[c_1, c_2,\dots,c_N]^T$, allora risulta comunque che $\mathbf{y}=\mathbf A\cdot \mathbf{k}$ e quindi:
+\begin{equation}
+\mathbf{k} = (\mathbf A^T \mathbf A)^{-1} \mathbf A^T \cdot \mathbf{y} 
+\end{equation}
+```{marginfigure}
+L'equazione matriciale $y=\mathbf A\cdot \mathbf{k}$ mostra molto chiaramente cosa si intende per **modelo statistico lineare**: se il modello può essere rappresentato con una relazione lineare tra la matrice dei regressori e il vettore dei coefficienti, allora è un modello lineare.
+```
+
+
+# Applicazione in R
+`r newthought("R dispone di una funzione")` per la creazione di modelli statistici lineari, che sta alla base delle tecniche di regressione: `lm()` (per *Linear Model*).
+Questa funzione crea un modello lineare e ne effettua la regressione a partire da un set di dati (risposta e predittori) e da una descrizione del modello stesso. La descrizione del modello viene espressa mediante una caratteristica del linguaggio R chiamata **formula**.
+
+## Le *formule* di R
+In R una **formula**\footnote{Vedi la guida in linea digitando \texttt{?formula} in console di R} è un'espressione costituita da:
+
+* un lato sinistro, che riporta il vettore di dati da considerare come **risposta**
+* un segno di relazione: la **tilde** `~`\footnote{Su Windows: \texttt{AltGr+0126}; su MacOS: \texttt{option+5}}
+* un lato destro, che riporta una descrizione di come i regressori sono combinati
+
+In particolare, il modo in cui si combinano i regressori segue una specifica *algebra*:
+
+1. `y~A+B` indica una somma, come in $y_i=c_0+c_1x_{1i} + c_2x_{2i}+\varepsilon_i$
+2. `y~A:B` indica un'interazione, come in $y_i=c_0+c_{12}x_{1i}x_{2i}+\varepsilon_i$
+3. `y~A*B` indica sia la somma che l'interazione, come in $y_i=c_0+c_1x_{1i} + c_2x_{2i} + c_{12}x_{1i}x_{2i}+\varepsilon_i$
+
+Si noti che si tratta di una vera e propria algebra, nel senso che può essere combinata secondo queste regole base. Ad esempio, `A*B*C` si espande come `A+B+C+A:B+B:C+A:C+A:B:C`.
+
+Studiando le equivalenze con le espressioni matematiche nelle tre regole precedenti osserviamo che nella formula R il termine costante (chiamato **intercetta**) è implicito, così come i **residui**. Se si desidera esplicitamente rimuovere il termine costante, come ad esempio in $y_i=cx_i+\varepsilon_i$, si aggiunge un `-1` alla formula: `y~A-1`.
+
+```{marginfigure}
+Particolare attenzione va posta per i polinomi di grado superiore al primo: la formula `y~A^2` si espande come `y~A*A` e quindi come `y~A+A+A:A`, che equivale a `y~A` e non è evidentemente quanto ci si aspetterebbe.
+
+La stessa confusione può originarsi in altri casi: ad esempio, la formula `y~A+log(B)` è legale e non ambigua, e rappresenta la somma del predittore `A` con il produttore calcolato facendo il logaritmo del vettore `B`. Viceversa, se volessimo scrivere una formula che esprime la somma tra il predittore `A` e il predittore ottenuto sommando due vettori `B` e `C` non potremmo scrivere `y~A+B+C`, che ha evidentemente un altro significato.
+
+In questi casi, per disambiguare l'uso di operatori algebrici di formula con normali operatori aritmetici si usa la funzione `I()` (per *Identity*): ad esempio `y~A+I(A^2)+I(B+C)`.
+```
+
+Tipicamente, risposta e predittori non sono vettori separati ma colonne di un unico data frame. In questi casi il modello lineare può essere ovviamente definito come:
+```{r eval=FALSE, include=TRUE}
+lm(df$y ~ df$A*df$B)
+```
+
+È evidente che quando il modello diventa complicato e quando i nomi delle colonne sono lunghi, questo formato può risultare noioso da scrivere e difficile da leggere, per cui c'è un'alternativa: si usano nella formula solo i nomi delle colonne e si passa l'opzione `data=` con il nome del data frame che contiene le colonne stesse. Ad esempio:
+```{r eval=FALSE, include=TRUE}
+lm(y ~ A*B, data=df)
+```
+
+```{marginfigure}
+Si noti che in R (a differenza che in altri linguaggi) il punto è un carattere come un altro e, quindi, perfettamente valido come parte del nome di una variabile.
+```
+È comune assegnare il risultato di `lm()` ad una variabile che si chiama come il data frame su cui si opera a cui si aggiunge la desinenza `.lm`:
+```{r eval=FALSE, include=TRUE}
+ldf.lm <- m(y ~ A*B, data=df)
+```
+
+## Regressione a un fattore
+
+Vediamo ora un esempio di un caso molto comune, in cui la risposta dipende da un unico fattore: generiamo dei dati corrispondenti ad una relazione lineare $y=2x+0.1x^2$ a cui sommiamo un disturbo normale e realizziamo poi la regressione con un modello lineare:
+```{r, fig.margin=T}
+set.seed(0)
+N <- 100
+df <- tibble(
+  x = seq(-10,10, length.out=N),
+  y_nom = 2*x + 0.1*x^2,
+  y = y_nom + rnorm(N, 0, 2)
+)
+
+df %>% ggplot(aes(x=x, y=y)) + 
+  geom_line(aes(y=y_nom), col="red") +
+  geom_point()
+```
+Si noti che abbiamo mantenuto anche i valori *nominali*, cioè depurati della parte stocastica, del fenomeno simulato, aggiunti al grafico come curva rossa.
+
+Ora creiamo e visualizziamo il modello lineare dei dati in colonna `y`:
+```{r}
+(df.lm <- lm(y~x+I(x^2), data=df))
+```
+
+Come si vede, stampando l'oggetto `df.lm` si ottengono direttamente i valori dell'intercetta, e dei coefficienti di primo e secondo grado. In particolare, l'intercetta è molto vicina a zero, dato che la nominale ha una radice proprio in zero.
+
+In realtà il modello contiene molte più informazioni, come è evidente ispezionando i suoi attributi:
+```{r}
+attributes(df.lm)
+```
+I valori di questi attributi possono essere stampati in forma di report con la funzione `summary()`:
+```{marginfigure}
+`summary()` è una funzione disponibile per molti oggetti R, vale spesso la pena provarla.
+```
+```{r}
+summary(df.lm)
+```
+
+Qui troviamo tre dati interessanti: una tabella con i quartili dei residui (dovrebbero essere centrati su zero); una tabella dei coefficienti *con i loro p-value*; il valore del **coefficiente di determinazione** $R^2$, che misura la bontà della regressione (deve essere vicino a 1).
+```{marginfigure}
+Il **coefficiente di determinazione** è definito come $R^2=1-SS_{\mathrm{res}}/SS_{\mathrm{tot}}$, dove $SS_{\mathrm{res}}=\sum\varepsilon_i^2$ e $SS_{\mathrm{tot}}=\sum(y_i-\bar y)^2$: se i valori regrediti corrispondono ai valori osservati, la somma dei residui è 0 e $R^2=1$.
+```
+Soffermiamoci sui *p-value* dei coefficienti: per essi, vale quanto visto nella Parte precedente: tanto più piccolo è il *p-value*, tanto più il termine è statisticamente significativo, e viceversa. In questo caso notiamo che, mentre i termini di grado 1 e 2 sono sicuramente significativi, l'intercetta lo è solo al 8%. Possiamo quindi rivedere il modello eliminando l'intercetta, cioè forzando il modello a passare per l'origine:
+```{marginfigure}
+In una formula, per rimuovere l'intercetta è necessario aggiungere il termine `-1`.
+```
+```{r}
+df.lm <- lm(y~x+I(x^2)-1, data=df)
+summary(df.lm)
+```
+Come si vede, $R^2$---già alto prima---è addirittura aumentato, quindi possiamo assumere il secondo modello come più appropriato.
+
+Il modo più semplice per visualizzare il modello di regressione è utilizzare la geometria `geom_smooty()` di `ggplot`. Questa funzione richiede il metodo (nel nostro caso il nome della funzione da usare per la regressione, cioè `"lm"`) e la formula, che---anziché ripetere---importiamo dall'oggetto `df.lm`:
+```{r fig.margin=T}
+df %>% ggplot(aes(x=x, y=y)) + 
+  geom_line(aes(y=y_nom), col="red") +
+  geom_point(color=gray(0.8)) + 
+  geom_smooth(method="lm", formula=df.lm$call$formula, level=0.99, lty=2, fill="blue")
+```
+La banda attorno alla curva di regressione è detta **banda di confidenza**: è l'equivalente dell'intervallo di confidenza, in questo caso al 99%, inteso in maniera corrispondente all'intervallo di confidenza definito per i test statistici nella Parte precedente. Cioè: dato questo modello, la componente stocastica delle misure potrebbe provocare una variazione dei coefficienti di regressione tale che, al 99%, la curva di regressione rientri nella banda di confidenza.
+
+Come visto nella Parte precedente, ogni modello va accompagnato da un'analisi di adeguatezza. In particolare, è fondamentale verificare la normalità dei residui mediante il test di Shapiro-Wilk e mediante dei grafici:
+```{r fig.margin=T}
+library(ggExtra) # fornisce ggMarginal()
+p <- df %>% ggplot(aes(x=x, y=df.lm$residuals)) +
+  geom_point() +
+  labs(y="residui")
+ggMarginal(p, type="histogram", margins="y", bins=10)
+ggplot(mapping = aes(sample=df.lm$residuals)) +
+  geom_qq_line(color="red") +
+  geom_qq() +
+  labs(x="quantili teorici", y="quantili campionari")
+```
+
+## Sotto-adattamento (*underfitting*)
+Nella realtà di un esperimento raramente si conosce l'andamento nominale atteso dei dati. In questi casi è possibile scegliere il modello sbagliato. Nell'esempio precedente, se osserviamo i dati *senza la curva nominale* che--ricordiamolo---è ignota, potremmo essere tentati di effettuare una regressione con un modello del primo grado. È evidente che quest'operazione è sempre possibile: sta all'analista/sperimentatore decidere qual è il grado del modello più appropriato per descrivere i dati osservati.
+```{r fig.margin=T}
+df.lm2 <- lm(y~x, data=df)
+df %>% 
+  ggplot(aes(x=x, y=y)) + 
+  geom_point() +
+  geom_smooth(method="lm", formula=df.lm2$call$formula, level=0.99, fill="blue")
+```
+
+Lasciando per esercizio la verifica dei *p-value* e di $R^2$, ci limitiamo a verificare i residui in un grafico Q-Q, il quale mostra evidentemente come la distribuzione non sia normale, dato che le due code tendono a scappare dallo stesso lato della linea di riferimento:
+```{r fig.margin=T}
+ggplot(mapping = aes(sample=df.lm2$residuals)) +
+  geom_qq_line(color="red") +
+  geom_qq() +
+  labs(x="quantili teorici", y="quantili campionari")
+```
+
+Ciò è confermato anche dal test:
+```{r}
+(st <- shapiro.test(df.lm2$residuals))
+```
+con un `r round(st$p.value*100, 1)`% di probabilità d'errore rifiutando l'ipotesi di normalità. 
+
+Ma, soprattutto, studiando la relazione tra residui e regressore, risulta:
+```{r fig.margin=T}
+p <- df %>% ggplot(aes(x=x, y=df.lm2$residuals)) +
+  geom_point() +
+  labs(y="residui")
+ggMarginal(p, type="histogram", margins="y", bins=10)
+```
+In questo caso è evidente che i residui mostrano un *pattern* a "U".  Questo risultato è tipico di un caso di **sottoadattamento** o **underfitting**, che si ha quando il modello scelto è troppo semplice, cioè ha un grado troppo basso, per descrivere accuratamente i dati.
+
+## Sovra-adattamento (*overfitting*)
+Il caso opposto del sottoadattamento è quando si sceglie un modello troppo complesso per i dati disponibili. Il risultato si chiama **sovradattamento** ed è altrettanto da evitare.
+
+Consideriamo ad esempio, a partire dai dati originali, soltanto il sottoinsieme incluso nell'intervallo $x\in[-7.5, 7.5]$. Marchiamo i dati in questo intervallo come "in" e irestanti come "out". Poi regrediamo un modello polinomiale di grado 10 solo sui dati "in", e vediamo come il modello si comporta sui dati "out", cioè in condizioni di **estrapolazione**.
+
+```{marginfigure}
+La funzione `poly()` può essere utilizzata per creare rapidamente formule polinomiali con tutti i termini fino al grado desiderato.
+```
+```{r fig.margin=T}
+df <- mutate(df, subset=if_else(x>-7.5 & x<7.5, "in", "out")) 
+df %>%
+  ggplot(aes(x=x, y=y, color=subset)) +
+  geom_point() + 
+  geom_smooth(data=filter(df, subset=="in"), 
+              method="lm", formula=y~poly(x,10), 
+              fullrange=T) + 
+  coord_cartesian(ylim=c(-30,30))
+```
+
+Come si vede, sui dati "in" il modello segue bene i dati sperimentali, forse anche troppo, dato che cerca di inseguire anche piccole variazioni medie (vedi tra 3 e 5, ad esempio). Tuttavia al di fuori dell'intervallo di regressione il modello diverge rapidamente e le bande di confidenza si allargano altrettanto rapidamente. Inoltre, il modello risulta del tutto inefficace nell'**estrapolazione**, cioè nella predizione dei valori al di fuori dall'intervallo di regressione. È il tipico caso di **sovradattamento**.
+
+# Predizione
+La funzione `predict()` consente di valutare un modello su generici valori dei predittori, che in generale possono esser più di uno. I nuovi valori dei predittori possono essere passati come un dataframe al parametro `newdata`. Se questo parametro non è fornito, il modello viene calcolato sugli stessi valori dei predittori dei dati su cui è stata calcolata la regressione. È possibile chiedere anche il calcolo della banda di confidenza:
+```{r}
+predict(df.lm) %>% str()
+predict(df.lm, interval="confidence") %>% str()
+```
+Come si nota, la funzione restituisce un vettore o una matrice con colonne nominate, *non un data frame*.
+
+Per valutare il modello su altri dati è necessario passare un data frame (o una `tibble`), con le colonne con gli stessi nomi dei predittori:
+```{r}
+predict(df.lm, 
+        newdata=tibble(x=-12,12), 
+        interval="confidence") %>% str()
+```
+
+Oltre che l'intervallo di confidenza, `predict` può calcolare anche l'intervallo di predizione, cioè la banda all'interno della quale ci si aspetta una frazione dei dati pari al valore del parametro `level`. Siccome non è possibile ottenere entrambe le bande allo stesso tempo, costruiamo una nuova tibble a partire da un nuovo vettore di regressori tra -15 e 15 (più ampio), usiamo `bind_cols()` per associare le colonne di un primo `predict()`, rinominandole, e poi ripetiamo una seconda volta per le sole colonne `lwr` e `upr` per l'intervallo di predizione (dato che la colonna `fit` è uguale).
+
+```{r}
+new <- tibble(
+  x=seq(-15,15,0.1)
+)
+new <- new %>% bind_cols(
+  predict(df.lm, newdata=new, interval="confidence", level=0.99)
+) %>% rename(conf.lwr=lwr, conf.upr=upr) %>%
+  bind_cols(
+    predict(df.lm, newdata=new, interval="predict", level=0.99) %>% 
+      as_tibble() %>% 
+      select(
+        pred.lwr=lwr, pred.upr=upr
+      )
+)
+```
+Possiamo ora realizzare un grafico, aggiungendo le bande con la geometria `geom_ribbon()`:
+```{r fig.margin=T}
+new %>% ggplot(aes(x=x)) +
+  geom_point(data=df, aes(x=x, y=y), color=gray(0.5)) +
+  geom_ribbon(aes(ymin=pred.lwr, ymax=pred.upr, color="predizione", linetype="predizione"), alpha=0) +
+  geom_ribbon(aes(ymin=conf.lwr, ymax=conf.upr, color="confidenza", linetype="confidenza"), alpha=0.5) +
+  geom_line(aes(y=fit)) +
+  labs(color="intervallo", linetype="intervallo")
+```
+Infine, la funzione `confint()` consente di ottenere l'intervallo di confidenza **sui parametri** del modello:
+```{r}
+confint(df.lm2)
+```
 
 
 # Regressione lineare generalizzata
+`r newthought("La regressione lineare classica")` sopra descritta assume l'ipotesi di normalità dei residui. In altre parole, la parte stocastica del modello (vedi Fig. \ref{fig:modelreg}) deve essere distribuita secondo una normale a media nulla.
+
+In virtù del teorema del limite centrale quest'ipotesi non è troppo stringente. Tuttavia ci sono numerosi casi in cui è certamente non soddisfatta. Vogliamo quindi passare da una situazione in cui (essendo $\mathbf{x}_i$ e $\mathbf{k}$ i vettori dei regressori e dei coefficienti):
+\begin{eqnarray}
+y_i &=& f(\mathbf{x}_i, \mathbf{k}) + \varepsilon_i = \eta_i + \varepsilon_i\\
+\varepsilon_i &\sim & \mathcal{N}(0, \sigma^2)
+\end{eqnarray}
+ad una in cui:
+\begin{eqnarray}
+y_i &=& \eta_i + \varepsilon_i \\
+\varepsilon_i &\sim & D(p_1, p_2, \dots)
+\end{eqnarray}
+essendo $D$ una generica distribuzione con parametri $p_i$ e $\eta_i$ la componente sistematica.
+
+Quando $D$ è una distribuzione facente parte della **famiglia di distribuzioni esponenziali**\footnote{Normale, binomiale, gamma, normale inversa, Poisson, quasinormale, quasibinomiale e quasipoissoniana}, il problema può essere risolto dalla **regressione lineare generalizzata**.
+
+Questa generalizzazione non è banale e si basa sull'introduzione di una cosiddetta **funzione di collegamento** (*link function*), $g(\cdot)$. Quest'ultima serve a proiettare l'insieme dei valori possibili per la distribuzione $D$ sull'insieme dei numeri reali, in modo che sia possibile sommarli alla parte deterministica $\eta_i$:
+\begin{equation}
+y_i=\eta_i+g(d_i),~ d_i\sim D(p_1, p_2\dots )
+\end{equation}
+```{marginfigure}
+È evidente che in questi termini la regressione lineare è un caso particolare della regressione lineare generalizzata, dove la distribuzione di riferimento è $\mathcal{N}$ e la funzione di collegamento è l'identità.
+```
+
+Per quanto riguarda le funzioni di collegamento, ogni distribuzione della famiglia esponenziale ha una sua funzione di collegamento canonica, ma in linea di principio nulla vieta di utilizzare funzioni di collegamento diverse e più adatte ad una particolare applicazione. La seguente tabella mostra le funzioni canoniche per le principali distribuzioni esponenziali:
+
+| Distribuzione | Funzione di collegamento |
+|---------------|--------------------------|
+| Normale       | $g(x)=x$                 |
+| Binomiale     | $g(x)=\mathrm{logit}(x)$ |
+| Poisson       | $g(x)=\log(x)$           |
+| Gamma         | $g(x)=1/x$               |
+
+In pratica, il caso della distribuzione binomiale e di Poisson sono quelli di uso più frequente. Senza entrare nei dettagli di come vengono calcolati i coefficienti di regressione, vediamo il caso particolarmente importante della regressione binomiale, o **logistica**.
+
 
 ## Regressione logistica
+La regressione logistica prende il nome dalla funzione di collegamento utilizzata per la regressione lineare generalizzata nel caso in cui ci si aspetta che i residui abbiano una distribuzione binomiale.
+
+La regressione logistica è utile nei casi in cui si voglia classificare un evento in due categorie (vero/falso, alto/basso, vivo/morto, OK/NO, ecc.) in funzione dei valori assunti da uno o più regressori. Si tratta di uno dei metodi più semplici per realizzare dei *classificatori* e fa parte, di conseguenza, delle tecniche di *machine learning* (ML).
+
+Si tratta quindi di una regressione lineare generalizzata con distribuzione binomiale e funzione di collegamento $\mathrm{logit}(x)$:
+$$
+\mathrm{logit}(x)=\frac{1}{1+e^{-p(x-x_0)}}
+$$
+
+La funzione logistica è una funzione sigmoidale, con dominio su $\mathbb{R}$ e che assume valori nell'intervallo $(0,1)$; il parametro $x_0$ è il regressore per cui la funzione assume il valore di 0.5, e il parametro $p$ è la pendenza del tratto di transizione. Il grafico della funzione è mostrato in Fig. \ref{fig:logit}.
+```{r logit, echo=FALSE, fig.margin=T, fig.cap="Grafico della funzione logistica"}
+logit <- function(x, p=1, x0=0) 1/(1+exp(-p*(x-x0)))
+tibble(x=seq(-6, 6, 0.1), y=logit(x, 2, 1)) %>%
+  ggplot(aes(x=x, y=y)) +
+  geom_hline(yintercept=c(0, 0.5, 1), lty=2) + 
+  geom_vline(xintercept=1, lty=2) +
+  geom_line() + 
+  labs(y="logit(x, 2, 1)")
+```
+L'idea è che i regressori per cui la funzione logistica vale meno di 0.5 appartengano alla prima classe (bassa) e quelli per cui vale più di 0.5 appartengano alla seconda classe (alta). Obiettivo della regressione è calcolare i valori di $x_0$ e di $p$ che minimizzano i residui quadrati medi. 
+
+
+# Regressione logistica in R: esempio
+
+`r newthought("Vogliamo prevedere la sopravvivenza")` di una bottiglia di sapone liquido al test di caduta, in funzione del livello di riempimento. Più la bottiglia è piena, infatti, più piccolo è il polmone di aria che contiene e, quindi, maggiore la sovrapressione in caso di caduta. Ovviamente il problema è stocastico, dato che le bottiglie non sono tutte uguali e il riempimento stesso ha una certa variabilità.
+
+Abbiamo un data frame che contiene i risultati di 400 diversi test di caduta per bottiglie riempite a differenti livelli rispetto alla capacità nominale. Cominciamo caricando e visualizzando i dati con un istogramma del livello di riempimento:
+
+```{r fig.margin=T}
+data <- read_table("http://repos.dii.unitn.it:8080/data/soap_bottles.txt", comment="#")
+data %>% slice_head(n=6) %>% knitr::kable()
+data %>% ggplot(aes(x=p)) +
+  geom_histogram(bins = 20, color="black", fill=gray(0.75)) + 
+  geom_rug(aes(color=OK)) +
+  labs(x="riempimento (%)", y="Osservazioni", color="Sopravvissuto")
+```
+
+Si noti la cosiddetta "stuoia" (*rug*) subito sopra le ascisse: essa riporta le reali osservazioni, in verde i sopravvissuti e in rosso i morti. È evidente che l'istogramma rappresenta due popolazioni, e che c'è una sovrapposizione tra la popolazione dei sopravvissuti e quella dei morti. In altre parole, non c'è un limite netto al livello di riempimento che discrimina nettamente le due classi; piuttosto, siamo interessati a identificare un limite che minimizzi il numero di **errori di classificaizone**.
+
+Questa è la tipica situazione adatta ad una regressione logistica.
+
+## Preparazione dei dati
+
+Come in tutte le applicazioni di ML, è opportuno dividere i dati in due sottoinsiemi: uno (tipicamente più grande) da utilizzare per l'addestramento, o la messa a punto del modello di regressione; l'altro, complementare, verrà poi utilizzato per **validare** il modello, cioè per verificarne l'affidabilità. Decidiamo di utilizzare l'80% dei dati per l'addestramento e il restante 20% per la validazione. Per farlo, aggiungiamo una colonna `training` al data frame che contenga valori booleani `TRUE/FALSE` in rapporto 80/20: le righe con `training==TRUE` saranno quindi nel campione di addestramento:
+
+```{r}
+N <- length(data$run)
+ratio <- 0.8
+n <- floor(N*ratio)
+data$training <- FALSE
+data$training[sample(1:N, n)] <- TRUE
+str(data)
+```
+
+
+## Regressione
+
+Ora costruiamo il modello logistico, utilizzando la funzione `glm()` (Generalized Linear Model) e specificando l'opzione `family=binomial()`:
+```{marginfigure}
+L'argomento del parametro `family`di `glm()` può essere o il nome (come stringa) della distribuzione desiderata, o una delle funzioni elencate in `?family`, come appunto `binomial()`. Queste ultime funzioni accettano come parametro `link`, che può specificare una funzione di collegamento diversa dalla canonica.
+```
+```{r}
+model <- glm(OK~p, data=filter(data, training), family=binomial())
+summary(model)
+```
+
+Si noti che `glm()` usa una formulazione della funzione logistica leggermente differente, con $\mathrm{logit}(x)=1/(1+\exp(-px-m))$, ossia i coefficienti riportati dall'output di `glm()` sono $p$ e $m$, quindi il punto medio è $x_0=-m/p$.
+```{marginfigure}
+Una pendenza negativa significa che la funzione logistica passa da 1 a 0 all'aumentare dell'argomento.
+```
+Possiamo quindi visualizzare la funzione logistica adattata, cioè con i parametri risultanti dalla regressione, effettuando una *predizione* del risultato del test di caduta a partire dal valore di riempimento. Per farlo, potremmo utilizzare la funzione `predict()` di R base, ma utilizziamo invece `add_predictions()` del pacchetto `modelr` che fa parte del Tidyverse. Questa funzione aggiunge una colonna `pred` che contiene le predizioni al data frame originale, in corrispondenza di **tutti** i valori dei regressori (in questo caso la colonna `p`):
+
+```{r fig.margin=T}
+x0 <- -model$coefficients[1]/model$coefficients[2]
+data <- add_predictions(data, model, type="response")
+data <- add_residuals(data, model)
+p1 <- data %>% ggplot(aes(x=p, y=pred)) +
+  geom_line() + 
+  geom_vline(xintercept=x0, lty=2) +
+  labs(x="Riempimento p (%)", y="logit(p)")
+p1
+```
+
+
+## Predizione e validazione
+
+Il modello adattato può essere utilizzato per predire la sopravvivenza al test di caduta: infatti, riempimenti inferiori a $x_0=`r round(x0, 1)`$ appartengono alla classe `OK`, gli altri alla classe `FAIL`.
+
+Si noti che `add_predictions()` sopra usata ha valutato il modello adattato a titti i predittori, quindi **inclusi i valori che non abbiamo utilizzato per la regressione**, cioè quelli in cui `training==FALSE`. Possiamo quindi validare la regressione confrontando la classe predetta con la classe effettiva per i dati in cui `training==FALSE`:
+```{r fig.margin=T}
+data <- data %>% mutate(OKn=as.numeric(OK))
+p1 + 
+  geom_point(data=filter(data, !training), mapping=aes(x=p, y=OKn, color=OK)) +
+  geom_rug(data=filter(data, !training, OK), mapping=aes(y=pred, color=OK), sides="l") +
+  geom_rug(data=filter(data, !training, !OK), mapping=aes(y=pred, color=OK), sides="r")
+```
+
+
+È evidente che si può spostare la soglia di classificazione più in alto o più in basso di 0.5: se la spostiamo più in alto, ad esempio a 0.7, riusciamo a evitare tutte le rotture, ma classificheremo come probabili rotture anche bottiglie che potrebbero sopravvivere. Viceversa, se spostiamo la soglia più in basso eviteremo di scartare bottiglie che potrebbero sopravvivere, ma al prezzo di accettare più bottiglie "deboli".
+
+In altre parole è un problema di bilanciamento di falsi positivi e falsi negativi. Per capire l'affidabilità del modello è opportuno costruire quindi una **matrice di confusione**, in grado di riassumere falsi positivi, falsi negativi e predizioni corrette (si noti l'uso della funzione `table()`):
+
+```{r}
+# in conteggio:
+ct_t <- table(Actual=filter(data, training)$OK, 
+             Predicted=filter(data, training)$pred>0.5)
+ct_v <- table(Actual=filter(data, !training)$OK, 
+             Predicted=filter(data, !training)$pred>0.5)
+# in frazione percentuale, TRAINING:
+(ct_t <- round(ct_t/sum(ct_t)*100, 1))
+# in frazione percentuale, VALIDAZIONE:
+(ct_v <- round(ct_v/sum(ct_v)*100, 1))
+```
+
+In particolare, osserviamo che con una soglia di classificazione a 0.5 il modello ha una probabilità di falsi positivi (FPR, *false positive rate*) pari a `r ct_t[1,2]`%, e una probabilità di falsi negativi (FNR) pari a `r ct_t[2,1]`% sui dati di training, e valori molto simili sui dati di validazione. In particolare, quest'ultimo confronto ci consente di **ritenere il modello validato**.
+
+Tipicamente, nei classificatori dove la cifra di merito è la *sopravvivenza* si preferisce abbassare il più possibile FNR a scapito del FPR. Cioè vogliamo individuare il valore di soglia che minimizza i falsi negativi pur senza penalizzare troppo i falsi positivi.
+
+A questo scopo, le funzioni `prediction()` e `performance()` della libreria `ROCR` consentono di calibrare con precisione la soglia di classificazione.
+
+```{r fig.dim=c(5, 4)*1.5}
+library(ROCR)
+pred <- prediction(filter(data, training)$pred, filter(data, training)$OK)
+perfn <- performance(pred, "tnr", "fnr")
+plot(perfn, colorize=T, print.cutoffs.at=seq(0,1,0.1))
+perfp <- performance(pred, "tpr", "fpr")
+plot(perfp, colorize=T, print.cutoffs.at=seq(0,1,0.1))
+```
+
+Su questi grafici il parametro colore rappresenta la soglia di classificazione. Il **primo grafico** mostra che abbassare la soglia è efficace nel ridurre FNR fino a 0.4, poi però non cambia nulla tra 0.4 e 0.2.
+
+Parimenti, dal secondo grafico si osserva che ridurre la soglia sotto 0.4 aumenta sensibilmente FPR. Di conseguenza scegliamo la soglia a 0.4 e ricalcoliamo la matrice di confusione:
+
+```{r}
+(ct <- round(table(Actual=data$OK, 
+                   Predicted=data$pred>0.4)/length(data$OK)*100, 1))
+```
+
+Questo ci consente di ridurre FNR a `r ct[2,1]`%, alle spese di un aumento del FPR a `r ct[1,2]`%.
+
+```{marginfigure}
+L'esempio di regressione logistica sopra riportato può sembrare banale, ma in realtà la potenza del metodo si apprezza meglio quando il modello di regressione è *multivariato*, cioè quando prende in considerazione due o più regressori. In questi casi il modello è del tipo `glm(y~a+b, data=df, family="binomial")`. In questo documento si è scelto il caso univariato perché la visualizzazione è più semplice, ma la stessa tecnica può essere facilmente estesa al caso multivariato.
+```
