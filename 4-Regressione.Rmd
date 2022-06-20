@@ -28,6 +28,7 @@ library(latex2exp)
 library(tidyverse)
 library(glue)
 source("myfunctions.R")
+theme_set(theme_gray()+theme(legend.position = "bottom"))
 options(width=60)
 ```
 ```{=tex}
@@ -187,7 +188,7 @@ Si noti che in R (a differenza che in altri linguaggi) il punto è un carattere 
 ```
 È comune assegnare il risultato di `lm()` ad una variabile che si chiama come il data frame su cui si opera a cui si aggiunge la desinenza `.lm`:
 ```{r eval=FALSE, include=TRUE}
-ldf.lm <- m(y ~ A*B, data=df)
+df.lm <- m(y ~ A*B, data=df)
 ```
 
 ## Regressione a un fattore
@@ -473,16 +474,17 @@ Si noti che `glm()` usa una formulazione della funzione logistica leggermente di
 Una pendenza negativa significa che la funzione logistica passa da 1 a 0 all'aumentare dell'argomento.
 ```
 Possiamo quindi visualizzare la funzione logistica adattata, cioè con i parametri risultanti dalla regressione, effettuando una *predizione* del risultato del test di caduta a partire dal valore di riempimento. Per farlo, potremmo utilizzare la funzione `predict()` di R base, ma utilizziamo invece `add_predictions()` del pacchetto `modelr` che fa parte del Tidyverse. Questa funzione aggiunge una colonna `pred` che contiene le predizioni al data frame originale, in corrispondenza di **tutti** i valori dei regressori (in questo caso la colonna `p`):
-
+```{marginfigure}
+**Nota**: il parametro `type="response"` di `add_predictions()` serve a specificare che si desiderano le predizioni sul dominio della risposta (cioè dei valori di $y$). Il default, `type="link"`, restituisce le predizioni sul dominio della funzione di collegamento (cioè prima di applicarla).
+```
 ```{r fig.margin=T}
 x0 <- -model$coefficients[1]/model$coefficients[2]
 data <- add_predictions(data, model, type="response")
 data <- add_residuals(data, model)
-p1 <- data %>% ggplot(aes(x=p, y=pred)) +
+(p1 <- data %>% ggplot(aes(x=p, y=pred)) +
   geom_line() + 
   geom_vline(xintercept=x0, lty=2) +
-  labs(x="Riempimento p (%)", y="logit(p)")
-p1
+  labs(x="Riempimento p (%)", y="logit(p)"))
 ```
 
 

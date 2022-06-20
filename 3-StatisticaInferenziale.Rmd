@@ -29,6 +29,7 @@ library(latex2exp)
 library(tidyverse)
 library(glue)
 source("myfunctions.R")
+theme_set(theme_gray()+theme(legend.position = "bottom"))
 options(width=60)
 ```
 ```{=tex}

@@ -26,7 +26,9 @@ header-includes:
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
+library(tidyverse)
 source("myfunctions.R")
+theme_set(theme_gray()+theme(legend.position = "bottom"))
 options(width=60)
 ```
 

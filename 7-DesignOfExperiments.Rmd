@@ -8,7 +8,8 @@ subtitle: "SpM --- Design of Experiments" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
-  ![](by-nc-sa.png){height=5mm}date: "Ultimo aggiornamento: `r Sys.Date()`"
+  ![](by-nc-sa.png){height=5mm}
+date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
     number_sections: yes
