@@ -318,7 +318,7 @@ df %>%
 
 Come si vede, sui dati "in" il modello segue bene i dati sperimentali, forse anche troppo, dato che cerca di inseguire anche piccole variazioni medie (vedi tra 3 e 5, ad esempio). Tuttavia al di fuori dell'intervallo di regressione il modello diverge rapidamente e le bande di confidenza si allargano altrettanto rapidamente. Inoltre, il modello risulta del tutto inefficace nell'**estrapolazione**, cioè nella predizione dei valori al di fuori dall'intervallo di regressione. È il tipico caso di **sovradattamento**.
 
-# Predizione
+## Predizione
 La funzione `predict()` consente di valutare un modello su generici valori dei predittori, che in generale possono esser più di uno. I nuovi valori dei predittori possono essere passati come un dataframe al parametro `newdata`. Se questo parametro non è fornito, il modello viene calcolato sugli stessi valori dei predittori dei dati su cui è stata calcolata la regressione. È possibile chiedere anche il calcolo della banda di confidenza:
 ```{r}
 predict(df.lm) %>% str()
@@ -362,6 +362,104 @@ new %>% ggplot(aes(x=x)) +
 Infine, la funzione `confint()` consente di ottenere l'intervallo di confidenza **sui parametri** del modello:
 ```{r}
 confint(df.lm2)
+```
+
+
+# Dati multivariati
+`r newthought("L'approccio sopra descritto")`, applicato nella sezione precedente al caso di dati **monovariati**, cioè con un unico predittore, è direttamente estensibile al caso **multivariato**, in cui i predittori sono più di uno.
+
+Per illustrare la procedura creiamo un campo scalare $\mathbb{R}^2\rightarrow \mathbb{R}$ che implementiamo mediante una funzione `f(x,y)`. Creiamo poi una tabella in griglia regolare di valori `x` e `y` con `n` punti tra 0 e 10 per ciascun predittore, per un totale di 2500 punti.
+
+## Preparazione dei dati (simulazione)
+
+Per realizzare le griglie di punti è molto utile la funzione `expand_grid()`\footnote{Versione evoluta di \texttt{expand.grid()} dalla libreria `tidyr`, restituisce una tibble.}, che prende i vettori con i livelli di due o più variabili e restituisce una tabella *tidy* con tutte le possibili combinazioni:
+```{r}
+set.seed(10)
+n <- 50 
+f <- function(x, y) 10-1*x+0.1*x^2+0.1*(-10*y+1.5*y^2)+0.05*x*y
+dfn <- expand_grid(
+  x=seq(0, 10, length.out=n),
+  y=seq(0, 10, length.out=n)
+) %>% 
+  mutate(fn=f(x,y))
+
+str(dfn)
+```
+
+La tabella `dfn`rappresenta i **dati nominali**. Ora vogliamo simulare un'operazione di campionamento irregolare: cioè selezioniamo un sottoinsieme di punti $x,y$ in numero `Ns`, casualmente distribuiti. Poi ripetiamo gli stessi punti `rep`` volte e aggiungiamo una componente aleatoria normale:
+```{r}
+Ns <- 100
+rep <- 3
+df <- dfn %>% 
+  slice_sample(n=Ns) %>% 
+  slice(rep(1:n(), each=rep)) %>%
+  mutate(
+    f=fn+rnorm(Ns, 0, range(fn)/25)
+  )
+```
+
+Visualizziamo i dati mediante un grafico a livelli, sovrapponendo i punti campionati.
+```{marginfigure}
+A `aes()` possono essere passati i nomi delle colonne oppure il risultato di un'elaborazione interna a `ggplot`, ad esempio i valori dei livelli calcolati, disponibili come variabile interna `level`. Per questo motivo, se vogliamo colorare le curve di livello dobbiamo mappare il colore come `after_stat(level)`.
+```
+```{r fig.margin=T}
+dfn %>% ggplot(aes(x=x, y=y, z=fn, color=after_stat(level))) +
+  geom_contour() +
+  geom_point(aes(color=f), data=df) + 
+  scale_color_viridis_b()
+```
+
+## Modello lineare
+
+Ora creiamo un modello lineare, considerando tutti i termini fino al secondo grado comprese le interazioni, e applicandolo ai **dati campionati** `df`. Per brevità, nella formula del modello si può usare la funzione `poly()`:
+```{r include=FALSE}
+w_ <- options()$width
+options(width=100)
+```
+```{r}
+df.lm <- lm(f~poly(x,2)*poly(y,2), data=df)
+summary(df.lm)
+```
+```{r include=FALSE}
+options(width=w_)
+```
+Possiamo osservare che gli unici termini significativi sono $x, y, x^2, y^2, xy$, coerentemente con la definizione della funzione `f(xy)`.  Possiamo quindi rivedere il modello eliminando i termini non significativi:
+```{r}
+df.lm <- lm(f~x*y+I(x^2)+I(y^2), data=df)
+summary(df.lm)
+```
+
+## Verifica
+
+Possiamo ora usare il modello `df.lm` per predire i valori di `f` su una differente griglia di coordinate `x` e `y`:
+```{r, fig.margin=T}
+library(modelr)
+N <- 20
+expand_grid(x=seq(0, 10, length.out=N), y=seq(0, 10, length.out=N)) %>%
+  add_predictions(df.lm) %>% 
+  ggplot(aes(x=x, y=y)) +
+  geom_contour(aes(z=pred, color=after_stat(level))) +
+  scale_color_viridis_b()
+```
+
+Per un confronto con i dati nominali sovrapponiamo le curve di livello della predizione alle curve di livello piene dei valori nominali:
+```{r fig.margin=T}
+dfn %>%
+  add_predictions(df.lm) %>% 
+  ggplot(aes(x=x, y=y)) +
+  geom_contour_filled(aes(z=fn, color=after_stat(level))) +
+  geom_contour(aes(z=pred), col="white") +
+  theme(legend.position = "none")
+```
+
+Un'altra verifica grafica può essere ottenuta confrontando i grafici di $y(x, 0)$ e $y(x, 10)$ per i valorin nominaly e predetti dal modello:
+```{r, fig.margin=T}
+dfn %>% add_predictions(df.lm) %>%
+  filter(y==c(0, 10)) %>%
+  ggplot(aes(x=x)) + 
+  geom_line(aes(y=pred, color=factor(y), linetype="predizione")) +
+  geom_line(aes(y=fn, color=factor(y), linetype="nominale")) + 
+  labs(y="resa", color="y", linetype="dati")
 ```
 
 
