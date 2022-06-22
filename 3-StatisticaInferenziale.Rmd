@@ -76,10 +76,8 @@ Se stessimo parlando di un allarme domestico, $\alpha$ sarebbe la probabilità d
 # Test di Student
 ## Formulazione classica
 Il primo a formulare matematicamente la coppia di ipotesi sopra descritte e a trovare il modo per calcolarne la probabilità è stato William S. Gosset, mastro birraio delle birrerie Guinness di Dublino. Fu un autodidatta, il che gli guadagnò il nomignolo di *Student* da parte dei suoi colleghi.
-```{marginfigure}
-![](images/Gosset.jpg){width=100%}
-
-William Sealy Gosset, a.k.a. Student (1876--1937)
+```{r gosset, out.width="\\columnwidth", fig.margin=T, echo=F, include=T, fig.cap="William Sealy Gosset, a.k.a. Student (1876--1937)"}
+knitr::include_graphics("images/Gosset.jpg")
 ```
 Il suo problema, di tipo eminentemente industriale, era determinare quando le immancabili differenze delle caratteristiche della birra tra lotti di produzione (ad es. il grado alcolico) fossero sufficientemente grandi da concludere che il processo di produzione era mutato (in maniera indesiderata) tra un lotto e l'altro.
 
