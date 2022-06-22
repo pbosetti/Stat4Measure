@@ -2,7 +2,7 @@
 title: |
   Statistica per la Misura
   
-  Parte 1. --- Introduzione a R
+  Parte 0. --- Introduzione a R
 runningheader: "SpM --- Introduzione a R" # only for pdf output
 subtitle: "Introduzione a R" # only for html output
 author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"

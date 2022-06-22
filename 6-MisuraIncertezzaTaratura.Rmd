@@ -499,7 +499,12 @@ V=\pi \cdot 120^2 \cdot 450 = \unit[(20.4\pm0.2)\times 10^6]{mm^3} \label{eq:lpi
 ## Metodo Monte Carlo
 Se il modello analitico della grandezza combinata (la (\ref{eq:cylinder}) nell'esempio precedente) **non è disponibile** (nel senso che la relazione è numerica o comunque non differenziabile), allora la (\ref{eq:lpi}) non è applicabile.
 
-In questo caso la GUM prevede l'applicazione del metodo Monte Carlo. Questo metodo si basa sulla generazione di numeri casuali (come al casinò, da qui il nome) secondo le distribuzioni attese per le grandezze elementari, e la successiva combinazione delle $n$-uple di valori casuali per calcolare (mediante il modello disponibili, che tipicamente è numerico) altrettanti valori della grandezza dipendente, dei quali si può poi analizzare la distribuzione.
+In questo caso la GUM prevede l'applicazione del metodo Monte Carlo. Questo metodo si basa sulla generazione di numeri casuali (come al casinò, da qui il nome) secondo le distribuzioni attese per le grandezze elementari, e la successiva combinazione delle $n$-uple di valori casuali per calcolare (mediante il modello disponibili, che tipicamente è numerico) altrettanti valori della grandezza dipendente, dei quali si può poi analizzare la distribuzione. Il metodo consiste in tre passi:
+
+1. si generano i campioni a partire dalle distribuzioni di riferimento per ciascuna grandezza elementare; i campioni devono essere sufficientemente numerosi (diverse migliaia), di uguali dimensioni e generati da una distribuzione che sia rappresentativa del caso reale;
+2. si verificano le distribuzioni dei campioni generati (istogramma, media e deviazione standard);
+3. si combinano gli elementi dei campioni per generare un campione di valori della grandezza combinata.
+
 
 Per meglio illustrare il concetto ricorriamo allo stesso esempio del cilindro graduato, in modo da poter confrontare i risultati. Il primo passo è la **generazione di campioni** sufficientemente grandi delle grandezze elementari $x_i$. Per enfatizzare l'efficacia del metodo, assumiamo anche che la distribuzione delle lunghezze sia marcatamente non-normale, assumendo in particolare una distribuzione $\mathcal{X}^2_k$ e ricordando che per tale distribuzione $\mu=k$ e $\sigma^2=2k$ ($k$ essendo i gradi di libertà):
 ```{r}
