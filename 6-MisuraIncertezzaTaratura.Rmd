@@ -507,6 +507,9 @@ In questo caso la GUM prevede l'applicazione del metodo Monte Carlo. Questo meto
 
 
 Per meglio illustrare il concetto ricorriamo allo stesso esempio del cilindro graduato, in modo da poter confrontare i risultati. Il primo passo è la **generazione di campioni** sufficientemente grandi delle grandezze elementari $x_i$. Per enfatizzare l'efficacia del metodo, assumiamo anche che la distribuzione delle lunghezze sia marcatamente non-normale, assumendo in particolare una distribuzione $\mathcal{X}^2_k$ e ricordando che per tale distribuzione $\mu=k$ e $\sigma^2=2k$ ($k$ essendo i gradi di libertà):
+```{marginfigure}
+La lbreria `PearsonDS` mette a disposizione la famiglia di distribuzioni di Pearson. Si tratta di una distribuzione continua a quattro parametri che, oltre a media e varianza, consente di definire anche la asimmetricità, o *skewness*, e la curtosi, o *kurtosis*, cioè quanto la PDF sia più snella e alta (o viceversa) rispetto alla normale.
+```
 ```{r}
 library(PearsonDS)
 set.seed(0)
@@ -515,7 +518,7 @@ rbar = 120
 ur = 0.5
 lbar = 450
 ul = 0.5
-moments <- c(
+moments <- list(
   mean = lbar, 
   variance = ul^2, 
   skewness = 1, 

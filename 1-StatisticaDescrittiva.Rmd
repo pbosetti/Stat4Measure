@@ -2,8 +2,8 @@
 title:
   Statistica per la Misura,
   Parte 1. --- Satistica descrittiva
-runningheader: "SpM --- Statistica base" # only for pdf output
-subtitle: "SpM --- Statistica base" # only for html output
+runningheader: "SpM --- Statistica descrittiva" # only for pdf output
+subtitle: "SpM --- Statistica descrittiva" # only for html output
 author: 
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
