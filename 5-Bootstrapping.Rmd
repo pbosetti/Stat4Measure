@@ -33,6 +33,8 @@ library(boot)
 library(magrittr)
 library(grDevices)
 source("myfunctions.R")
+knitr::opts_chunk$set(tidy=F)
+theme_set(theme_gray()+theme(legend.position = "bottom"))
 ```
 
 # Tecniche di Bootstrapping
@@ -51,18 +53,18 @@ Si tratta ovviamente di un **metodo computazionale**, possibile cioè solo media
 
 Supponiamo di avere una determinata variabile aleatoria $X$ con una certa distribuzione $F$, della quale abbiamo un **campione** $x=\left<x_1,x_2,\dots, x_n\right>$. Ogni funzione dei dati campionari $x$ è una **statistica**, che è essa stessa una variabile casuale. 
 
-Ad esempio, supponiamo di voler *stimare* un determinato parametro $\hat\theta=s(x)$, dove $s()$ è una qualche funzione dei dati campionari. Allora $\hat\theta$ è a sua volta una variabile casuale. 
+Ad esempio, supponiamo di voler *stimare* un determinato parametro $\hat\theta=s(x)$, dove $s(\cdot)$ è una qualche funzione dei dati campionari. Allora $\hat\theta$ è a sua volta una variabile casuale. 
 In quanto tale,  $\hat\theta$ avrà una sua distribuzione, ed indicheremo con $G(\theta)=P(\hat\theta<\theta)$ la sua funzione di ripartizione. La distribuzione $G$ è chiamata **distribuzione campionaria** della statistica  $\hat\theta$.
 
 La **forma di** $G$ dipende da:
 
 * la distribuzione originaria $F$
-* la funzione $s()$ utilizzata per calcolare la statistica  $\hat\theta$
+* la funzione $s(\cdot)$ utilizzata per calcolare la statistica  $\hat\theta$
 * la dimensione del campione $n$
 
-In alcuni casi---cioè per alcune (poche) combinazioni di $F$, $s()$ e $n$---la distribuzione campionaria è nota in maniera esatta. Tuttavia, nella maggior parte dei casi essa è **nota solo asintoticamente**, cioè quando $n\rightarrow +\infty$. In alcuni casi, addirittura, $G$ può non essere nota nemmeno asintoticamente.
+In alcuni casi---cioè per alcune (poche) combinazioni di $F$, $s(\cdot)$ e $n$---la distribuzione campionaria è nota in maniera esatta. Tuttavia, nella maggior parte dei casi essa è **nota solo asintoticamente**, cioè quando $n\rightarrow +\infty$. In alcuni casi, addirittura, $G$ può non essere nota nemmeno asintoticamente.
 
-Vediamo due esempi: quando cioè la $s()$ è la *media* campionaria oppure la *mediana* campionaria.
+Vediamo due esempi: quando cioè la $s(\cdot)$ è la *media* campionaria oppure la *mediana* campionaria.
 
 ## Distribuzione della media
 Sia quindi il parametro di interesse il valore atteso $\theta=E(X)$ e la statistica sia la media campionaria $\hat\theta=s(x)=1/n \sum_{i=1}^n x_i$. Se $X\sim\mathcal{N}(\theta, \sigma^2)$, allora la distribuzione campionaria è anch'essa normale, con la varianza scalata per il numero di elementi: $\hat\theta=\mathcal{N}(\theta, \sigma^2/n)$.
@@ -83,11 +85,12 @@ df <- df %>%
     size_n=as.numeric(size), 
     size=factor(size, levels=n)
   )
+asymp.se <- function(n) 1/sqrt(n)
 
 df %>% 
   ggplot(aes(x=thetahat, y=after_stat(density))) +
   geom_histogram(bins = 31, fill=gray(0.8), color=gray(0.2)) + 
-  geom_line(aes(y=dnorm(thetahat, sd=1/sqrt(size_n))), color="red") +
+  geom_line(aes(y=dnorm(thetahat, sd=asymp.se(size_n))), color="red") +
   labs(x=TeX("\\hat{\\theta}"), y="densità") + 
   facet_wrap(~size, labeller=label_both, nrow=1)
     
@@ -108,7 +111,6 @@ df <- df %>%
     size=factor(size, levels=n)
   )
 
-asymp.se <- function(n) 1/sqrt(n)
 df %>% 
   ggplot(aes(x=thetahat, y=after_stat(density))) +
   geom_histogram(bins = 31, fill=gray(0.8), color=gray(0.2)) + 
@@ -119,7 +121,7 @@ df %>%
 ```
 
 ## Distribuzione della mediana
-Vediamo ora lo stesso approccio applicato però alla **mediana** come statistica. Si può dimostrare come in questo caso la distribuzione campionaria di $\hat\theta=\tilde x$\footnote{$\tilde x$ è il simbolo per la mediana del campione $x$.} tende ad una distribuzione normale $\mathcal{N}(\theta, 1/(4nf(\theta)^2))$, dove $f()$ è la PDF della normale, quando $n\rightarrow +\infty$. In questo caso, la convergenza è ancora più lenta della convergenza della media su un campione uniforme:
+Vediamo ora lo stesso approccio applicato però alla **mediana** come statistica. Si può dimostrare come in questo caso la distribuzione campionaria di $\hat\theta=\tilde x$\footnote{$\tilde x$ è il simbolo per la mediana del campione $x$.} tende ad una distribuzione normale $\mathcal{N}(\theta, 1/(4nf(\theta)^2))$, dove $f(\cdot)$ è la PDF della normale, quando $n\rightarrow +\infty$. In questo caso, la convergenza è ancora più lenta della convergenza della media su un campione uniforme:
 ```{r fig.fullwidth=T, fig.dim=c(5, 1.)*1.8, out.height="6in"}
 set.seed(10)
 df <- tibble(.rows=N)
@@ -163,14 +165,19 @@ La **distribuzione di bootstrap** consiste quindi di $R$ stime di $\theta$ più 
 ```{marginfigure}
 **Nota**: Il numero di repliche nella procedura di bootstrap deve essere elevato: tipicamente si sceglie un valore maggiore o uguale a 10000.
 ```
-In virtù del campionamento con probabilità uniforme, questa distribuzione di bootstrap può quindi essere usata come surrogato della distribuzione campionaria di $\hat\theta$ allo scopo di effettuare inferenze statistiche. In particolare, può essere utilizzata per stimare le *proprietà* di $\hat\theta$, come la sua varianza, e per calcolare l'intervallo di confidenza di $\theta$.
+In virtù del campionamento con probabilità uniforme, questa distribuzione di bootstrap può quindi essere usata come surrogato della distribuzione campionaria (o *empirica*) di $\hat\theta$ allo scopo di effettuare inferenze statistiche (vedi Fig. \ref{fig:bootworld}, da @Efron1994). In particolare, può essere utilizzata per stimare le *proprietà* di $\hat\theta$, come la sua varianza, e per calcolare l'intervallo di confidenza di $\theta$.
+
+```{r bootworld, echo=F, fig.cap="La logica del metodo bootstrap"}
+knitr::include_graphics("images/real_and_boot.png")
+```
+
 
 
 
 
 # Esempi in R
 
-## Metodo non-parametrico
+## Metodo non-parametrico, dati univariati
 
 Cominciamo con l\'esempio più semplice: vogliamo calcolare l'intervallo di confidenza sulla media campionaria mediante il metodo bootstrap. Per farlo, a partire da un campione, effettuiamo un **campionamento con reinserimento** $N=`r (N <- 10000)`$ volte. Per ogni estrazione calcoliamo il valore della statistica che vogliamo studiare, in questo caso la media campionaria.
 
@@ -188,65 +195,100 @@ Quest'interfaccia è assolutamente flessibile e può essere adattata allo studio
 ```{r}
 set.seed(1)
 N <- 10000
-d <- rbeta(100, 1, 10)
-d.boot <- boot(d, \(x, i) mean(x[i]), R=N)
-d.plot <- tibble(i = seq_along(d.boot$t), t = d.boot$t)
-d.boot.ci <- boot.ci(d.boot, type=c("perc"))
-d.test <- t.test(d)
+data <- rbeta(100, 1, 10)
+(data.b <- boot(data, \(x, i) mean(x[i]), R=N))
+
 ```
+In particolare, l'ultima tabella di output riporta in questo caso un'unica riga corrispondente all'unica statistica di interesse (la media). Il termine `original` è il valore della statistica applicata al campione originale; il termine `bias` rappresenta la differenza tra la statistica applicata agli $R$ campioni di bootstrap meno il termine `original`; il termine `std. error` è la deviazione standard del vettore della statistica applicata ai campioni di bootstrap.
 
-Confronto con intervallo di confidenza:
+Eseguendo `names(data.b)` osserviamo che l'oggetto restituito da `boot()` contiene i campi `data$t0`, che è la stima della statistica applicata al campione originario, $\hat\theta=s(x)$, e il vettore `data.b$t`, con `R` elementi, ciascuno il risultato della statistica applicata al corrispondente campione di bootstrap: $\hat\theta^*_i=s(x^*_i),~i=1,2,\dots,R$.
 
-```{r, fig.cap="Campioni bootstrap", fig.margin = T}
-d.plot %>%
+Il campione `data.b$t` è quindi proprio la distribuzione di bootstrap che, come detto sopra, può essere usata come surrogato della distribuzione campionaria di $\hat\theta$: in altre parole `data.b$t` è una approssimazione della distribuzione---in questo caso---della media campionaria. Di conseguenza, i quantili $\alpha/2$ e $\-\alpha/2$ rappresentano i limiti dell'intervallo di confidenza per la media del campione con una probabilità $1-\alpha$.
+
+Il metodo più semplice per calcolare l'intervallo di confidenza per una statistica (qualsiasi!) sottoposta a bootstrap è quindi quello di valutare i quantili inferiore e superiore corrispondenti al livello di confidenza desiderato.
+
+La funzione `boot.ci()` calcola l'intervallo secondo questo metodo e secondo altri 4 metodi che qui non vedremo per ragioni di brevità.
+
+Confrontiamo ora l'intervallo di confidenza ottenuto direttamente dai quantili di `data.ci$t`, mediante `boot.ci()` e calcolati con il metodo parametrico standard, cioè il test di Student:
+
+```{r fig.margin = T}
+data.ci <- boot.ci(data.b, type=c("perc"))
+data.test <- t.test(data)
+tibble(i = seq_along(data.b$t), t = data.b$t) %>%
   ggplot(aes(x = i, y = t)) +
   geom_point(size = 0.05, alpha = 0.5) + 
   geom_hline(aes(color = "Bootstrap", 
-                 yintercept = d.boot.ci$percent[4])) + 
+                 yintercept = data.ci$percent[4]),
+             linetype = 2, size = 1.5) + 
   geom_hline(aes(color = "Bootstrap", 
-                 yintercept = d.boot.ci$percent[5])) + 
+                 yintercept = data.ci$percent[5]),
+             linetype = 2, size = 1.5) + 
   geom_hline(aes(color = "T-test", 
-                 yintercept = d.test$conf.int[1])) +
+                 yintercept = data.test$conf.int[1])) +
   geom_hline(aes(color = "T-test", 
-                 yintercept = d.test$conf.int[2])) +
-  scale_color_discrete(name = "Tipo") + 
-  theme(legend.position = "bottom")
+                 yintercept = data.test$conf.int[2])) +
+  scale_color_discrete(name = "Tipo")
 ```
 
-Meglio osservabile mediante un istogramma, dato che l'indice in ascissa non porta nessuna informazione (corridponde infatti all'indice del campione di bootstrap, che è casuale per definizione):
 
-```{r, fig.cap="Istogramma dei campioni bootstrap", fig.margin = T}
-d.plot %>%
+```{r echo=F}
+tribble(
+  ~Metodo, ~Intervallo,
+  "Student", data.test$conf.int,
+  "Quantili", quantile(data.b$t, c(0.025, 1-0.025)),
+  "`boot.ci()`", data.ci$percent[4:5]
+) %>% knitr::kable(digits=4)
+```
+
+Il confronto tra analisi parametrica e bootstrap è meglio osservabile mediante un istogramma, dato che l'indice in ascissa nella figura precedente non porta nessuna informazione (corrisponde infatti all'indice del campione di bootstrap, che è casuale per definizione):
+```{r fig.margin = T}
+tibble(t=data.b$t) %>%
   ggplot(aes(x = t, y=after_stat(density))) + 
-  geom_histogram(bins = nclass.scott(d.plot$t), 
+  geom_histogram(bins = nclass.scott(data.b$t), 
                  fill = grey(0.8), 
                  color = grey(0.)) +
-  geom_vline(aes(color = "Bootstrap", 
-                 xintercept = d.boot.ci$percent[4])) + 
-  geom_vline(aes(color = "Bootstrap", 
-                 xintercept = d.boot.ci$percent[5])) + 
+  geom_vline(aes(color = "Bootstrap",
+                 xintercept = data.ci$percent[4]), 
+                 linetype = 2, size = 1.5) + 
+  geom_vline(aes(color = "Bootstrap",
+                 xintercept = data.ci$percent[5]), 
+                 linetype = 2, size = 1.5) + 
   geom_vline(aes(color = "T-test", 
-                 xintercept = d.test$conf.int[1])) +
+                 xintercept = data.test$conf.int[1])) +
   geom_vline(aes(color = "T-test", 
-                 xintercept = d.test$conf.int[2])) +
-  scale_color_discrete(name ="Tipo") + 
-  theme(legend.position = "bottom")
+                 xintercept = data.test$conf.int[2])) +
+  scale_color_discrete(name ="Tipo") 
 ```
 
-Come si osserva, l'intervallo di confidenza stimato mediante bootstrapping è molto simile a quello calcolato mediante test di Student.
+Come si osserva, l'intervallo di confidenza stimato mediante bootstrap è molto simile a quello calcolato mediante test di Student.
 Il vantaggio, tuttavia, è che questo metodo può essere facilmente applicato a _qualunque_ statistica o indicatore, anche quando non sia noto o facile da definire l'intervallo di confidenza in forma analitica. Inoltre, e soprattutto, non si fa **nessuna ipotesi sulla forma della distribuzione** dei dati iniziali: dato che il campionamento viene effettuato _con probabilità uniforme_, infatti, ogni campione di bootstrap avrà una distribuzione simile all'originale, tanto più simle quanto il campione originale è grande. Al contrario i metodi analitici, quando disponibili, ipotizzano sempre una certa distribuzione: ad esempio nel caso considerato il metodo analitico di Student assume una distribuzione normale.
 
-```{r eval=FALSE, include=FALSE}
-plot(db$t, cex=0.1)
-abline(h=db.ci$percent[4:5], col="red")
-abline(h=dt$conf.int, lty=2, col="blue")
-hist(pd$t, freq = T, breaks="Scott")
-abline(v=db.ci$percent[4:5], col="red")
-abline(v=dt$conf.int, lty=2, col="blue")
+Infine, un grafico quantile-quantile della distribuzione di bootstrap può essere utile a capire se il numero di repliche $R$ è grande a sufficienza: se lo è, il grafico Q-Q è molto stretto attorno alla diagonale, come in questo caso.
+```{r fig.margin=T}
+tibble(x=data.b$t) %>%
+  ggplot(aes(sample=x)) +
+  geom_qq() +
+  geom_qq_line(color="red") + 
+  labs(x="quantili teorici", y="quantili distribuzione campionaria")
+```
+Un altro grafico utile è il confronto tra la CDF della distribuzione di riferimento e la **distribuzione cumulata empirica** (ECDF, *empirical cumulative distribution function*). Quest'ultima, a sua volta è  un'approssimazione della CDF, nel senso che, nel senso che è una statistica che stima la CDF di una popolazione ignota sulla base del comportamento di un campione noto.
+```{r, fig.margin=T}
+m <- mean(data.b$t)
+s <- sd(data.b$t)
+tibble(x=seq(min(data.b$t), max(data.b$t), 
+             length.out=length(data.b$t)),
+       y=ecdf(data.b$t)(x),
+       yn=pnorm(x, mean=m, sd=s)) %>%
+  ggplot(aes(x=x, y=y)) +
+  geom_point() +
+  geom_line(aes(y=yn), color="red") +
+  geom_vline(xintercept=m+c(-3, 0, 3)*s, color="red") +
+  labs(x=TeX("\\hat{\\theta}"), y="probabilità")
 ```
 
 
-Come secondo esempio vediamo il caso della regressione lneare, calcolata con il metodo della pseudo-inversa: se $\mathbf{A}$ è la matrice dei regressori, $x$ il vettore dei coefficienti e $b$ il vettore delle rese, i coefficienti possono essere calcolati invertendo l'equazione
+## Metodo non parametrico, dati bivariati
+Come secondo esempio vediamo il caso della regressione lineare, calcolata con il metodo della pseudo-inversa: se $\mathbf{A}$ è la matrice dei regressori, $x$ il vettore dei coefficienti e $b$ il vettore delle rese, i coefficienti possono essere calcolati invertendo l'equazione
 \begin{equation}
 \mathbf{A}\cdot x=b = (\mathbf A^T \mathbf A)^{-1} \mathbf A^T \cdot y\label{eq:pseudoinv}
 \end{equation}
@@ -279,12 +321,16 @@ linfit <- function(data) {
   names(res) <- c("a", "b")
   return(res)
 }
-
 k.lf <- linfit(data)
-cat("lm():\n")
-k.lm
-cat("linfit():\n")
-k.lf
+```
+
+
+```{r echo=F}
+tribble(
+  ~Metodo, ~a, ~b,
+  "`lm()`", k.lm["a"], k.lm["b"],
+  "`linfit()`", k.lf["a"], k.lf["b"]
+) %>% knitr::kable()
 ```
 
 Ovviamente i valori coincidono, dato che `lm()` utilizza internamente lo stesso metodo di calcolo.
@@ -298,6 +344,11 @@ Possiamo quindi effettuare un bootstrap sulla funzione `linfit()` per calcolare 
 
 ```{r}
 (data.b <- boot(data, \(x, i)linfit(x[i,]), R=10000))
+```
+Come vediamo, l'oggetto `data.b` questa volta ha due campi: `t1` e `t2`, rispettivamente per la prima ($a$) e la seconda statistica ($b$). 
+
+Gli intervalli di confidenza vanno calcolati separatamente:
+```{r}
 boot.ci(data.b, type="perc", index=1)
 boot.ci(data.b, type="perc", index=2)
 ```
@@ -306,62 +357,42 @@ boot.ci(data.b, type="perc", index=2)
 
 
 ## Metodo parametrico
+La funzione `boot()` può essere utilizzata anche in modalità parametrica: in questo caso, la distribuzione di bootstrap viene generata non ricampionando i dati originali, bensì generandoli direttamente mediante una funzione di generazione di dati casuali per la quale **siano noti i parametri**.
 
-```{r}
-d.pboot <- boot(d, R = N, sim = "parametric",
+In questo caso i dati vengono generati dalla funzione passata come argomento `ran.gen`, che accetta due parametri: il primo è il vettore di dati originali e il secondo è l'oggetto opzionalmente passato all'aromento `mle`. Nel nostro caso, passiamo a `mle` una lista con la media e la deviazione standard campionarie.
+```{r fig.margin=T}
+set.seed(1)
+data <- rbeta(100, 1, 10)
+data.pb <- boot(data, R = 10000, sim = "parametric",
                 statistic = \(x) mean(x),
                 ran.gen = \(x, p) rnorm(length(x), p$mean, p$sd),
-                mle = list(mean=mean(d), sd=sd(d)))
-d.pboot.ci <- boot.ci(d.pboot, type=c("perc"))
-d.plot$tp <- d.boot$t
-d.plot %>%
-  ggplot(aes(x = tp)) + 
-  geom_histogram(bins = nclass.scott(d.plot$tp), 
-                 fill = grey(0.8), 
-                 color = grey(0.)) +
-  geom_vline(aes(color = "N-Bootstrap", 
-                 xintercept = d.boot.ci$percent[4])) + 
-  geom_vline(aes(color = "N-Bootstrap", 
-                 xintercept = d.boot.ci$percent[5])) +
-  geom_vline(aes(color = "P-Bootstrap", 
-                 xintercept = d.pboot.ci$percent[4])) + 
-  geom_vline(aes(color = "P-Bootstrap", 
-                 xintercept = d.pboot.ci$percent[5])) + 
-  geom_vline(aes(color = "T-test", 
-                 xintercept = d.test$conf.int[1])) +
-  geom_vline(aes(color = "T-test", 
-                 xintercept = d.test$conf.int[2])) +
-  scale_color_discrete(name ="Tipo") + 
-  theme(legend.position = "bottom")
+                mle = list(mean=mean(data), sd=sd(data)))
+data.pci <- boot.ci(data.pb, type=c("perc"))
 ```
 
-```{r}
-set.seed(1)
-data <- tibble(
-  d = rbeta(100, 1, 10),
-  i = seq_along(d)
-)
-boots <- bootstraps(data, times = 10000) %>%
-  mutate(mean_coef = map(splits, ~ tibble(
-    estimate = mean(analysis(.)$d),
-    term = "mean"),
-  ),
-  mean = map_dbl(mean_coef, ~.[[1]]),
-  i = seq_along(mean))
-boots.pctl <- int_pctl(boots, mean_coef)
-
-ggplot(boots, aes(x=i, y=mean)) +
-  geom_point(size = 0.05, alpha = 0.5) + 
-  geom_hline(yintercept = boots.pctl$.estimate) + 
-  geom_hline(yintercept = boots.pctl$.lower) + 
-  geom_hline(yintercept = boots.pctl$.upper)
-  
+Confrontiamo il risultato con il bootstrap  non-parametrico:
+```{r fig.margin=T}
+tibble(t = data.b$t, tp = data.pb$t) %>% ggplot(aes(x = tp)) + 
+  geom_histogram(bins = nclass.scott(data.pb$t), 
+                 fill = grey(0.8), color = grey(0.)) +
+  geom_vline(aes(color = "N-Bootstrap", 
+                 xintercept = data.ci$percent[4]),
+             linetype=2, size=1.5) + 
+  geom_vline(aes(color = "N-Bootstrap", 
+                 xintercept = data.ci$percent[5]),
+             linetype=2, size=1.5) +
+  geom_vline(aes(color = "P-Bootstrap", 
+                 xintercept = data.pci$percent[4])) + 
+  geom_vline(aes(color = "P-Bootstrap", 
+                 xintercept = data.pci$percent[5])) + 
+  scale_color_discrete(name ="Tipo")
 ```
 
+Come si osserva i risultati sono del tutto comparabili, tuttavia il metodo parametrico richiede di fare un'assunzione sulla distribuzione (forma e parametri) della popolazione incognita. In generale, quindi, il metodo non-parametrico è più robusto e meno arbitrario; d'altro canto, se si hanno informazioni attendibili sulla popolazione il metodo parametrico consente di "forzare" la generazione dei dati secondo tale distribuzione.
 
 
 
-```{r}
+```{r eval=F, echo=F}
 set.seed(27)
 boots <- bootstraps(mtcars, times = 2000, apparent = TRUE)
 boots
