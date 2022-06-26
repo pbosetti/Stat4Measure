@@ -26,11 +26,46 @@ header-includes:
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
+library(tidyverse)
+library(tidymodels)
+library(magrittr)
+library(grDevices)
 source("myfunctions.R")
+knitr::opts_chunk$set(tidy=F)
+theme_set(theme_gray()+theme(legend.position = "bottom"))
+```
+```{=tex}
+\newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
 ```
 
 
 # Perché progettare gli esperimenti?
+`r newthought("Un esperimento è un'attività")` volta a raccogliere dati che consentano:
+
+* di confermare un'ipotesi teorica;
+* di identificare i fattori che influiscono su un processo;
+* di calibrare i parametri di un modello.
+
+Nel primo caso siamo interessati soprattutto a verificare la *forma* del modello teorico di un processo/fenomeno; nel secondo caso il modello stesso può essere ignoto, e si è interessati soprattutto a conoscere i fattori (cioè le variabili indipendenti) che governano il processo/fenomeno; nel terzo caso, infine, la forma del modello è nota e si desidera identificarne i parametri.
+
+Il terzo caso è affrontato mediante regressione di un modello statistico (lineare o lineare generalizzato). Nel primo caso alla regressione si affianca lo studio degli intervalli di confidenza (parametrici o via bootstrap), che mi consentono di valutare quanto il modello sia adatto a rappresentare la realtà. In entrambi questi casi la dimensionalità del problema è tipicamente contenuta: si tratta di problemi univariati o al più bivariati.
+
+Il secondo caso, invece, mira a costruire un modello approssimato, tipicamente al primo grado, della risposta di un sistema o processo al variare di un numero di fattori indipendenti relativamente elevato (dieci o più). Questo modello può essere poi la base per lo studio di dettaglio e lo sviluppo di modelli più raffinati per un sottoinsieme di fattori, ricadendo nel primo e nel terzo caso.
+
+Consideriamo ora il caso di un fenomeno univariato: il **numero minimo di livelli** dell'unico fattore che devono essere indagati per costruire o validare un modello sono ovviamente pari a $k+1$, dove $k$ è il grado del modello: se il modello è quadratico ($k=2$) ho bisogno di valutare la risposta del processo in almeno 3 differenti livelli. Se voglio essere anche in grado di valutare la varianza ho bisogno di più livelli oppure **di ripetere l'esperimento più volte** ad ogni livello.
+```{marginfigure}
+**Nota**: c'è una sostanziale differenza tra **ripetere l'esperimento** e **ripetere la misurazione**: nel primo caso è l'intero esperimento che va ripetuto, fino alla misurazione finale; nel secondo caso si ripete soltanto la misurazione. 
+
+Il secondo fornisce solo informazioni sulla varianza del sistema di misura, mentre se volgiamo valutare la varianza complessiva del processo dobbiamo ripetere l'intera operazione valutazione del processo per un particolare livello dei parametri indipendenti (fattori).
+```
+
+Ma se il processo/fenomeno è multivariato e il numero di fattori $n$ è elevato, il numero di **trattamenti** (cioè combinazioni di livelli di fattori) che devo effettuare cresce esponenzialmente con il numero di fattori, cioè $k^n$.
+
+\boxedpar{
+Siccome ogni singole esperimento è associato ad un valore economico (un costo), ciò significa che il costo di un esperimento cresce esponenzialmente con il numero di fattori.
+
+Di qui deriva la necessità di progettare un esperimento---soprattutto quelli del secondo tipo sopra descritto---in modo da minimizzarne il costo e massimizzarne l'efficacia.
+}
 
 # Piani fattoriali
 
