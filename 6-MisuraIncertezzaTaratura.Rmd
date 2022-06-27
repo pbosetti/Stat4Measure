@@ -8,7 +8,6 @@ subtitle: "SpM --- Misura, incertezza e taratura" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
-  ![](by-nc-sa.png){height=5mm} 
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
@@ -24,6 +23,10 @@ header-includes:
   - \usepackage[italian]{babel}
   - \usepackage{wasysym}
   - \usepackage{units}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
 ---
 
 ```{r setup, include=FALSE}

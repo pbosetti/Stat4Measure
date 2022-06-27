@@ -4,8 +4,10 @@ title: |
   
   Parte 0. --- Introduzione a R
 runningheader: "SpM --- Introduzione a R" # only for pdf output
-subtitle: "Introduzione a R" # only for html output
-author: "Paolo Bosetti --- Dipartimento di Ingegneria Industriale"
+subtitle: "SpM --- Introduzione a R" # only for html output
+author: 
+  Paolo Bosetti,
+  Dipartimento di Ingegneria Industriale, Università di Trento
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
@@ -21,6 +23,10 @@ bibliography: skeleton.bib
 link-citations: yes
 header-includes:
   - \usepackage[italian]{babel}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
 ---
 
 ```{r setup, include=FALSE}
