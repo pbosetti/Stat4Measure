@@ -83,9 +83,7 @@ Nel caso di sensori che dispongono di un trasduttore, è evidente la necessità 
 ## Taratura statica
 Quando si trascurano gli effetti dinamici, cioè quando si assume che il sistema nel suo complesso (misurando più sistema di misura) siano in stato stazionario, si parla di taratura statica. In queste condizioni il tempo non è una variabile. Per contro, la taratura dinamica (che si vedrà nei prossimi corsi) tiene in considerazione anche gli effetti tempo-dipendenti.
 
-La taratura statica mira a determinare la correlazione  $y=f(m)$ tra l'ingresso misurando $m$ e l'uscita del trasduttore $y$, chiamata **caratteristica statica dello strumento**, nonché l'**incertezza di misura** dello stesso.
 
-In condizioni statiche, uno strumento di misura fornisce la misura mediante **inversione** della caratteristica statica: $m=f^{-1}(y)$ (vedi Fig. \ref{fig:taratura1}).
 ```{r taratura1, echo=FALSE, fig.margin=T, fig.cap="Misurazione: inversione della caratteristica statica, nota l'uscita per determinare il misurando"}
 df <- tibble(
   i=1:100,
@@ -107,7 +105,6 @@ p1 +
   geom_point(data=point, size=3, color="black", fill="blue", shape=21)
 ```
 
-Affinché la caratteristica statica sia nota è necessario determinarla sia in forma (cioè l'espressione analitica) che nei coefficienti. Questa è evidentemente un'operazione di **regressione**, che porta all'identificazione della caratteristica statica a partire da una serie di coppie $(m_i,y_i)$. Operativamente, dopo aver selezionato una serie di misurandi noti $m_i$ e aver registrato la corrispondente uscita non corretta $y_i$ si effettua una regressione lineare con i metodi visti precedentemente. (vedi Fig. \ref{fig:taratura2}).
 
 ```{r taratura2, echo=FALSE, fig.margin=T, fig.cap="Taratura: identificazione della caratteristica statica, nota l'uscita e il misurando"}
 point <- filter(df, i==30)
@@ -117,6 +114,12 @@ p1 +
   geom_point(data=filter(df, s), size=3, color="black", fill="blue", shape=21) +
   labs(x="misurando (noto)", y="uscita osservata")
 ```
+
+La taratura statica mira a determinare la correlazione  $y=f(m)$ tra l'ingresso misurando $m$ e l'uscita del trasduttore $y$, chiamata **caratteristica statica dello strumento**, nonché l'**incertezza di misura** dello stesso.
+
+In condizioni statiche, uno strumento di misura fornisce la misura mediante **inversione** della caratteristica statica: $m=f^{-1}(y)$ (vedi Fig. \ref{fig:taratura1}).
+
+Affinché la caratteristica statica sia nota è necessario determinarla sia in forma (cioè l'espressione analitica) che nei coefficienti. Questa è evidentemente un'operazione di **regressione**, che porta all'identificazione della caratteristica statica a partire da una serie di coppie $(m_i,y_i)$. Operativamente, dopo aver selezionato una serie di misurandi noti $m_i$ e aver registrato la corrispondente uscita non corretta $y_i$ si effettua una regressione lineare con i metodi visti precedentemente. (vedi Fig. \ref{fig:taratura2}).
 
 I valori $m_i$ utilizzati durante la taratura possono essere:
 
@@ -215,9 +218,18 @@ Gf <- function(Temp, G0=0.05, T0=20, k=0.01) G0 + k*(Temp-T0)
 K <- function(Temp, params) with(params, 3/2*G*Vi*(l*Gf(Temp))/(E*B*H^2))
 model <- function(F, Temp, params) K(Temp, params) * F + params$V0
 temp <- function(time, t0=4, T0=20, dT=5, tau=2) ifelse(time<t0, T0, T0+dT*(1-exp(-(time-t0)/tau)))
-curve(model(x, 20, parameters), from=0, to=100, ylab="V (Volt)", xlab="F (N)")
-curve(temp(x), from=0, to=20, xlab="Tempo (h)", ylab="Temperatura (°C)")
 ```
+
+```{r fig.margin=T, tidy=F}
+tibble(x=seq(0, 20, length.out=100)) %>% ggplot(aes(x)) +
+  geom_function(fun=\(x)model(x, 20, parameters)) +
+  labs(y="V (Volt)", x="Forza (N)")
+tibble(x=seq(0, 20, length.out=100)) %>% ggplot(aes(x)) +
+  geom_function(fun=temp) +
+  labs(x="Tempo (h)", y="Temperatura (°C)")
+```
+
+
 Ora simuliamo l'esperimento, aggiungendo del disturbo dovuto agli **ingressi interferenti** e eseguendo le misurazioni **senza casualizzazione**, seguendo cioè l'ordine logico dal misurando minore al maggiore:
 ```{r, fig.margin=T}
 set.seed(120)
@@ -264,7 +276,7 @@ Creiamo un unico grafico che riporta sia la regressione che i residui:
 ```{marginfigure}
 **Nota**: in realità anche il polinomio di secondo grado mostra un leggero *pattern* a "M": provando ad aumentare il grado del polinomio, tale pattern sparisce con un polinomio di 5° grado. Tuttavia, controllando l'estrapolazione è facile vedere che la predizione diverge rapidamente, sintomo di sovradattamento.
 ```
-```{r fig.margin=T}
+```{r fig.margin=T, tidy=F}
 offset <- sum(range(data$V)) / 2
 ratio <- diff(range(data$V)) / diff(range(data.lm$residuals))
 data %>% add_predictions(model=data.lm) %>%
