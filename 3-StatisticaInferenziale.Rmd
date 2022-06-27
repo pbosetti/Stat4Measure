@@ -3,8 +3,8 @@ title:
   Statistica per la Misura
   
   Parte 3. --- Statistica inferenziale
-runningheader: "SpM --- Statistica inferenziale" # only for pdf output
-subtitle: "SpM --- Statistica inferenziale" # only for html output
+runningheader: "Statistica inferenziale" # only for pdf output
+subtitle: "Statistica inferenziale" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
@@ -22,8 +22,10 @@ header-includes:
   - \usepackage[italian]{babel}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
-  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
+  - \fancyhead[LO,LE]{\rightmark}
+  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}

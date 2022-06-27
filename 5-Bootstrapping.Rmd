@@ -3,8 +3,8 @@ title:
   Statistica per la Misura
   
   Parte 5. --- Bootstrapping
-runningheader: "SpM --- Bootstrapping" # only for pdf output
-subtitle: "SpM --- Bootstrapping" # only for html output
+runningheader: "Bootstrapping" # only for pdf output
+subtitle: "Bootstrapping" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
@@ -20,11 +20,12 @@ bibliography: skeleton.bib
 link-citations: yes
 header-includes:
   - \usepackage[italian]{babel}
-  - \usepackage{amsmath}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
-  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
+  - \fancyhead[LO,LE]{\rightmark}
+  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}

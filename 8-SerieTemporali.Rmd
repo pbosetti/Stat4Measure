@@ -3,12 +3,11 @@ title:
   Statistica per la Misura
   
   Parte 8. --- Serie temporali
-runningheader: "SpM --- Serie temporali" # only for pdf output
-subtitle: "SpM --- Serie temporali" # only for html output
+runningheader: "Serie temporali" # only for pdf output
+subtitle: "Serie temporali" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
-  ![](by-nc-sa.png){height=5mm}
 date: "Ultimo aggiornamento: `r Sys.Date()`"
 output:
   tufte::tufte_handout:
@@ -17,10 +16,19 @@ output:
     citation_package: natbib
     latex_engine: xelatex
   tufte::tufte_html:
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
 bibliography: skeleton.bib
 link-citations: yes
 header-includes:
   - \usepackage[italian]{babel}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[LO,LE]{\rightmark}
+  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}

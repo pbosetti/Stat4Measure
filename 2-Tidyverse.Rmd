@@ -3,8 +3,8 @@ title:
   Statistica per la Misura
   
   Parte 3. --- Tidyverse
-runningheader: "SpM --- Tidyverse" # only for pdf output
-subtitle: "SpM --- Tidyverse" # only for html output
+runningheader: "Tidyverse" # only for pdf output
+subtitle: "Tidyverse" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
@@ -22,8 +22,10 @@ header-includes:
   - \usepackage[italian]{babel}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
-  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
+  - \fancyhead[LO,LE]{\rightmark}
+  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}

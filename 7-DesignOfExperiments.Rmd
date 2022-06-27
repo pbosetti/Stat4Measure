@@ -3,8 +3,8 @@ title:
   Statistica per la Misura
   
   Parte 7. --- Design of Experiments
-runningheader: "SpM --- Design of Experiments" # only for pdf output
-subtitle: "SpM --- Design of Experiments" # only for html output
+runningheader: "Design of Experiments" # only for pdf output
+subtitle: "Design of Experiments" # only for html output
 author:
   Paolo Bosetti,
   Dipartimento di Ingegneria Industriale, Università di Trento 
@@ -25,8 +25,10 @@ header-includes:
   - \usepackage[italian]{babel}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
-  - \fancyhead[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[CO,CE]{Statistica per la Misura --- paolo.bosetti@unitn.it}
+  - \fancyhead[LO,LE]{\rightmark}
+  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
+  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}
@@ -86,6 +88,81 @@ Dato che le tecniche statistiche necessarie per affrontare esperimenti del primo
 In quest'ambito, il **processo** è visto come una **scatola nera**: un sistema opaco che non ci consente di vedere il funzionamento interno, ma che accetta una serie di $n$ **ingressi** (i fattori) soggetti a variabilità statistica e fornisce un'unica **risposta** in uscita. 
 
 L'obiettivo del piano fattoriale è definire la correlazione tra ingressi e uscita (tra fattori e resa). L'obiettivo del **Design of Experiments** (*DoE*) è definire le combinazioni di trattamenti in modo da massimizzare l'efficienza dell'esperimento (intesa come rapporto tra informazioni ottenute e numero di trattamenti investigati).
+
+Introduciamo il concetto di piano fattoriale a partire da un esempio elementare: abbiamo due fattori, $A$ e $B$, ciascuno con due livelli, che chiameremo $A^+$, $A^-$, $B^+$ e $B^-$. Supponiamo che la combinazione $(A^-,B^-)$ sia la normale configurazione operativa del processo.
+
+```{r include=FALSE}
+data <- tribble (
+  ~A, ~B, ~resa, ~Yates,
+  "A-", "B-", 20, "$(1)$",
+  "A+", "B-", 50, "$a$",
+  "A-", "B+", 30, "$b$",
+  "A+", "B+", 12, "$ab$"
+)
+```
+Se vogliamo investigare la risposta del processo ad una variazione dei due fattori, l'approccio più semplice è cambiare il valore di ogni fattore, **uno alla volta**, come illustrato in Fig. \ref{fig:onebyone}, supponendo di valutare la resa come riportato nella seguente tabella:
+```{r onebyone, fig.margin=T, echo=F, fig.cap="Esperimento modificando un fattore alla volta"}
+ggplot(data[1:3,], aes(x=A, y=B)) +
+  geom_label(aes(x=A, y=B, label=resa))
+```
+```{r echo=F}
+data[1:3,] %>% knitr::kable()
+```
+
+Da queste informazioni possiamo calcolarci l'**effetto** di $A$ e di $B$. Introduciamo anzitutto la **notazione di Yates** per riferirsi ai **trattamenti**: ogni trattamento è indicato con la le lettere minuscole dei relativi fattori se a livello alto, nulla se a livello basso, e si utilizza $(1)$ se tutti i fattori sono a livello basso.
+Gli effetti (che si indicano col nome del loro fattore) risultano quindi:
+\begin{eqnarray}
+A &=& a - (1) = `r data$resa[2]` - `r data$resa[1]` = `r data$resa[2]-data$resa[1]`\\
+B &=& b - (1) = `r data$resa[3]` - `r data$resa[1]` = `r data$resa[3]-data$resa[1]`
+\end{eqnarray}
+Cioè entrambi i fattori hanno un effetto positivo e l'effetto di $A$ è maggiore di quello di $B$.
+
+Tuttavia questo approccio ha due limiti:
+
+1. non posso dire se c'è interazione tra $A$ e $B$, se cioè l'effetto di $A$ dipende dal **livello* di $B$, e viceversa;
+2. a meno di non replicare l'esperimento più volte, non ho nessuna indicazione statistica sull'effetto, perché non posso stimare la varianza.
+
+Supponiamo ora di completare l'esperimento con un trattamento in cui **entrambi i fattori sono a livello alto**, cioè il trattamento $ab$: otteniamo la tabella seguente e la Fig. \ref{fig:2to2}:
+```{r echo=F}
+data %>% knitr::kable()
+```
+```{r 2to2, fig.margin=T, echo=F, fig.cap="Esperimento fattoriale completo"}
+ggplot(data, aes(x=A, y=B)) +
+  geom_label(aes(x=A, y=B, label=resa))
+A <- with(data, (resa[2]+resa[4])/2 - (resa[1]+resa[3])/2)
+B <- with(data, (resa[3]+resa[4])/2 - (resa[1]+resa[2])/2)
+AB <- with(data, (resa[1]+resa[4])/2 - (resa[2]+resa[3])/2)
+```
+
+Abbiamo realizzato un **piano fattoriale completo** di tipo $2^2$, cioè con due fattori, ciascuno a 2 livelli e un totale di $2^2=4$ trattamenti.
+
+Per la stima degli effetti questo piano fattoriale ci consente di fare un passo in avanti:
+\begin{eqnarray}
+A &=& \frac{a+ab}{2} - \frac{(1) + b}{2} = `r A`\\
+B &=& \frac{b+ab}{2} - \frac{(1) + a}{2} = `r B` \\
+AB &=& \frac{a+b}{2} - \frac{(1)+ab}{2} = `r AB`
+\end{eqnarray}
+cioè l'effetto di $A$ è positivo, ma l'effetto di $B$ risulta **in media negativo** dato che tra di due fattori c'è un'interazione non nulla $AB=`r AB`$. In altre parole, come si evince anche dalla Fig. \ref{fig:2to2}, aumentare $A$ ha un effetto positivo quanto $B$ è basso, ma **negativo** quando $B$ è alto.
+
+```{r interaction1, echo = F, fig.margin=T, fig.cap="Grafico di interazione tra i due fattori $A$ e $B$"}
+ggplot(data, aes(x=A, y=resa, color=B, group=B)) + 
+  geom_line(size=2) + 
+  geom_point(size=4)
+```
+Questa situazione è ben rappresentabile con un **grafico di interazione** come in Fig. \ref{fig:interaction1}: il fatto che le due rette **non siano parallele** significa che c'è interazione tra i due fattori. Viceversa, se esse fossero parallele significherebbe che l'effetto di ciascun fattore è indipendente dall'altro.
+```{r interaction2, echo = F, fig.margin=T, fig.cap="Grafico di interazione tra i due fattori $A$ e $B$"}
+ggplot(data, aes(x=B, y=resa, color=A, group=A)) + 
+  geom_line(size=2) + 
+  geom_point(size=4)
+```
+
+Dal confronto tra Fig. \ref{fig:interaction1} e Fig. \ref{fig:interaction2} si capisce come sia indifferente quale dei due fattori sia in traccia e quale sull'ascissa: la conclusione è sempre la stessa: rette parallele significa nessuna interazione, e viceversa.
+
+Si è detto che il secondo punto debole dell'esperimento di Fig. \ref{fig:onebyone} è che non consente la stima della varianza, a meno di non ripetere gli esperimento (che però aumenta il costo). Si vedrà nel resto di questa Parte che il piano fattoriale di Fig. \ref{fig:2to2}, invece, consente anche una stima della varianza.
+```{marginfigure}
+**Nota**: stimare la varianza è essenziale, perché se essa risulta maggiore dell'effetto è chiaro che nessuno degli effetti calcolati ha più valore di un numero casuale.
+```
+
 
 
 ## Piani fattoriali $k^2$
