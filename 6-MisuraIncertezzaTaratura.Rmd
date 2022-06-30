@@ -26,9 +26,9 @@ header-includes:
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
   - \fancyhead[LO,LE]{\rightmark}
-  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
+  - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}
@@ -571,7 +571,7 @@ data %>% ggplot(aes(x=l, y=after_stat(density))) +
   geom_vline(xintercept = mean(data$l), color="red") +
   geom_vline(xintercept = quantile(data$l, c(0.25, 0.5, 0.75)), 
              color="blue", linetype=2) +
-  labs(x="Raggio (mm)", y="Densità", 
+  labs(x="Lunghezza (mm)", y="Densità", 
        title=glue("Lunghezza: media={m}, dev.st={s}"))
 ```
 

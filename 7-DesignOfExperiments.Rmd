@@ -22,13 +22,15 @@ output:
 bibliography: skeleton.bib
 link-citations: yes
 header-includes:
+  - \usepackage{units}
   - \usepackage[italian]{babel}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
   - \fancyhead[LO,LE]{\rightmark}
-  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
+  - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
+  - \usepackage[normalem]{ulem}
 ---
 
 ```{r setup, include=FALSE}
@@ -38,12 +40,18 @@ library(tidyverse)
 library(tidymodels)
 library(magrittr)
 library(grDevices)
+library(glue)
+if (!require(metR)) {
+  install.packages("metR")
+  require(metR)
+}
 source("myfunctions.R")
 knitr::opts_chunk$set(tidy=F)
 theme_set(theme_gray()+theme(legend.position = "bottom"))
 ```
 ```{=tex}
 \newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
+\renewcommand{\ul}[1]{\underline{#1}}
 ```
 
 
@@ -93,20 +101,20 @@ Introduciamo il concetto di piano fattoriale a partire da un esempio elementare:
 
 ```{r include=FALSE}
 data <- tribble (
-  ~A, ~B, ~resa, ~Yates,
-  "A-", "B-", 20, "$(1)$",
-  "A+", "B-", 50, "$a$",
-  "A-", "B+", 30, "$b$",
-  "A+", "B+", 12, "$ab$"
+  ~A, ~B, ~resa, ~Yates, ~An, ~Bn,
+  "A-", "B-", 20, "$(1)$", -1, -1,
+  "A+", "B-", 50, "$a$", 1, -1,
+  "A-", "B+", 30, "$b$", -1, 1,
+  "A+", "B+", 12, "$ab$", 1, 1
 )
 ```
 Se vogliamo investigare la risposta del processo ad una variazione dei due fattori, l'approccio più semplice è cambiare il valore di ogni fattore, **uno alla volta**, come illustrato in Fig. \ref{fig:onebyone}, supponendo di valutare la resa come riportato nella seguente tabella:
 ```{r onebyone, fig.margin=T, echo=F, fig.cap="Esperimento modificando un fattore alla volta"}
-ggplot(data[1:3,], aes(x=A, y=B)) +
+ggplot(data[1:3,1:4], aes(x=A, y=B)) +
   geom_label(aes(x=A, y=B, label=resa))
 ```
 ```{r echo=F}
-data[1:3,] %>% knitr::kable()
+data %>% select(Yates, A:resa) %>% slice_head(n=3) %>% knitr::kable()
 ```
 
 Da queste informazioni possiamo calcolarci l'**effetto** di $A$ e di $B$. Introduciamo anzitutto la **notazione di Yates** per riferirsi ai **trattamenti**: ogni trattamento è indicato con la le lettere minuscole dei relativi fattori se a livello alto, nulla se a livello basso, e si utilizza $(1)$ se tutti i fattori sono a livello basso.
@@ -119,12 +127,12 @@ Cioè entrambi i fattori hanno un effetto positivo e l'effetto di $A$ è maggior
 
 Tuttavia questo approccio ha due limiti:
 
-1. non posso dire se c'è interazione tra $A$ e $B$, se cioè l'effetto di $A$ dipende dal **livello* di $B$, e viceversa;
+1. non posso dire se c'è interazione tra $A$ e $B$, se cioè l'effetto di $A$ dipende dal **livello** di $B$, e viceversa;
 2. a meno di non replicare l'esperimento più volte, non ho nessuna indicazione statistica sull'effetto, perché non posso stimare la varianza.
 
 Supponiamo ora di completare l'esperimento con un trattamento in cui **entrambi i fattori sono a livello alto**, cioè il trattamento $ab$: otteniamo la tabella seguente e la Fig. \ref{fig:2to2}:
 ```{r echo=F}
-data %>% knitr::kable()
+data %>% select(Yates, A:resa) %>% knitr::kable()
 ```
 ```{r 2to2, fig.margin=T, echo=F, fig.cap="Esperimento fattoriale completo"}
 ggplot(data, aes(x=A, y=B)) +
@@ -158,6 +166,22 @@ ggplot(data, aes(x=B, y=resa, color=A, group=A)) +
 
 Dal confronto tra Fig. \ref{fig:interaction1} e Fig. \ref{fig:interaction2} si capisce come sia indifferente quale dei due fattori sia in traccia e quale sull'ascissa: la conclusione è sempre la stessa: rette parallele significa nessuna interazione, e viceversa.
 
+Un altro modo di osservare l'interazione è mediante una **superficie di risposta** (*response surface*): essa è una superficie (o una iper-superficie se i fattori sono più di due) che corrisponde all'insieme dei punti $Y=f(A, B)$, essendo $Y$ la resa del processo. Questa superficie può essere visualizzata mediante un grafico tridimensionale oppure---e meglio---mediante un grafico a contorno (*coutour plot*), che riporta le iso-linee della superficie in un piano di coordinate $(A, B)$. Su questo grafico, se le curve di livello risultano dritte (quale che sia l'inclinazione), allora non c'è interazione. Se invece sono curve come in Fig. \ref{fig:response}, allora significa che c'è interazione. Tra l'altro, si noti che i grafici di interazione non sono altro che le tracce dei bordi della superficie di risposta nell'intervallo di interesse: se osservassimo la superficie di risposta guardando lungo l'asse $B$ vedremmo in primo piano la linea corrispondente alla variazione di $A$ quando $B$ è basso e in secondo piano la variazione quando $B$ è alto, come in Fig. \ref{fig:interaction1}. Viceversa, guardando lungo l'asse $A$ vedremmo la Fig. \ref{fig:interaction2}.
+
+```{r response, fig.margin=T, echo=F, fig.cap="Superficie di risposta. I bordi orizzontali sono le tracce della superficie e corrispondono al grafico di interazione visto lungo la direzione dell'asse $A$"}
+model <- lm(resa~An*Bn, data)
+grd <- expand.grid(An=seq(-1,1,0.1), Bn=seq(-1,1,0.1))
+grd %>% mutate(
+  resa = predict(model, newdata = grd)
+) %>% ggplot(aes(x=An, y=Bn, z=resa)) + 
+  geom_contour_filled(show.legend=F) +
+  labs(x="A", y="B", color="resa") + 
+  geom_segment(aes(x=-1, y=-1, xend=1, yend=-1, color="B-"), size=2) +
+  geom_segment(aes(x=-1, y=1, xend=1, yend=1, color="B+"), size=2) +
+  geom_point(aes(x=An, y=Bn, color=B), data=data, size=4)
+  
+```
+
 Si è detto che il secondo punto debole dell'esperimento di Fig. \ref{fig:onebyone} è che non consente la stima della varianza, a meno di non ripetere gli esperimento (che però aumenta il costo). Si vedrà nel resto di questa Parte che il piano fattoriale di Fig. \ref{fig:2to2}, invece, consente anche una stima della varianza.
 ```{marginfigure}
 **Nota**: stimare la varianza è essenziale, perché se essa risulta maggiore dell'effetto è chiaro che nessuno degli effetti calcolati ha più valore di un numero casuale.
@@ -165,16 +189,722 @@ Si è detto che il secondo punto debole dell'esperimento di Fig. \ref{fig:oneby
 
 
 
-## Piani fattoriali $k^2$
+# Piani fattoriali $k^2$
+`r newthought("Consideriamo il caso in cui")` si abbiano solo due fattori e un generale numero di livelli $k\geqslant2$. Nel caso più semplice in cui sia $k=2$, ricordando quanto detto a proposito dell'analisi della varianza nella Parte sulla statistica inferenziale, possiamo costruire un modello statistico degli effetti e delle medie come segue:
+\begin{align}
+y_{ijk} &=& \mu_{ij} + \varepsilon_{ijk} & \quad\textrm{modello delle medie} \\
+y_{ijk} &=& \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk} & \quad\textrm{m. degli effetti} \label{eq:effects}
+\end{align}
+a cui corrisponde il modello di regressione
+\[
+\hat y = \mu + \alpha x_1 + \beta x_2 + (\alpha\beta) x_1 x_2
+\]
 
-## Piani fattoriali $2^n$
+È evidente che al modello lineare degli effetti in (\ref{eq:effects}) può essere associata l'analisi della varianza (ANOVA) associata alle seguenti coppie di ipotesi alternative:
+\[
+\textrm{A)}\quad\left\{
+\begin{array}{rl}
+H_0:& \alpha_1 = \alpha_2 = \dots =\alpha_a = 0 \\
+H_1:& \alpha_i \ne 0\quad\textrm{per almeno un}~i=1,2,\dots, a
+\end{array}
+\right.
+\],
+\[
+\textrm{B)}\quad\left\{
+\begin{array}{rl}
+H_0:& \beta_1 = \beta_2 = \dots =\beta_b = 0 \\
+H_1:& \beta_j \ne 0\quad\textrm{per almeno un}~j=1,2,\dots,b
+\end{array}
+\right.
+\]
+e
+\[
+\textrm{AB)}\quad\left\{
+\begin{array}{rl}
+H_0:& (\alpha\beta)_{ij} =   0\quad \forall~i,j\\
+H_1:& (\alpha\beta)_{ij} \ne 0\quad \textrm{per almeno una coppia}~i,j
+\end{array}
+\right.
+\]
+
+A queste coppie di ipotesi corrisponde una decomposizione della **somma quadratica totale corretta** $SS_T=SS_A + SS_B + SS_{AB} + SS_E$, utilizzata per costruire la tabella ANOVA che consente di capire quali dei fattori e delle loro interazioni sia statisticamente significativo.
+
+```{marginfigure}
+**Nota**: è evidente che, siccome il modello di regressione utilizzato per costruire la tabella ANOVA è un **modello statistico lineare**, quanto sopra detto vale non solo per i modelli del primo grado, ma per una qualsiasi combinazione polinomiale dei fattori, purché essa sia lineare nei coefficienti.
+```
+
+Vediamo quindi un esempio di come realizzare e analizzare questo tipo di esperimenti. Si noti che anche l'esempio dell'inferenza effettuata sul test di vita di una batteria, riportato nella Parte sulla statistica inferenziale, è di fatto un esempio di piano fattoriale $3^2$, dove uno dei due livelli è **qualitativo** (il tipo di materiale).
+
+## Esempio: vita di un utensile da tornitura
+Uno sperimentatore vuole studiare l'effetto della velocità di taglio e dell'angolo di spoglia di un utensile per tornitura. In questo caso entrambi i parametri sono **quantitativi** e lo sperimentatore decide di verificare tre livelli per ciascun parametro: i livelli normalmente suggeriti dal costruttore dell'utensile più due altri livelli al di sopra e al di sotto. In definitiva sceglie velocità di 125, 150 e 175 m/min, e angoli di spoglia di 15°, 20° e 25°. Decide anche di ripetere 2 volte ogni trattamento.
+
+In generale, la sequenza operativa per questo genere di esperimenti prevede:
+
+1. preparazione della **griglia di test**, cioè la tabella che elenca tutti i trattamenti
+2. casualizzazione della sequenza operativa, in modo da distribuire casualmente effetti di fattori non considerati e non controllati\footnote{vedi quanto detto nella Parte sulla taratura}
+3. conduzione degli esperimenti e raccolta delle misure
+4. formulazione e verifica dell'adeguatezza del modello statistico
+5. costruzione della tabella ANOVA
+6. sulla base del risultato ANOVA, modifica del modello
+
+Il primo passo tipicamente consente nella preparazione di una tabella con tutte le combinazioni dei fattori e delle ripetizioni, creando anche un indice casuale che serva per eseguire le prove in ordine, appunto, casuale. Per questo tipo di operazione risulta molto comoda la funzione `expand_grid()`:
+```{r}
+df <- expand.grid(
+  Angle=c(15,20,25), 
+  Speed=c(125,150,175), 
+  Repeat=c(1,2), 
+  Response =NA) %>%
+  mutate(StdOrder=1:n(), RunOrder=sample(n()), .before=Angle)
+```
+Questa tabella va poi riordinata secondo la chiave `RunOrder`, esportata nel formato preferito (usando `write_csv()`), e infine utilizzata per condurre gli esperimenti nell'ordine corretto e raccogliere i dati:
+```{r eval=FALSE, include=T}
+df %>% arrange(RunOrder) %>% write_csv("data.csv")
+```
+
+Ad esperimento completato non ci resta che importare nuovamente la tabella, questa volta completa della colonna `Response`, che in questo caso riporta la variazione di vita dell'utensile rispetto al valore di riferimento storico:
+```{r}
+df <- read_table("http://repos.dii.unitn.it:8080/data/cutting.dat", comment="#")
+df %>% slice_head(n=6) %>% knitr::kable()
+```
+
+Costruiamo ora un modello di secondo grado in entrambi i fattori, comprese tutte le possibili correlazioni:
+```{r}
+df.lm <- lm(Response~Angle*Speed*I(Angle^2)*I(Speed^2), data=df)
+anova(df.lm)
+```
+
+L'analisi della varianza mostra che i termini di secondo grado sono significativi, quindi la superficie di risposta sarà sicuramente ondulata. Prima di verificarla controlliamo però i residui. Si noti che carichiamo la libreria `modelr` che fornisce le funzioni `add_residuals()` e `add_predictions()`:
+```{r fig.margin=T, tidy=F, fig.dim=c(5, 3)*0.8}
+library(modelr)
+df <- add_residuals(df, df.lm) 
+ggplot(df, aes(x=Angle, y=resid)) + geom_point() +
+  labs(x="angolo", y="residui")
+```
+
+
+```{r fig.margin=T, tidy=F, fig.dim=c(5, 3)*0.8}
+ggplot(df, aes(x=Speed, y=resid)) +   geom_point() +
+  labs(x="velocità", y="residui")
+```
+
+Dato che non si evidenziano particolari *pattern* sui residui, possiamo creare il grafico della superficie di risposta, interpolando il modello su una nuova griglia di punti 20x20:
+```{r fig.margin=T, tidy=F, fig.dim=c(5, 6)*0.8}
+p1 <- c(22.1, 164)
+p2 <- c(17.5, 145)
+rs <- expand.grid(
+  Angle=seq(15,25,length.out=20), 
+  Speed=seq(125,175,length.out=20))
+add_predictions(rs, df.lm) %>%
+  ggplot(aes(x=Angle, y=Speed, z=pred)) +
+  geom_contour_filled() +
+  geom_label(aes(x=p1[1], y=p1[2], label="A")) +
+  geom_label(aes(x=p2[1], y=p2[2], label="B"))
+```
+
+La superficie di risposta è uno strumento estremamente utile per chi controlla un processo: consente infatti di identificare
+ 
+ * i punti stazionari del processo, cioè combinazioni di fattori che, come nel punto A nell'ultima figura, rendono il processo insensibile, quindi **robusto**, a piccole variazioni dei fattori stessi;
+ * data una condizione operativa qualsiasi, come il punto B in figura, consentono di capire in che direzione muoversi per avere un massimo incremento della resa (ad esempio in B più o meno a 45° verso l'alto e a destra), oppure la direzione da seguire per mantenere la resa immutata, cioè seguendo una curva di livello, ma variando un fattore in modo da ottenere obiettivi secondari (ad esempio aumentare la velocità).
+
+
+# Piani fattoriali $2^n$
+
+Un piano fattoriale $2^n$ è il tipo più semplice, in cui tutti i fattori hanno solo due livelli, alto e basso. È un piano molto adatto agli **esperimenti esplorativi**, in cui l'obiettivo principale è capire quali fattori sono significativi e quindi meritevoli di ulteriori approfondimenti **mirati**. Inoltre, è il primo passo per piani più complessi, che vedremo nelle prossime sezioni.
+
+In un piano $2^n$ i livelli dei fattori sono espressi in **unità codificate** (*coded units*): l'intervallo di interesse tra livello basso e livello alto viene cioè scalato sull'intervallo $[-1, 1]$, e i livelli sono convenzionalmente indicati con $-$ e $+$.
+```{marginfigure}
+**Nota**: nella matrice di progetto le colone delle interazioni sono ottenute moltiplicando i segni dei fattori corrispondenti. I segni dei fattori si alternano con requenze via via dimezzate: $1$ per $A$, $1/2$ per $B$, $1/4$ per $C$ e così via. Infine, l'ordine di fattori e interazioni nelle colonne è quello che si ottiene associando ai fattori un valore pari a potenza di due ($A=1, B=2, C=4, \dots$) e alle interazioni la somma dei valori dei fattori.
+
+In questo modo, la sottomatrice $4\times 4$ in alto a destra è la matrice per il piano fattoriale $2^2$, e la matrice qui riportata è la sottomatrice $8\times 8$ del piano fattoriale $2^4$, e così via.
+```
+Il primo passo è sempre quello di costruire la **matrice di progetto** (*design matrix*). Nel caso di tre fattori si ha:
+```{r echo=F}
+lv <- c("-", "+")
+`%f*%` <- function(a, b) {
+  an <- ifelse(a=="-", -1, 1)
+  bn <- ifelse(b=="-", -1, 1)
+  ifelse(an*bn == -1, "-", "+")
+}
+dm <- expand.grid(
+  I="+",
+  A=lv,
+  B=lv,
+  C=lv
+) %>% 
+  mutate(AB=A%f*%B, .after=B) %>%
+  mutate(AC=A%f*%C, BC=B%f*%C, ABC=A%f*%B%f*%C)
+tr <- tolower(colnames(dm))
+tr[1] <- "(1)"
+dm %>% mutate(I="+") %>%
+  mutate(treat=tr, .before="I") %>%
+  knitr::kable(align=c("l", rep("c", 8)))
+```
+
+Le **colonne dei soli fattori** servono ovviamente per definire ogni trattamento, cioè per definire la combinazione di livelli dei fattori in ogni condizione di test. Sono quindi essenziali per la conduzione dei test stessi. Le **colonne delle interazioni**, invece, servono per definire i **frazionamenti**, concetto che verrà illustrato più oltre. Inoltre, si dimostra che l'**effetto** di ogni fattore e interazione è calcolabile sulla base dei segni riportati nella matrice di progetto:
+\begin{eqnarray}
+A &=& \frac{-(1)+a-b+ab}{2r} \label{eq:Aeffect} \\
+B &=& \frac{-(1)-a+b+ab}{2r} \\
+AB &=& \frac{+(1)-a-b+ab}{2r}
+\end{eqnarray}
+dove $r$ è il numero di repliche, e per le somme quadratiche dell'analisi di varianza vale:
+\begin{eqnarray}
+SS_A &=& \frac{(-(1)+a-b+ab)^2}{4r} \\
+SS_B &=& \frac{(-(1)-a+b+ab)^2}{4r} \\
+SS_{AB} &=& \frac{(+(1)-a-b+ab)^2}{4r}
+\end{eqnarray}
+
+Le strutture di tipo $(-(1)+a-b+ab)$ si chiamano **contrasti** e la loro espressione è facilmente generalizzabile a $k$ fattori (cioè la sequenza dei trattamenti in ordine standard con i segni riportati nella colonna corrispondente della matrice di progetto). In generale, vale:
+\begin{eqnarray}
+\mathrm{Ef}(X) &=& \frac{2}{2^rn}\mathrm{Contrast}(X) \\
+\mathit{SS}(X) &=& \frac{1}{2^rn}\mathrm{Contrast}(X)^2 \\
+\end{eqnarray}
+con $n$ il numero di fattori. Note le $SS_X$ è immediato costruire quindi la tabella ANOVA. In realtà, gli strumenti di `R` come `lm()` e `anova()` rendono superflua questa tecnica, come vedremo di seguito.
+
+Il piano fattoriale $2^3$ può essere rappresentato anche in forma grafica come un cubo, vedi Fig. \ref{fig:facplan}. Si noti che il piano fattoriale $2^2$ corrisponde alla faccia orizzontale in basso di questo cubo, cioè ai trattamenti $(1), a, b, ab$. La faccia superiore ha gli stessi nomi di trattamento della faccia inferiore, con l'aggiunta di una $c$ alla fine.
+
+Allo stesso modo, un piano $2^4$ è un ipercubo in 4 dimensioni, e può essere solo rappresentato graficamente come due cubi: uno per il livello basso del quarto fattore $D$, e uno per il livello alto di $D$, i cui trattamenti hanno gli stessi nomi del primo cubo ma con l'aggiunta di una $d$ alla fine.
+
+```{r facplan, echo=F, fig.margin=T, fig.cap="Piano fattoriale $2^3$"}
+knitr::include_graphics("images/facplan1.pdf")
+```
+
+\boxedpar{
+In generale, quindi, un piano fattoriale $2^n$ può essere rappresentato come un ipercubo in $n$ dimensioni, oppure, graficamente, come $n-2$ cubi.
+}
+
+Per ottenere la tabella prove da utilizzare per effettuare gli esperimenti non resta che replicare la matrice di progetto tante volte quante sono le ripetizioni desiderate (almeno 2) e aggiungere la colonna con l'ordine di esecuzione casuale, come visto nella Sezione precedente.
+
+## Esempio $2^2$: reazione chimica
+
+Cominciamo con un piano $2^2$. Vogliamo studiare la resa di una reazione chimica (come quantità di prodotto) soggetta a due fattori: la concentrazione del reagente $A$ e la quantità di catalizzatore $B$. I livelli sono impostati a 15% e 25% per il reagente e 1 g e 5 g per il catalizzatore. Noi useremo comunque **unità codificate** nell'intervallo $[-1,1]$. Ogni trattamento viene ripetuto 3 volte.
+
+**Preparazione della matrice di progetto**. Costruiamo la matrice considerando le tre ripetizioni e la colonna con l'ordine casuale:
+```{r}
+dm <- expand.grid(A=c(-1,1), B=c(-1,1), rep=1:3) %>%
+  mutate(AB=A*B, .before=rep) %>%
+  mutate(Run=sample(n()), .before=A) %>%
+  mutate(Yield=NA, A=factor(A), B=factor(B), AB=factor(AB))
+  
+dm %>% 
+  knitr::kable()
+```
+Si noti che abbiamo inizialmente definito i livelli come numerici `c(-1,1)` ma li abbiamo poi **convertiti in fattori** (con `A=factor(A)`). Questo passo è fondamentale per raggruppare le osservazioni fatte nello stesso trattamento.
+```{marginfigure}
+**Nota**: si ricordi che i termini nella tabella ANOVA hanno un numero di gradi di libertà che dipende dal numero di livelli di ogni trattamento. Se---come in questo caso---i trattamenti sono replicati due volte, il numero di gradi di libertà è $(a-1)=1$, quindi convertire `A` in fattore o meno non ha alcun effetto pratico.
+
+Tuttavia è consigliabile prestare attenzione alla conversione in fattore, e ricordarsi che ogni qual volta i liveli sono più di due il risultato di ANOVA è corretto solo se si opera su *fattori*.
+```
+
+
+Per quanto detto sopra, la colona `AB` è ovviamente superflua, ma è stata aggiunta qui per completezza.
+
+La tabella va riordinata secondo la colonna `Run` (con `dm %>% arrange(Run)`) e utilizzata come sequenza operativa per l'esecuzione di tutti i trattamenti.
+
+Effettuati i test possiamo aggiungere il vettore delle rese:
+```{r}
+yield <- c(
+  28, 36, 18, 31,
+  25, 32, 19, 30,
+  27, 32, 23, 29
+)
+dm <- dm %>% mutate(Yield=yield)
+```
+
+Ora possiamo creare il modello lineare completo e verificare la significatività dei termini con ANOVA:
+```{r}
+dm.lm <- lm(Yield~A*B, data=dm)
+anova(dm.lm)
+```
+Osserviamo che l'interazione `A:B` risulta poco significativa. Questo ci spinge a **rivedere il modello eliminando l'interazione**\footnote{Questa è una conclusione importante: significa che le due variabili possono essere studiate \strong{indipendentemente}, una alla volta.}:
+
+```{r}
+dm.lm <- lm(Yield~A+B, data=dm)
+anova(dm.lm)
+```
+Il prossimo passo è quello della **verifica di adeguatezza** del modello, mediante analisi dei residui. Cominciamo con la verifica di normalità:
+```{r fig.margin=T}
+dm <- dm %>% add_residuals(dm.lm) %>% add_predictions(dm.lm)
+st <- shapiro.test(dm$resid)
+dm %>% ggplot(aes(sample=resid)) +
+  geom_qq() + geom_qq_line(color="red") + 
+  labs(x="quantili campionari", y="quantili teorici",
+       title=glue("Shapiro test: p-value={round(st$p.value, 4)}"))
+
+```
+
+Il grafico quantile-quantile sembra poco allineato, ma bisogna ricordare che 16 osservazioni sono poche perché tale grafico risulti affidabile. Infatti, il test di Shapiro riporta un *p-value* pari a `r round(st$p, 4)`, che non consente di dubitare della normalità dei residui.
+
+Resta da verificare l'assenza di *pattern*:
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8}
+ggplot(dm, aes(x=pred, y=resid)) + 
+  geom_point() + labs(x="predizione", y="residui")
+ggplot(dm, aes(x=A, y=resid)) + 
+  geom_point() + labs(y="residui")
+ggplot(dm, aes(x=B, y=resid)) + 
+  geom_point() + labs(y="residui")
+```
+
+Anche in questo caso non notiamo condizioni sospette, quindi possiamo completare l'analisi realizzando un grafico a contorno della superficie di risposta. Quest'ultima, dato che abbiamo rimosso il termine di interazione dal modello lineare, risulterà ovviamente essere un piano con massimo in $(1,-1)$ e minimo in $(-1,1)$, quindi rappresentata da iso-linee parallele sul grafico a contorno:
+```{r fig.margin=T}
+dm.lmr <- lm(Yield~as.numeric(A)+as.numeric(B), data=dm)
+rs <- expand.grid(A=seq(-1,1,0.1), B=seq(-1,1,0.1)) %>% 
+  add_predictions(dm.lmr)
+
+ggplot(rs, aes(x=A, y=B, z=pred)) +
+  geom_contour() + 
+  geom_text_contour(stroke=0.5, stroke.color="white") +
+  scale_x_continuous(
+    sec.axis = sec_axis(~rescale(., to=c(15,25), from=c(-1,1)), 
+                        name="Reagente (%)")
+  ) + 
+  scale_y_continuous(
+    sec.axis = sec_axis(~rescale(., to=c(1,5), from=c(-1,1)), 
+                        name="Catalizzatore (g)")
+  )
+```
+
+```{marginfigure}
+**Nota**: la combinazione della funzione `rescale()` (che consente di riscalare da unità codificate a unità originarie) e dell'opzione `sec.axis` di `scale_x_continuous()` permette di aggiungere una seconda scala che riporta alle unità originarie la superficie di risposta.
+```
+
+
+## Esempio $2^3$: wafer-etching plant
+
+Vogliamo studiare la velocità di asportazione (*etch rate*) in un impianto di *plasma etching* per wafer di silicio. I possibili fattori del processo sono:
+
+* $A$: distanza tra gli elettrodi
+* $B$: flusso di gas 
+* $C$: potenza del segnale RF alimentato agli elettrodi
+
+L'esperimento viene replicato 2 volte. Cominciamo con il costruire la matrice di progetto. Per quanto detto sopra, tralasciamo le colonne di interazione:
+```{r}
+dm <- expand.grid(
+  An = c(-1, 1),
+  Bn = c(-1, 1), 
+  Cn = c(-1, 1),
+  rep = 1:2,
+  Yield = NA
+) %>% 
+  mutate(A=factor(An), B=factor(Bn), C=factor(Cn), .before=An) %>%
+  mutate(Run=sample(n()), .before=A)
+dm %>%
+  slice_head(n=8) %>%
+  knitr::kable()
+```
+Come al solito, riordiniamo la tabella secondo la colonna `Run`, effettuiamo i test e inseriamo le rese nella tabella originaria:
+```{r}
+dm$Yield <- c(
+  550, 669, 633, 642, 1037, 749, 1075, 729,
+  604, 650, 601, 635, 1052, 868, 1063, 860
+)
+```
+
+Realizziamo un modello lineare completo e verifichiamo l'analisi della varianza:
+```{r}
+dm.lm <- lm(Yield~A*B*C, data=dm)
+anova(dm.lm)
+summary(dm.lm)$adj.r.squared
+```
+```{marginfigure}
+**Nota**: il coefficiente di regressione è $R^2 = \frac{SS_\textit{Model}}{SS_\textit{Total}}$, mentre il coefficiente di regressione corretto è $R^2_\mathit{adj}=1-\frac{(1-R^2)(n-1)}{n-k-1}$, con $k$ il numero di regressori. Il secondo è più affidabile perché tiene conto del rapporto tra il numero di punti sperimentali e il numero di regressori.
+
+Quindi, in ogni regressione con più di un regressore è sempre preferibile valutare $R^2_\mathit{adj}$.
+```
+
+Si osserva che solo i termini `A`, `C` e `A:C` risultano significativi, e si noti inoltre il valore di $R^2_\mathit{adj}$ della regressione, pari a `r round(summary(dm.lm)$r.squared, 4)`. Rivediamo quindi il modello eliminando tutti i termini non significativi:
+```{r}
+dm.lm <- lm(Yield~A*C, data=dm)
+anova(dm.lm)
+summary(dm.lm)$adj.r.squared
+```
+Il modello rivisto ha un coefficiente di regressione corretto $R^2_\mathit{adj}$ pari a `r round(summary(dm.lm)$r.squared, 4)`, inferiore a quello del modello completo: il modello ridotto è quindi in grado di rappresentare meglio i dati originali.
+
+Per quanto riguarda i residui, procediamo come sopra:
+```{r fig.margin=T}
+dm <- dm %>% add_residuals(dm.lm) %>% add_predictions(dm.lm)
+st <- shapiro.test(dm$resid)
+dm %>% ggplot(aes(sample=resid)) +
+  geom_qq() + geom_qq_line(color="red") + 
+  labs(x="quantili campionari", y="quantili teorici",
+       title=glue("Shapiro test: p-value={round(st$p.value, 4)}"))
+```
+
+La normalità è confermata e così pure l'assenza di *pattern* in rapporto ai fattori $A$ e $C$:
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8}
+ggplot(dm, aes(x=A, y=resid)) + 
+  geom_point() + labs(y="residui")
+ggplot(dm, aes(x=B, y=resid)) + 
+  geom_point() + labs(y="residui")
+```
+
+Infine realizziamo il grafico della superficie di risposta, confrontata con le medie nei quattro vertici del piano fattoriale:
+```{r fig.margin=T}
+# modello di regressione sui livelli numerici
+dm.lmr <- lm(Yield~An*Cn, data=dm)
+rs <- expand.grid(An=seq(-1,1,0.1), Cn=seq(-1,1,0.1)) %>% 
+  add_predictions(dm.lmr)
+# calcolo le medie nei vertici
+dm.bar <- dm %>% 
+  group_by(An, Cn) %>% 
+  summarise(Yield=mean(Yield), .groups="keep") %>%
+  ungroup()
+
+ggplot(data=rs, mapping=aes(x=An, y=Cn)) +
+  geom_contour(aes(z=pred)) + 
+  geom_text_contour(aes(z=pred), stroke=0.5, stroke.color="white") +
+  geom_label(data=dm.bar, aes(x=An, y=Cn, label=Yield)) +
+  scale_x_continuous(name="A",
+    sec.axis = sec_axis(~rescale(., to=c(0.8,1.2), from=c(-1,1)), 
+                        name="Gap (mm)")
+  ) + 
+  scale_y_continuous(name="C",
+    sec.axis = sec_axis(~rescale(., to=c(275,325), from=c(-1,1)), 
+                        name="Potenza (g)")
+  ) +
+  coord_cartesian(xlim=c(-1, 1)*1.2, ylim=c(-1,1))
+```
+Quindi il massimo della resa si ha in $(-1,1)$, il minimo in $(-1,-1)$ e si ha una modesta torsione del piano, ossia interazione tra $A$ e $C$.
 
 # Estensioni e frazionamenti
-`r newthought("")`
+`r newthought("È evidente che anche limitandosi")` a due livelli per fattore il numero di trattamenti cresce molto rapidamente quando aumenta la complessità del problema. È quindi necessario trovare soluzioni per ridurre ulteriormente il numero di esperimenti e per effettuare il più possibile solo i test strettamente necessari, ad esempio **senza ricorrere alle repliche**
+
+Da un lato, un piano $2^n$ è efficiente ma non consente di capire se il modello di primo grado su cui è basato è sufficiente per catturare la complessità del processo: serve quindi un modo per sapere quando e se un piano $2^n$ deve essere esteso, ad esempio, ad un $3^n$. In questo caso si ricorre al **Central Composite Design**.
+
+Dall'altro lato, soprattutto quando $n$ è elevato, è necessario ridurre ulteriormente il numero di test: ciò può essere ottenuto evitando le ripetizioni o addirittura dimezzando il numero di trattamenti mediante i **piani fattoriali frazionati**
+
+## Piani fattoriali non replicati
+È evidente che l'analisi della varianza può essere effettuata **solo se ogni trattamento è replicato** almeno due volte. In caso contrario il numero di gradi di libertà dell'errore non è sufficiente e non è possibile valutare la componente $SS_E$. Tuttavia, se fosse possibile eliminare la necessità di ripetere i trattamenti potremmo dimezzare il costo di un piano fattoriale.
+
+In realtà, si può ragionare che nel caso di piani fattoriali con $n$ elevato (maggiore di 3), **se non tutti i termini (fattori e interazioni) sono significativi**, quelli non significativi avranno un contributo indistinguibile dal disturbo normale. Questo metodo è stato originariamente proposto da C. Daniel (@Daniel1959) e può essere così riassunto:
+
+1. si realizza un modello lineare completo del piano fattoriale non replicato;
+2. si effettua un grafico Quantile-Quantile degli **effetti**: essi saranno sulla diagonale per i termini non significativi, e lontani dalla diagonale per i termini significativi; all'estremo, se nessun termine fosse significativo, gli effetti sarebbero puramente normali;
+3. a questo punto si rimuovono dal modello gli effetti non significativi: in questo modo il modello guadagna gradi di libertà sull'errore e consente di verificare l'analisi della varianza.
+
+Vediamo un esempio: vogliamo studiare la velocità di filtrazione di un impianto pilota di filtrazione, in dipendenza di 4 fattori:
+
+* $A$: temperatura
+* $B$: pressione
+* $C$: concentrazione di formaldeide
+* $D$: velocità di agitazione
+
+Si tratta quindi di un piano $2^4$ **non replicato**. Per brevità trascuriamo la randomizzazione della sequenza operativa, che assumiamo già fatta.
+```{r}
+dm <- expand.grid(
+  An = c(-1, 1),
+  Bn = c(-1, 1), 
+  Cn = c(-1, 1),
+  Dn = c(-1, 1)
+) %>% 
+  mutate(A=factor(An), B=factor(Bn), 
+         C=factor(Cn), D=factor(Dn), .before=An) %>%
+  mutate(Yield=c(
+    45, 71, 48, 65, 68, 60, 80, 65,
+    43, 100, 45, 104, 75, 86, 70, 96
+  ))
+dm %>%
+  slice_head(n=8) %>%
+  knitr::kable()
+```
+
+Realizziamo un mdello lineare completo: si noti come l'analisi ANOVA non è completa: dato che senza repliche risulta $SS_E=0$, tutte le statistiche di test $F$ sono `NaN`:
+```{r}
+dm.lm <- lm(Yield~A*B*C*D, data=dm)
+anova(dm.lm)
+```
+
+Applichiamo quindi il **metodo di Daniel**: creiamo un grafico Q-Q degli effetti dalcolati dal modello `dm.lm`, etichettandoli con il loro nome. Si noti che con `slice_tail(n=length(c)-1)` prendiamo tutti gli effetti tranne il primo, che rappresenta l'intercetta, cioè la media complessiva di tutte le osservazioni:
+```{r fig.margin=T}
+c <- effects(dm.lm)
+tibble(
+  term = names(c),
+  value = as.numeric(c)
+) %>% slice_tail(n=length(c)-1) %>%
+  ggplot(aes(sample=value)) +
+  geom_hline(aes(yintercept=value), color=gray(0.7)) +
+  geom_qq() + 
+  geom_qq_line() +
+  geom_label(aes(y=value, x=-3., label=term), hjust="left") +
+  coord_cartesian(xlim=c(-3,3))
+```
+
+Quindi possiamo dedurre che siano significativi solo gli effetti di `A:D`, `D`, `C`, `A:C` e `A`. Queste combinazioni possono essere rappresentate dalla formula `Yield~A*C+A*D`:
+```{r}
+dm.lm <- lm(Yield~A*C+A*D, data=dm)
+anova(dm.lm)
+```
+L'analisi della varianza conferma il risultato del metodo di Daniel.
+```{marginfigure}
+**Nota**: generalmente è opportuno essere **conservativi** nell'applicazione del metodo di Daniel, e eliminare solo i termini che sono evidentemente lontani dalla diagonale, lasciando invece i termini sospetti che saranno, se del caso, eliminati dalla successiva ANOVA, in maniera più robusta.
+```
+
+Lasciando per esercizio la verifica dei residui (che comunque non hanno problemi), vediamo di analizzare la risposta del sistema.
+```{r respsurf, fig.fullwidth=T, fig.dim=c(5, 2.)*1.8, out.height="6in", fig.cap="Superficie di risposta per il piano fattoriale $2^3$ dell'impianto pilota di filtrazione"}
+levels = factor(c(-1,1))
+expand.grid(
+  A=levels, C=levels, D=levels
+) %>% add_predictions(dm.lm) %>%
+  ggplot(aes(x=A, y=pred, color=C, group=C)) +
+  geom_line(size=2) +
+  geom_point(size=4) +
+  facet_wrap(~D, labeller=label_both) +
+  labs(y="Resa")
+```
+
+A volte può essere utile identificare, tra i termini significativi, quelli responsabili della maggior parte dell'effetto complessivo. In questo modo ci si può concentrare sui fattori più efficaci per controllare o migliorare un processo.
+
+A tale scopo può essere utile realizzare un **grafico di Pareto** degli effetti, che può essere costruito come segue:
+```{marginfigure}
+Data una serie di termini $\left<x_1, x_2,\dots,x_n\right>$ il grafico di Pareto riporta delle barre verticali di altezza pari alle $|x_i|$ **in ordine decrescente** e una linea che rappresenta il contributo cumulato, in percento.
+```
+```{r fig.margin=T}
+df <- tibble(
+  term = names(effects(dm.lm)),
+  value = as.numeric(abs(effects(dm.lm))),
+) %>%
+  # elimino gli effetti non significativi e l'intercetta
+  filter(term!="" & term != "(Intercept)") %>% 
+  # riordino
+  arrange(desc(value)) %>%
+  # calcolo la somma cumulativa
+  mutate(cum=cumsum(value),
+  # e converto term in un fattore ordinato
+         term = factor(term, levels=term, ordered=T)
+  ) 
+df %>% 
+  ggplot(aes(x=term, fill=cum, color=cum, group=1)) +
+  geom_col(aes(y=value)) + 
+  geom_point(aes(y=cum)) +
+  geom_line(aes(y=cum)) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~rescale(., from=c(0,max(df$cum)), to=c(0,100)),
+                        name="contributo relativo (%)"),
+    name = "effetto"
+  ) + 
+  theme(legend.position = "none")
+```
+
+In questo caso particolare osserviamo che circa l'80% dell'effetto complessivo proviene dai contributi di $A$, $AC$, $AD$ e $D$, quindi potremmo decidere di trascurare nel modello in contributo della concentrazione di formaldeide $C$ o, quantomeno, di considerarlo come un parametro poco influente e, quindi, da ritenere come costante nelle procedure di regolazione del processo, preferendo intervenire su $A$ e $D$.
 
 ## Central Composite Design
 
-## Piani fattoriali non replicati
+Il principale limite dei piani fattoriali $2^k$ è l'assunzione di **linearità della risposta** sul dominio considerato. Indagando solo cosa avviene agli estremi del dominio non abbiamo nemmeno modo di verificare se la risposta sia effettivamente lineare o no. Nel caso non lo fosse, sarebbe ovviamente necessario passare a piani fattoriali con più livelli, ad esempio $3^k$. Ma come possiamo capire quando ciò è effettivamente necessario, senza sprecare risorse ad investigare troppi trattamenti?
+
+La soluzione può nascere dall'osservazione della Fig. \ref{fig:respsurf}: Nel caso in cui non ci siano componenti quadratiche nella risposta, è chiaro che quando $A=0$ la resa media sarà a metà strada tra la linea verde e quella rossa. Viceversa, se la resa reale ha un comportamento quadratico possiamo aspettarci che nell'origine essa sia più bassa o più alta del punto medio tra le due tracce.
+
+Quindi possiamo aggiungere dei trattamenti, possibilmente replicati 3 o più volte, nell'origine, cioè quando tutti i fattori hanno valore 0 nelle unità codificate. Successivamente verifichiamo la **significatività** della curvatura con un modello lineare che includa un fattore al quadrato. Si noti che con un unico punto centrale non possiamo discriminare se il comportamento quadratico derivi da uno o più dei fattori, ma solo che esso sia significativo oppure no: di conseguenza è indifferente quale dei fattori viene considerato come termine quadratico nel modello.
+```{marginfigure}
+**Nota**: se nei piani fattoriali $2^k$ è opportuno specificare che i fattori siano di tipo `factor` in modo che valori ripetuti dello stesso trattamento siano effettivamente raggruppati consentendo una miglior valutazione della variabilità del sistema, nei piani con più di due livelli per fattore e quando il modello lineare include termini di grado 2 o superiore, i fattori **devono essere numerici**, perché l'elevazione a potenza non è definita sui `factor` (che sono l'equivalente di una stringa).
+```
+
+Vediamo un esempio aggiungendo 5 repliche del trattamento in $(A,C,D)= (0,0,0)$:
+```{r}
+dm.c <- tibble(
+  An = rep(0, 5),
+  Cn = rep(0, 5),
+  Dn = rep(0, 5),
+  Yield = c(91, 90, 90, 89, 91)
+) 
+dm <- dm %>% add_row(dm.c)
+```
+
+Ora applichiamo un modello lineare e verifichiamo la significatività del termine quadratico. È immediato vedere che otteniamo sempre la stessa ANOVA indipendentemente da quale dei tre fattori indichiamo come termine quadratico:
+```{r}
+dm.lmq <- lm(Yield~An*Cn+An*Dn+I(An^2), data=dm)
+anova(dm.lmq)
+
+dm.lmq <- lm(Yield~An*Cn+An*Dn+I(Cn^2), data=dm)
+anova(dm.lmq)
+```
+
+Questo risultato ci dice che il sistema ha effettivamente un comportamento quadratico **in almeno uno dei suoi fattori significativi**; tuttavia, per identificare quali fattori abbiano un effetto quadratico è necessario passare ad un piano fattoriale $3^k$ completo, aggiungendo quindi punti sugli assi (cioè sulle coordinate 0 in unità codificate). In questi casi si parla di **aumentare un piano fattoriale** aggiungendo dei punti assiali in un secondo momento.
+
+Prima di illustrare questo passaggio tuttavia, è opportuno chiarire perché utilizziamo le unità codificate, cioè su scala $[-1,1]$ anziché le unità proprie di ciascun fattore.
+
+Consideriamo l'effetto del fattore A in un piano $2^2$, la cui espressione è riportata sopra in (\ref{eq:Aeffect}). Il $2$ al denominatore rappresenta l'ampiezza dell'intervallo di variazione del fattore **in unità codificate**, dato che l'effetto è la variazione di resa per una data variazione di ingresso. Quindi, se anziché le unità codificate usassimo quelle native, fattori diversi ma con la stessa variazione di resa potrebbero avere effetti molto diversi se la loro variazione in unità native avesse valori molto differenti (e questo è assolutamente possibile). In questi casi un fattore con un intervallo molto ampio in unità native potrebbe quindi diventare non significativo.
+
+\boxedpar{
+Viceversa, utilizzando le unità codificate stiamo di fatto normalizzando gli effetti per l'ampiezza dell'intervallo tecnologico di variabilità dei singoli fattori, in modo da rendere \strong{confrontabili} gli effetti di un fattore che per una determinata applicazione possa variare tra, ad esempio, 0 e 1 con uno che vari tra 100 e 1000.
+}
+
+Per questi motivi, quando si aumenta un piano fattoriale $2^k$ centrato con dei punti assiali non si passa direttamente ad un piano $3^k$, ma si preferisce aggiungere i punti **equidistanti all'origine nelle direzioni assiali**, tali che giacciano quindi sull'iper-sfera con centro nell'origine. In questo modo la **sensibilità** nell'analisi dei residui non risente di differenti ampiezze degli intervalli di variazione.
+
+Nel piano $2^2$ ciò significa aggiungere i punti di coordinate $(0, \pm\sqrt{2})$ e $(\pm\sqrt{2}, 0)$. Nel piano $2^3$ significa aggiungere i punti di coordinate $(\pm\sqrt{3},0,0)$, $(0, \pm\sqrt{3},0)$ e $(0, 0, \pm\sqrt{3})$. Questi piani fattoriali si chiamano **Central Composite Design** (CCD) e sono di norma realizzati in maniera **progressiva**:
+
+1. si effettua un piano $2^k$ e si eliminano i termini non significativi
+2. si aumenta con un punto centrale sul piano $2^{k'}$, con $k' \leq k$
+3. se il punto centrale indica curvatura, si passa a un CCD aggiungendo i punti assiali.
+
+La formula generale per calcolare le coordinate dei punti assiali per un piano $2^k$ è:
+\begin{equation}
+\alpha = (2^k)^{1/4}=2^{k/4}
+\end{equation}
+dove $\alpha$ è il valore assoluto dell'unica coordinata non nulla nei punti assiali.
+
 
 ## Piani fattoriali frazionati
+
+Al crescere del numero di fattori il numero di prove complessive, anche senza repliche, può diventare rapidamente insostenibile. È quindi utile trovare ulteriori tecniche per la riduzione del numero di prove.
+
+Consideriamo il piano $2^3$ di Fig. \ref{fig:facplan}: se dimezziamo i trattamenti selezionando solo quelli che stanno su spigoli opposti del cubo, cioè $a, b, c, abc$. È evidente che presi assieme possano fornire una immagine che, seppur parziale, indaga gli effetti delle variazioni di tutti i fattori.
+
+Guardando la matrice di progetto del piano $2^3$ è evidente che gli spigoli sopra indicati, che costituiscono una metà del piano fattoriale completo, corrispondono ai trattamenti per i quali la colonna $ABC$ ha un segno positivo, mentre la metà opposta ha segno negativo. Si introduce quindi il concetto di **relazione definente** del piano fattoriale, rappresentata dall'equazione
+\begin{equation}
+I=\pm ABC
+\end{equation}
+della quale la versione positiva rappresenta la frazione $\left<a, b, c, abc\right>$, mentre la negativa rappresenta $\left<(1), ab, ac, bc\right>$. Cioè: la relazione indica che si selezionano le righe della matrice di progetto in cui la colonna $I$ e la colonna $ABC$ sono uguali.
+
+Un **piano fattoriale frazionato** viene di solito indicato quindi come $2^{3-1}$ (in generale $2^{k-1}$) con l'associata relazione definente $I=ABC$ (oppure, indifferentemente, l'altra metà $I=-ABC$).
+
+Considerando la matrice di progetto è evidente che con questa frazione del piano fattoriale possiamo comunque stimare tutti gli effetti, nel senso che i **contrasti** sono tutti costruiti con lo stesso numero di termini non nulli (4 su 8). Ma cosa perdiamo passando da un piano completo ad uno frazionato? lo capiamo osservando gli effetti $A$ e di $BC$:
+\begin{eqnarray}
+A  &=& (-(1)+a-b+ab-c+ac-bc+abc)/(2r) \\
+BC &=& (+\ul{(1)}+a-b-\ul{ab}-c-\ul{ac}+\ul{bc}+abc)/(2r)
+\end{eqnarray}
+È evidente che, essendo nulli i termini sottolineati nel piano frazionato, l'effetto di $A$ **è indistinguibile** dall'effetto di $BC$, dato che i segni dei termini non nulli sono uguali. In questo caso si dice che **$A$ è in alias con $BC$**. Quindi ciò che si sacrifica con il frazionamento è la capacità di distinguere tra gli effetti in alias.
+```{marginfigure}
+**Nota**: quest'algebra tra gli effetti è perfettamente giustificata se si considera che $A$ rappresenta la colonna corrispondente della matrice di progetto, nella quale "+" rappresenta $+1$ e "-" rappresenta $-1$. È quindi evidente che $A\cdot A=A$, $I\cdot A = A$ e $A\cdot B=AB$.
+```
+C'è una tecnica algebrica per ricavare rapidamente tutte le coppie di effetti e interazioni in alias, ed è basata sulla relazione definente. Se accettiamo l'algebra per cui $A\cdot A = I$ e $I\cdot A = A$, allora pre-moltiplicando entrambi i termini per $A$ possiamo scrivere:
+\begin{equation}
+A\cdot I = A\cdot ABC \Rightarrow A=BC
+\end{equation}
+E così analogamente ricaviamo gli alias $B=AC$ e $C=AB$. Quindi, un piano fattoriale frazionato (PFF) $2^{3-1}$ ha tre strutture di alias che coinvolgono i fattori con le interazioni di secondo grado, mentre l'interazione di secondo grado $ABC$ non è in alias.
+
+Parlando di un PFF $2^{3-1}$ questa è evidentemente una limitazione abbastanza drastica dell'utilità. Tuttavia, quando il numero di fattore cresce le strutture di alias sono sempre più sparse, cioè i fattori sono in alias solo con interazioni di grado elevato. Ad esempio, su un PGG $2^{5-1}$ con relazione $I=ABCDE$ i singoli fattori sono in alias solo come $A=BCDE$, cioè con interazioni di 4° grado, a fronte del fatto che riduciamo il numero di trattamenti da $2^5=32$ a $2^4=16$.
+
+Si noti che un alias $A=BCDE$ significa che l'analisi ANOVA segnalerà sempre allo stesso modo come significativi o non significativi $A$ e $BCDE$. 
+
+```{marginfigure}
+Si noti che si tratta di un **principio** cioè un enunciato non dimostrabile ma basato sull'osservazione della realtà.
+```
+\boxedpar{
+Tuttavia, in virtù del \strong{prncipio di sparsità degli effetti}, le interazioni tra  fattori tendono a diventare via via più trascurabili all'aumentare del numero di fattori. Di conseguenza, nel caso in cui risultino significativi sia $A$ che $BCDE$ possiamo dedurre che la significatività sia da imputare ad $A$ e non all'interazione tra 4 fattori.
+}
+
+In definitiva, i PFF sono utili soprattutto quando il numero di fattori diventa elevato (maggiore di 4--5) in quanto consentono di dimezzare il numero di trattamenti pur consentendo, grazie al principio di sparsità degli effetti, di discriminare la significatività dei singoli fattori e delle interazioni di basso grado. 
+```{marginfigure}
+Inoltre, consideriamo cosa succederebbe se per il piano frazionato $2^{3-1}$ in Fig. \ref{fig:facplan} risultasse che il fattore $C$ non è significativo: in tal caso $C$ potrebbe essere eliminato dal modello, che ridurrebbe il piano frazionato $2^{3-1}$ a un piano completo $2^2$.
+
+In generale, cioè, quando è possibile eliminare un fattore da un PFF $2^{k-1}$ ci si riduce ad un **piano fattoriale completo in una dimensione in meno**, per il quale scompaiono tutte le strutture di alias ed è possibile effettuare una ANOVA completa.
+```
+
+Al solito, vediamo ora un esempio. Anzitutto, la creazione della matrice di progetto fa affidamento sulla relazione definente, moltiplicando i livelli +1 e -1 in accordo con essa. È utile definire delle colonne dei fattori in formato numerico (per poterle moltiplicare) e convertirle poi mediante `factor()`. Per semplicità, nel caso di un PFF $2^{3-1}$ si avrebbe quindi:
+```{r}
+lv <- c(-1,1)
+expand.grid(
+  Rep = 1:2,
+  A = lv,
+  B = lv
+) %>%
+  mutate(
+    C = A*B,
+    # applica una funzione a un intervallo di colonne:
+    across(A:C, ~factor(.)),
+    Run = sample(n()),
+    Y = NA
+  ) %>%
+  relocate(Run, .before=Rep) %>%
+  knitr::kable()
+```
+
+L'analisi procede poi come nel caso non frazionato, con la differenza che nello studio dei termini significativi della tabella ANOVA è necessario tenere conto delle strutture di alias previste dalla relazione definente.
+
+Ora vogliamo studiare un processo di litografia di circuiti stampati. Il processo dipende da 5 parametri:
+
+* A = rapporto focale dell'ottica
+* B = tempo di esposizione
+* C = tempo di sviluppo del fotoresist
+* D = parametro di dimensione della maschera
+* E = tempo di attacco chimico
+* risposta: yield
+
+Costruiamo un PFF $2^{5-1}$ con la relazione definente $I=ABCDE$:
+```{r}
+lv <- c(-1, +1)
+dm <- expand.grid(
+  A=lv, B=lv, C=lv, D=lv
+) %>%
+  mutate(
+    E = A*B*C*D,
+    across(A:E, ~factor(.)),
+    Y = c(
+      8, 9, 34, 52, 16, 22, 45, 60,
+      6, 10, 30, 50, 15, 21, 44, 63
+    )
+  )
+dm %>% slice_head(n=5) %>% knitr::kable()
+```
+Per semplicità, diamo per assodata la solita procedura di casualizzazione della sequenza operativa.
+
+Il PFF non è replicato, quindi dobbiamo applicare il metodo di Daniel:
+```{r fig.margin=T}
+dm.lm <- lm(Y~A*B*C*D*E, data=dm)
+c <- effects(dm.lm)
+tibble(
+  term = names(c),
+  value = as.numeric(c)
+) %>% slice_tail(n=length(c)-1) %>%
+  ggplot(aes(sample=value)) +
+  geom_hline(aes(yintercept=value), color=gray(0.7)) +
+  geom_qq() + 
+  geom_qq_line() +
+  geom_label(aes(y=value, x=-3., label=term), hjust="left") +
+  coord_cartesian(xlim=c(-3,3))
+```
+
+A quanto pare, la resa del processo dipende solamente da $A$, $B$, $AB$, e $C$. Di questi, $A$, $B$ e $C$ sono in alias con interazioni di quarto grado, che in virtù del principio di sparsità degli effetti possiamo escludere. L'interazione $AB$ è in alias con l'interazione $CDE$: tuttavia è difficile pensare che se nessuno dei termini con $D$ e $C$ sono significativi lo sia la loro interazione.
+
+Possiamo quindi rivedere la formula come segue:
+```{r}
+dm.lm <- lm(Y~A*B+C, data=dm)
+anova(dm.lm)
+```
+Possiamo anche ragionare in un altro modo: siccome Daniel non evidenzia significatività né di $D$ né di $E$, possiamo eliminare tali fattori. Eliminando $D$ otteniamo un piano completo non replicato $2^4$ ed eliminando $E$ otteniamo un piano completo $2\times2^3$:
+```{r}
+dm.lm <- lm(Y~A*B*C, data=dm)
+anova(dm.lm)
+```
+E questa tabella conferma le conclusioni della precedente. Il modello definitivo è quindi `Y~A*B+C`, che corrisponde all'equazione:
+\[
+\hat y = \mu + \alpha x_1 + \beta x_2 + (\alpha\beta)x_1x_2 + \gamma x_3
+\]
+
+
+Non resta che verificare l'adeguatezza del modello:
+```{r fig.margin=T}
+dm <- dm %>% add_residuals(dm.lm) %>% add_predictions(dm.lm)
+st <- shapiro.test(dm$resid)
+dm %>% ggplot(aes(sample=resid)) +
+  geom_qq() + geom_qq_line(color="red") + 
+  labs(x="quantili campionari", y="quantili teorici",
+       title=glue("Shapiro test: p-value={round(st$p.value, 4)}"))
+```
+
+La normalità è confermata e così pure l'assenza di *pattern* in rapporto ai fattori $A$, $B$ e $C$:
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8}
+ggplot(dm, aes(x=A, y=resid)) + 
+  geom_point() + labs(y="residui")
+ggplot(dm, aes(x=B, y=resid)) + 
+  geom_point() + labs(y="residui")
+ggplot(dm, aes(x=C, y=resid)) + 
+  geom_point() + labs(y="residui")
+```
+
+Per concludere, costruiamo i grafici di interazione tra $A$, $B$ e $C$:
+```{r respsurf2, fig.fullwidth=T, fig.dim=c(5, 2.)*1.8, out.height="6in", fig.cap="Superficie di risposta per il piano fattoriale $2^{5-1}$ per il processo di litografia IC"}
+levels = factor(c(-1,1))
+expand.grid(
+  A=lv, B=lv, C=lv
+) %>% 
+  mutate(
+    across(A:C, ~factor(.))
+  ) %>%  
+  add_predictions(dm.lm) %>%
+  ggplot(aes(x=A, y=pred, color=B, group=B)) +
+  geom_line(size=2) +
+  geom_point(size=4) +
+  facet_wrap(~C, labeller=label_both) +
+  labs(y="Resa")
+```
 
