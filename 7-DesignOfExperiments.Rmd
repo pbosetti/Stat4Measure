@@ -728,8 +728,13 @@ Viceversa, utilizzando le unità codificate stiamo di fatto normalizzando gli ef
 }
 
 Per questi motivi, quando si aumenta un piano fattoriale $2^k$ centrato con dei punti assiali non si passa direttamente ad un piano $3^k$, ma si preferisce aggiungere i punti **equidistanti all'origine nelle direzioni assiali**, tali che giacciano quindi sull'iper-sfera con centro nell'origine. In questo modo la **sensibilità** nell'analisi dei residui non risente di differenti ampiezze degli intervalli di variazione.
-
-Nel piano $2^2$ ciò significa aggiungere i punti di coordinate $(0, \pm\sqrt{2})$ e $(\pm\sqrt{2}, 0)$. Nel piano $2^3$ significa aggiungere i punti di coordinate $(\pm\sqrt{3},0,0)$, $(0, \pm\sqrt{3},0)$ e $(0, 0, \pm\sqrt{3})$. Questi piani fattoriali si chiamano **Central Composite Design** (CCD) e sono di norma realizzati in maniera **progressiva**:
+```{r CCD2, fig.margin=T, fig.cap="Piano CCD per due fattori"}
+knitr::include_graphics("images/CCD2.pdf")
+```
+```{r CCD3, fig.margin=T, fig.cap="Piano CCD per tre fattori"}
+knitr::include_graphics("images/CCD3.pdf")
+```
+Nel piano $2^2$ ciò significa aggiungere i punti di coordinate $(0, \pm\sqrt{2})$ e $(\pm\sqrt{2}, 0)$ (Fig. \ref{fig:CCD2}). Nel piano $2^3$ significa aggiungere i punti di coordinate $(\pm\sqrt{3},0,0)$, $(0, \pm\sqrt{3},0)$ e $(0, 0, \pm\sqrt{3})$ (Fig. \ref{fig:CCD3}). Questi piani fattoriali si chiamano **Central Composite Design** (CCD) e sono di norma realizzati in maniera **progressiva**:
 
 1. si effettua un piano $2^k$ e si eliminano i termini non significativi
 2. si aumenta con un punto centrale sul piano $2^{k'}$, con $k' \leq k$
