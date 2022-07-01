@@ -10,7 +10,8 @@ files <- c(
   "4-Regressione.Rmd",
   "5-Bootstrapping.Rmd",
   "6-MisuraIncertezzaTaratura.Rmd",
-  "7-DesignOfExperiments.Rmd"
+  "7-DesignOfExperiments.Rmd",
+  "8-SerieTemporali.Rmd"
 )
 out_files <- c()
 
