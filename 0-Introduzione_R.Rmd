@@ -41,8 +41,8 @@ options(width=60)
 
 `r newthought('In questa prima sezione')` del corso vedremo i principali
 concetti base per trattare variabili casuali---o
-*stocastiche*---mediante il linguaggio R. In questa come nelle prossime
-sezioni i concetti teorici verranno gradualmente introdotti assieme alle
+**stocastiche**, o **aleatorie**---mediante il linguaggio R. In questa come nelle prossime
+Sezioni i concetti teorici verranno gradualmente introdotti assieme alle
 funzionalità del linguaggio R che ne consentono l'applicazione.
 
 # Il linguaggio R e l'applicazione RStudio
@@ -64,7 +64,7 @@ il clone *R* alludendo ad una versione semplificata di S, ma gratuita.
 
 Oggi R è molto più diffuso di S, ed è uno dei due linguaggi più
 utilizzati al mondo (l'altro è Python) nel campo della statistica, del
-data mining e dell'analisi di big data.
+*data mining* e dell'analisi di *big data*.
 
 Con il termine *R* ci si riferisce sia al *linguaggio*, sia
 all'*interprete*, cioè al software in grado di eseguire programmi
@@ -152,7 +152,7 @@ Le variabili possono contenere valori di tipi, o *classi*, diversi.
 
 # Classi native in R
 
-Il linguaggio R è dotato di 6 classi native, più una:
+`r newthought("Il linguaggio R è dotato di 6 classi native")`, più una:
 
 -   **character** - una sequenza di caratteri che formano del testo:
     `"a"`, `"string"`, `'my text'` \* **numeric** - un valore numerico
@@ -173,7 +173,7 @@ Sono definiti i seguenti valori speciali:
 
 ```{marginfigure}
 La differenza tra `NULL` e `NA` è più semantica che essenziale: entrambi
-si riferiscono adi un oggetto mancante o vuoto, ma il primo è riservato a un
+si riferiscono ad un oggetto mancante o vuoto, ma il primo è riservato a un
 generico oggetto, mentre il secondo è riservato a *valori mancanti all'interno
 di una sequenza o vettore*.
 ```
@@ -185,7 +185,7 @@ di una sequenza o vettore*.
 
 # Vettori
 
-Un vettore può essere creato con la funzione `c()`: essa accetta un
+`r newthought("Un vettore può essere creato")` con la funzione `c()`: essa accetta un
 numero variabile di argomenti, che rappresentano gli elementi del
 vettore, in ordine:
 
@@ -197,6 +197,8 @@ parentesi tonde di *argomenti* separati da virgole.
 ```{r}
 (v1 <- c(1, 2, 3, 4))
 ```
+
+Si noti che **mettendo tra parentesi un'espressione muta** (come un'assegnazione) si forza la stampa del risultato.
 
 La funzione `c()` può anche accodare più vettori:
 
@@ -222,7 +224,7 @@ Se si desidera un passo diverso da 1 è necessario usare la funzione
 ```
 
 Molto utile è anche `seq_along()`, che crea una sequenza da 1 alla
-lunghezza di un altrio vettore:
+lunghezza di un altro vettore:
 
 ```{r}
 seq_along(v5)
@@ -248,7 +250,7 @@ as.character(c(1, 1.7))
 
 # Matrici e array
 
-Una *matrice* può essere costruita con la funzione `matrix()`:
+`r newthought("Una *matrice* può essere costruita")` con la funzione `matrix()`:
 
 ```{r}
 (m1 <- matrix(v3, 2, 5))
@@ -273,7 +275,7 @@ array(1:8, c(2,2,2))
 
 # Introspezione
 
-Spesso è utile ottenere informazioni su un oggetto: ciò può essere fatto
+`r newthought("Spesso è utile ottenere informazioni")` su un oggetto: ciò può essere fatto
 con le funzioni di *introspezione*:
 
 -   `mode()`: restituisce lo *storage mode*, cioè il modo in cui R
@@ -343,7 +345,7 @@ attributes(v)
 
 # Funzioni
 
-In R una funzione è una variabile come un'altra, e può quindi essere
+`r newthought("In R una funzione è una variabile come un'altra")`, e può quindi essere
 creata, assegnata ad una variabile, riassegnata successivamente,
 cancellata. Si dice che le funzioni sono *first class object*.
 
@@ -370,7 +372,7 @@ my_fun <- function(x) {
 Come si vede, è spesso utile sfruttare le caratteristiche delle funzioni
 e degli operatori nativi di R (che, come l'elevazione a potenza `^`,
 sono *vettorializzati*) per realizzare funzioni a loro volta
-vettorializate.
+vettorializzate.
 
 ```{marginfigure}
 Una funzione è *vettorializzata* quando opera automaticamente su uno scalare o 
@@ -386,7 +388,15 @@ my_apply(10, my_fun)
 ```
 
 In quest'ultimo esempio, `my_apply(10, my_fun)` applica la funzione
-`my_fun` al valore `10`.
+`my_fun` al valore `10`. Lo stesso risultato può essere ottenuto con una **funzione anonima**, cioè non assegnata:
+```{marginfigure}
+**Nota**: esiste anche la forma breve `my_apply(10, \(x) x+2)`. Nei linguaggi di programmazione queste forme sono chiamate *lambda*.
+```
+```{r}
+my_apply(10, function(x) x+2)
+```
+
+
 
 ## Argomenti delle funzioni
 
@@ -509,7 +519,7 @@ s
 
 # Indicizzazione
 
-Dato che ogni variabile in R (con l'eccezione delle funzioni) è
+`r newthought("Dato che ogni variabile in R")` (con l'eccezione delle funzioni) è
 intrinsecamente un vettore, è evidentemente necessario poter estrarre
 singoli valori o sottoinsiemi dai vettori. Per questo si utilizzano gli
 operatori di *indicizzazione*.
@@ -573,10 +583,10 @@ v[v > 5]
 
 # Classi aggiuntive: `factor`, `list`, `data.frame`
 
-Alcune classi, pur non corrispondendo a tipi base di R, sono
+`r newthought("Alcune classi, pur non corrispondendo a tipi base")` di R, sono
 estremamente utili e comuni. È il caso di `factor`, che rappresenta un
 *fattore*, cioè una variabile che può assumere solo un numero discreto
-di valoro, o *livelli*; `list`, che rappresenta una lista di coppie
+di valori, o *livelli*; `list`, che rappresenta una lista di coppie
 nome-valore; e `data.frame`, che rappresenta una *tabella* di vettori
 colona di uguale lunghezza ma di tipo potenzialmente differente.
 

@@ -290,14 +290,6 @@ Un po' di terminologia:
 -   un singolo valore assunto da uno stimatore è chiamato **stima**
 -   uno stimatore è anche chiamato **statistica**, cioè la media
     campionaria è una statistica della popolazione di riferimento
-
-Si noti che nelle Eqq. (\ref{eq:s_mean}--\ref{eq:s_var}) i valori $x_i$
-sono *estratti casualmente* dalla popolazione. Di conseguenza, le stime
-campionarie assumono variabili differenti per campioni differenti
-e---dato che la differenza tra due campioni è casuale---di conseguenza
-anche le stime campionarie (media e varianza) sono delle variabili
-stocastiche.
-
 ```{r include=FALSE}
 N <- 5000
 n <- c(20, 500)
@@ -322,6 +314,14 @@ tibble(i=samples, m=m) %>% ggplot() +
   labs(x="# campione", y=TeX("$\\bar{x}_i$"))
   
 ```
+Si noti che nelle Eqq. (\ref{eq:s_mean}--\ref{eq:s_var}) i valori $x_i$
+sono *estratti casualmente* dalla popolazione. Di conseguenza, le stime
+campionarie assumono variabili differenti per campioni differenti
+e---dato che la differenza tra due campioni è casuale---di conseguenza
+anche le stime campionarie (media e varianza) sono delle variabili
+stocastiche.
+
+
 
 Come si vede in Fig. \ref{fig:rand_mean}, ripetendo la stima della media
 su diversi campioni si ottiene decisamente una variabile casuale.
@@ -739,7 +739,7 @@ tibble(q=seq(0,5,0.01), p=df(q, 10,10)) %>%
 \begin{equation}
 x\sim\mathcal{F}_{u,v}
 \end{equation}
-è una cariabile casuale distribuita come una F di Snedecor, con funzione di distribuzione (vedi Fig. \ref{fig:snedecor}):
+è una variabile casuale distribuita come una F di Snedecor, con funzione di distribuzione (vedi Fig. \ref{fig:snedecor}):
 \begin{equation}
 f(x)=\frac{\Gamma\left(\frac{u+v}{2}\right)\left(\frac{u}{v}\right)^{u/2}x^{(u/2)-1}}{\Gamma\left( \frac{u}{2} \right)\Gamma\left( \frac{v}{2} \right) \left(\frac{u}{v}x+1\right)^{(u+v)/2}}.
 \end{equation}
@@ -1063,7 +1063,7 @@ as.numeric(names(tbl)[1])
 ```
 
 ```{marginfigure}
-Si noti che in inglese la moda è *mode*; tuttavia la funzione `mode()` è già deinita in R e rappresenta lo *storage mode* di una variabile. Per questo motivo usiamo qui il nome italiano.
+Si noti che in inglese la moda è *mode*; tuttavia la funzione `mode()` è già definita in R e rappresenta lo *storage mode* di una variabile. Per questo motivo usiamo qui il nome italiano.
 
 Inoltre, si noti che, siccome `table()` è insensibile alla presenza di `NA`, non è ncessario implementare un modo per gestire la presenza di `NA` nel vettore di input.
 ```
@@ -1107,7 +1107,7 @@ s <- 1.2
 df <- data.frame(i=1:N, x=rnorm(N, m, s))
 ```
 
-Ora confrontiamo i parametri media e deviazione standad con le stime su un grafico a dispersione:
+Ora confrontiamo i parametri media e deviazione standard con le stime su un grafico a dispersione:
 ```{r}
 m_s = mean(df$x)
 s_s = sd(df$x)

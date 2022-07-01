@@ -166,7 +166,7 @@ ggplot(data, aes(x=B, y=resa, color=A, group=A)) +
 
 Dal confronto tra Fig. \ref{fig:interaction1} e Fig. \ref{fig:interaction2} si capisce come sia indifferente quale dei due fattori sia in traccia e quale sull'ascissa: la conclusione è sempre la stessa: rette parallele significa nessuna interazione, e viceversa.
 
-Un altro modo di osservare l'interazione è mediante una **superficie di risposta** (*response surface*): essa è una superficie (o una iper-superficie se i fattori sono più di due) che corrisponde all'insieme dei punti $Y=f(A, B)$, essendo $Y$ la resa del processo. Questa superficie può essere visualizzata mediante un grafico tridimensionale oppure---e meglio---mediante un grafico a contorno (*coutour plot*), che riporta le iso-linee della superficie in un piano di coordinate $(A, B)$. Su questo grafico, se le curve di livello risultano dritte (quale che sia l'inclinazione), allora non c'è interazione. Se invece sono curve come in Fig. \ref{fig:response}, allora significa che c'è interazione. Tra l'altro, si noti che i grafici di interazione non sono altro che le tracce dei bordi della superficie di risposta nell'intervallo di interesse: se osservassimo la superficie di risposta guardando lungo l'asse $B$ vedremmo in primo piano la linea corrispondente alla variazione di $A$ quando $B$ è basso e in secondo piano la variazione quando $B$ è alto, come in Fig. \ref{fig:interaction1}. Viceversa, guardando lungo l'asse $A$ vedremmo la Fig. \ref{fig:interaction2}.
+Un altro modo di osservare l'interazione è mediante una **superficie di risposta** (*response surface*): essa è una superficie (o una iper-superficie se i fattori sono più di due) che corrisponde all'insieme dei punti $Y=f(A, B)$, essendo $Y$ la resa del processo. Questa superficie può essere visualizzata mediante un grafico tridimensionale oppure---e meglio---mediante un grafico a contorno (*contour plot*), che riporta le iso-linee della superficie in un piano di coordinate $(A, B)$. Su questo grafico, se le curve di livello risultano dritte (quale che sia l'inclinazione), allora non c'è interazione. Se invece sono curve come in Fig. \ref{fig:response}, allora significa che c'è interazione. Tra l'altro, si noti che i grafici di interazione non sono altro che le tracce dei bordi della superficie di risposta nell'intervallo di interesse: se osservassimo la superficie di risposta guardando lungo l'asse $B$ vedremmo in primo piano la linea corrispondente alla variazione di $A$ quando $B$ è basso e in secondo piano la variazione quando $B$ è alto, come in Fig. \ref{fig:interaction1}. Viceversa, guardando lungo l'asse $A$ vedremmo la Fig. \ref{fig:interaction2}.
 
 ```{r response, fig.margin=T, echo=F, fig.cap="Superficie di risposta. I bordi orizzontali sono le tracce della superficie e corrispondono al grafico di interazione visto lungo la direzione dell'asse $A$"}
 model <- lm(resa~An*Bn, data)
@@ -607,13 +607,13 @@ dm %>%
   knitr::kable()
 ```
 
-Realizziamo un mdello lineare completo: si noti come l'analisi ANOVA non è completa: dato che senza repliche risulta $SS_E=0$, tutte le statistiche di test $F$ sono `NaN`:
+Realizziamo un modello lineare completo: si noti come l'analisi ANOVA non è completa: dato che senza repliche risulta $SS_E=0$, tutte le statistiche di test $F$ sono `NaN`:
 ```{r}
 dm.lm <- lm(Yield~A*B*C*D, data=dm)
 anova(dm.lm)
 ```
 
-Applichiamo quindi il **metodo di Daniel**: creiamo un grafico Q-Q degli effetti dalcolati dal modello `dm.lm`, etichettandoli con il loro nome. Si noti che con `slice_tail(n=length(c)-1)` prendiamo tutti gli effetti tranne il primo, che rappresenta l'intercetta, cioè la media complessiva di tutte le osservazioni:
+Applichiamo quindi il **metodo di Daniel**: creiamo un grafico Q-Q degli effetti calcolati dal modello `dm.lm`, etichettandoli con il loro nome. Si noti che con `slice_tail(n=length(c)-1)` prendiamo tutti gli effetti tranne il primo, che rappresenta l'intercetta, cioè la media complessiva di tutte le osservazioni:
 ```{r fig.margin=T}
 c <- effects(dm.lm)
 tibble(

@@ -163,7 +163,7 @@ Si noti che l'incertezza si riferisce **solo alla componente casuale** e non pre
 ## Esempio
 
 Consideriamo la taratura di un **dinamometro a mensola** come quello illustrato in Fig. \ref{fig:cantilever}. Si tratta di una mensola snella orizzontale incastrata ad una estremità e con un carico verticale all'estremità opposta. La mensola è dotata di un **estensimetro** a resistenza variabile, un trasduttore in grado di convertire una **deformazione** in una variazione di resistenza elettrica.
-Applicando un carico all'estremità libera della mensola essa si flette, mettendo in trazione la superficie superiore e in compressione quella inferiore. L'estensimetro misura questa trazione, la cui variazione è proporzionale alla variaazione di forza applicata all'estremo libero.
+Applicando un carico all'estremità libera della mensola essa si flette, mettendo in trazione la superficie superiore e in compressione quella inferiore. L'estensimetro misura questa trazione, la cui variazione è proporzionale alla variazione di forza applicata all'estremo libero.
 ```{r cantilever, out.width="\\columnwidth", fig.margin=T, echo=F, include=T, fig.cap="Dinamometro a mensola"}
 knitr::include_graphics("images/cantilever.jpg")
 ```
@@ -561,7 +561,7 @@ data %>% ggplot(aes(x=r, y=after_stat(density))) +
        title=glue("Lunghezza: media={m}, dev.st={s}"))
 ```
 
-Per la lunghezza (notare l'assimmetria):
+Per la lunghezza (notare l'asimmetria):
 ```{r fig.margin=T, tidy=F}
 m <- round(mean(data$l),2)
 s <- round(sd(data$l),2)

@@ -80,7 +80,7 @@ L'adattamento del modello (\ref{eq:model}) può essere effettuato minimizzando u
 \Phi(c_1,c_2,\dots,c_m)=\sum_{i=1}^N\varepsilon_i^2=y_i - f(x_{1i},x_{2i},\dots,x_{ni},c_1, c_2,\dots,c_m)
 \end{equation}
 
-Se la $f()$ è una funzione analitica e differenziabile possiamo realizzare l'adattamento minimizzando $\Phi(c_1,c_2,\dots,c_m)$, cioè calcolando i coefficienti $c_j$ che minimizzano la distanza tra ra risposta misurata $y_i$ e la risposta regredita (cioè il modello) $\hat y_i$.
+Se la $f()$ è una funzione analitica e differenziabile possiamo realizzare l'adattamento minimizzando $\Phi(c_1,c_2,\dots,c_m)$, cioè calcolando i coefficienti $c_j$ che minimizzano la distanza tra la risposta misurata $y_i$ e la risposta regredita (cioè il modello) $\hat y_i$.
 
 Consideriamo il caso più semplice di una **relazione lineare** tra la risposta ed un unico parametro, $x$. Allora il modello statistico è:
 \[
@@ -305,7 +305,7 @@ In questo caso è evidente che i residui mostrano un *pattern* a "U".  Questo ri
 ## Sovra-adattamento (*overfitting*)
 Il caso opposto del sottoadattamento è quando si sceglie un modello troppo complesso per i dati disponibili. Il risultato si chiama **sovradattamento** ed è altrettanto da evitare.
 
-Consideriamo ad esempio, a partire dai dati originali, soltanto il sottoinsieme incluso nell'intervallo $x\in[-7.5, 7.5]$. Marchiamo i dati in questo intervallo come "in" e irestanti come "out". Poi regrediamo un modello polinomiale di grado 10 solo sui dati "in", e vediamo come il modello si comporta sui dati "out", cioè in condizioni di **estrapolazione**.
+Consideriamo ad esempio, a partire dai dati originali, soltanto il sottoinsieme incluso nell'intervallo $x\in[-7.5, 7.5]$. Marchiamo i dati in questo intervallo come "in" e i restanti come "out". Poi regrediamo un modello polinomiale di grado 10 solo sui dati "in", e vediamo come il modello si comporta sui dati "out", cioè in condizioni di **estrapolazione**.
 
 ```{marginfigure}
 La funzione `poly()` può essere utilizzata per creare rapidamente formule polinomiali con tutti i termini fino al grado desiderato.
@@ -457,7 +457,7 @@ dfn %>%
   theme(legend.position = "none")
 ```
 
-Un'altra verifica grafica può essere ottenuta confrontando i grafici di $y(x, 0)$ e $y(x, 10)$ per i valorin nominaly e predetti dal modello:
+Un'altra verifica grafica può essere ottenuta confrontando i grafici di $y(x, 0)$ e $y(x, 10)$ per i valori nominali e predetti dal modello:
 ```{r, fig.margin=T}
 dfn %>% add_predictions(df.lm) %>%
   filter(y==c(0, 10)) %>%
@@ -595,7 +595,7 @@ data <- add_residuals(data, model)
 
 Il modello adattato può essere utilizzato per predire la sopravvivenza al test di caduta: infatti, riempimenti inferiori a $x_0=`r round(x0, 1)`$ appartengono alla classe `OK`, gli altri alla classe `FAIL`.
 
-Si noti che `add_predictions()` sopra usata ha valutato il modello adattato a titti i predittori, quindi **inclusi i valori che non abbiamo utilizzato per la regressione**, cioè quelli in cui `training==FALSE`. Possiamo quindi validare la regressione confrontando la classe predetta con la classe effettiva per i dati in cui `training==FALSE`:
+Si noti che `add_predictions()` sopra usata ha valutato il modello adattato a tutti i predittori, quindi **inclusi i valori che non abbiamo utilizzato per la regressione**, cioè quelli in cui `training==FALSE`. Possiamo quindi validare la regressione confrontando la classe predetta con la classe effettiva per i dati in cui `training==FALSE`:
 ```{r fig.margin=T}
 data <- data %>% mutate(OKn=as.numeric(OK))
 p1 + 

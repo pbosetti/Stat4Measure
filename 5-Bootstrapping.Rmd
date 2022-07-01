@@ -265,7 +265,7 @@ tibble(t=data.b$t) %>%
 ```
 
 Come si osserva, l'intervallo di confidenza stimato mediante bootstrap è molto simile a quello calcolato mediante test di Student.
-Il vantaggio, tuttavia, è che questo metodo può essere facilmente applicato a _qualunque_ statistica o indicatore, anche quando non sia noto o facile da definire l'intervallo di confidenza in forma analitica. Inoltre, e soprattutto, non si fa **nessuna ipotesi sulla forma della distribuzione** dei dati iniziali: dato che il campionamento viene effettuato _con probabilità uniforme_, infatti, ogni campione di bootstrap avrà una distribuzione simile all'originale, tanto più simle quanto il campione originale è grande. Al contrario i metodi analitici, quando disponibili, ipotizzano sempre una certa distribuzione: ad esempio nel caso considerato il metodo analitico di Student assume una distribuzione normale.
+Il vantaggio, tuttavia, è che questo metodo può essere facilmente applicato a _qualunque_ statistica o indicatore, anche quando non sia noto o facile da definire l'intervallo di confidenza in forma analitica. Inoltre, e soprattutto, non si fa **nessuna ipotesi sulla forma della distribuzione** dei dati iniziali: dato che il campionamento viene effettuato _con probabilità uniforme_, infatti, ogni campione di bootstrap avrà una distribuzione simile all'originale, tanto più simile quanto il campione originale è grande. Al contrario i metodi analitici, quando disponibili, ipotizzano sempre una certa distribuzione: ad esempio nel caso considerato il metodo analitico di Student assume una distribuzione normale.
 
 Infine, un grafico quantile-quantile della distribuzione di bootstrap può essere utile a capire se il numero di repliche $R$ è grande a sufficienza: se lo è, il grafico Q-Q è molto stretto attorno alla diagonale, come in questo caso.
 ```{r fig.margin=T}
@@ -363,7 +363,7 @@ boot.ci(data.b, type="perc", index=2)
 ## Metodo parametrico
 La funzione `boot()` può essere utilizzata anche in modalità parametrica: in questo caso, la distribuzione di bootstrap viene generata non ricampionando i dati originali, bensì generandoli direttamente mediante una funzione di generazione di dati casuali per la quale **siano noti i parametri**.
 
-In questo caso i dati vengono generati dalla funzione passata come argomento `ran.gen`, che accetta due parametri: il primo è il vettore di dati originali e il secondo è l'oggetto opzionalmente passato all'aromento `mle`. Nel nostro caso, passiamo a `mle` una lista con la media e la deviazione standard campionarie.
+In questo caso i dati vengono generati dalla funzione passata come argomento `ran.gen`, che accetta due parametri: il primo è il vettore di dati originali e il secondo è l'oggetto opzionalmente passato all'argomento `mle`. Nel nostro caso, passiamo a `mle` una lista con la media e la deviazione standard campionarie.
 ```{r fig.margin=T}
 set.seed(1)
 data <- rbeta(100, 1, 10)

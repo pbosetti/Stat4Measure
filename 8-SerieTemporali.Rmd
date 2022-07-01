@@ -26,18 +26,43 @@ header-includes:
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
   - \fancyhead[LO,LE]{\rightmark}
-  - \fancyfoot[LO,LE]{Statistica per la Misura}
+  - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
-  - \fancyfoot[RO,RE]{\url{paolo.bosetti@unitn.it}}
+  - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
 ---
 
 ```{r setup, include=FALSE}
 library(tufte)
 library(latex2exp)
+library(tidyverse)
+library(xts)
+library(tsbox)
+library(astsa)
 source("myfunctions.R")
 ```
 
 # Statistica delle serie temporali
+`r newthought("I metodi statistici fin ora descritti")` nelle parti precedenti si basano, come già detto, sull'ipotesi che le variabili aleatorie osservate abbiano delle determinate distribuzioni (spesso normali) e che siano **indipendenti**. Il concetto di indipendenza delle osservazioni non è stato precedentemente affermato con sufficiente chiarezza, ma è ora il caso di farlo. Quanto visto fin ora si basa sul concetto di variabili aleatorie **identicamente e indipendentemente distribuite** (*IID*), tant'è che a rigore tali variabili andrebbero indicate come:
+\[
+x\overset{iid}{\sim}\mathcal{N}(0,1)
+\]
+
+La più volte citata necessità di casualizzare la sequenza operativa non è altro che un modo per ridurre l'**autocorrelazione** tra le misure, cioè il fatto che il risultato di una misurazione condotta al tempo $t$ possa influire su quella condotta al tempo $t+\Delta t$.
+
+Tuttavia, nella maggior parte dei casi pratici esiste un $\Delta t$ sufficientemente piccolo per cui la condizione di indipendenza non è più verificata, e quindi non si può parlare di variabili aleatorie IID. 
+```{r globtemp, echo=F, fig.margin=T, fig.cap="Anomalia termica mare/terra dal 1880 al 2015"}
+ggplot(ts_xts(globtemp), aes(x=Index, y=value)) + 
+  geom_line(color=gray(0.5)) + 
+  geom_point(shape=4) +
+  scale_x_date(breaks="20 years", date_labels = "%Y") +
+  labs(x="anno", y="Anomalia termica mare/terra (°C)")
+```
+
+Questa situazione, tipicamente, sussiste quando la dinamica propria dello strumento di misura o del misurando stesso è più lenta dell'intervallo temporale $\Delta t$ in cui si effettuano le misure.
+
+In queste condizioni le tecniche di analisi statistica necessitano di opportuni accorgimenti e si parla di **analisi delle serie temporali** (*Time-Series Analysis*).
+
+Si veda ad esempio la serie temporale di Fig. \ref{fig:globtemp}, che riguarda la differenza tra la temperatura media terrestre e marina dal 1880 al 2015. Questa serie mostra diverse condizioni che mostrino come---sebbene un contributo aleatorio sia evidente---sia difficile affermare che osservazioni adiacenti siano indipendenti. Vedi ad esempio la sequenza degli anni 1900--1905: se si trattasse di una variabile puramente aleatoria, la probabilità di 5 punti consecutivi in tendenza sarebbe minimale. Altresì, osservando il grafico appare un trend al riscaldamento a partire dal 1970 circa. Quanto questo trend sia effettivo e quanto sia invece di origine aleatoria è oggetto di dibattito tra politici e climatologi: è possibile sviluppare metodi di analisi statistica che consentano di assegnare delle probabilità d'errore a queste domande?
 
 # Regressione delle serie temporali
 

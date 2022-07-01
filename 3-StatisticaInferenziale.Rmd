@@ -437,7 +437,7 @@ df %>% ggplot(aes(x=s1, y=s2)) +
 ```
 Il grafico a dispersione mostra chiaramente che il campione `s3` è correlato con `s1` (se aumenta `s1`, aumenta anche `s2`), mentre `s2` è ben disperso e non sembra essere correlato.
 
-Quantitativamente, si può ricorrere al **coefficiente di corelazione** $\rho$, visto nella prima Parte: un valore prossimo a zero significa scarsa correlazione, un valore prossimo a 1 o -1 significa forte correlazione (positiva o negatva). In genere, ci si allarma quando $|\rho| > 0.9$:
+Quantitativamente, si può ricorrere al **coefficiente di correlazione** $\rho$, visto nella prima Parte: un valore prossimo a zero significa scarsa correlazione, un valore prossimo a 1 o -1 significa forte correlazione (positiva o negativa). In genere, ci si allarma quando $|\rho| > 0.9$:
 ```{r}
 cor(df$s1, df$s3)
 cor(df$s1, df$s2)
