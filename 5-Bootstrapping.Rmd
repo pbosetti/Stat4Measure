@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html:
 bibliography: skeleton.bib
 link-citations: yes

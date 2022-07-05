@@ -16,6 +16,9 @@ output:
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: false
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html:
 bibliography: skeleton.bib
 link-citations: yes
@@ -274,10 +277,10 @@ data.lm <- lm(V~poly(Force,2), data=data)
 summary(data.lm)
 ```
 
-Creiamo un unico grafico che riporta sia la regressione che i residui:
 ```{marginfigure}
 **Nota**: in realità anche il polinomio di secondo grado mostra un leggero *pattern* a "M": provando ad aumentare il grado del polinomio, tale pattern sparisce con un polinomio di 5° grado. Tuttavia, controllando l'estrapolazione è facile vedere che la predizione diverge rapidamente, sintomo di sovradattamento.
 ```
+Creiamo un unico grafico che riporta sia la regressione che i residui:
 ```{r fig.margin=T, tidy=F}
 offset <- sum(range(data$V)) / 2
 ratio <- diff(range(data$V)) / diff(range(data.lm$residuals))

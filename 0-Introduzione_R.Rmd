@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html: default
   tufte::tufte_book:
     citation_package: natbib
@@ -665,11 +668,6 @@ essere di tipi differenti (interi, razionali, stringhe, fattori, date,
 ecc.). Rispetto ad una matrice, un data frame ha quindi due principali
 differenze:
 
--   le colonne hanno un nome, oltre ad una posizione
--   le colonne possono essere di tipo differente
-
-Vediamo anzitutto come si crea un data frame:
-
 ```{marginfigure}
 Gli argomenti di `data.frame` sono coppie `nome=vettore`, con i vettori che
 devono avere tutti la stessa lunghezza. I nomi delle colonne non possono
@@ -680,6 +678,11 @@ creazione, ad es. `data.frame(x=1:10, y=x^2)`: per ottenere un risultato simile
 si crea il data frame con la colonna `x` e si aggiunge poi la colonna 
 `df$y <- df$x^2`.
 ```
+
+-   le colonne hanno un nome, oltre ad una posizione
+-   le colonne possono essere di tipo differente
+
+Vediamo anzitutto come si crea un data frame:
 
 ```{r}
 v <- 1:5

@@ -15,6 +15,9 @@ output:
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: false
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html:
 bibliography: skeleton.bib
 link-citations: yes
@@ -209,16 +212,16 @@ variabile stocastica continua è in Fig. \ref{fig:chisq}. Le funzioni di
 Figg. \ref{fig:binom1}--\ref{fig:chisq} sono chiamate **funzioni di
 densità di probabilità**, o **PDF** (da *Probability Density Function*).
 
+Si noti che dal confronto tra $E(x)$ e $V(x)$ risulta \begin{equation}
+\sigma^2 = E\left[(x-\mu)^2\right]
+\end{equation}
+
 ```{r chisq, echo=FALSE, fig.margin=T, fig.cap="Curva di probabilità di una variabile continua, a valori sui reali"}
 tibble(x=seq(0,20,0.1), p=dchisq(x, 5)) %>% 
   ggplot(mapping=aes(x=x, y=p)) + 
   geom_line() +
   labs(x="variabile continua", y="frequenza")
 ```
-
-Si noti che dal confronto tra $E(x)$ e $V(x)$ risulta \begin{equation}
-\sigma^2 = E\left[(x-\mu)^2\right]
-\end{equation}
 
 Inoltre, si noti che probabilità e frequenza devono *sommare a 1*:
 rispettivamente: \begin{equation}
@@ -484,10 +487,6 @@ sono: \begin{equation}
 \end{equation}
 
 ## Distribuzione di Poisson
-```{marginfigure}
-Si noti che l'intervallo di riferimento non deve essere necessariamente temporale. Ad esempio, la d. di Posson si applica alla distribuzione di difetti su una data lunghezza di filo di ferro, sapendo che il nuero medio di difetti per la stessa lunghezza è $\lambda$.
-Di seguito, con $\mathbb{N}^+$ e $\mathbb{R}^+$ intendiamo gli **insiemi dei numeri naturali e reali incluso lo 0**, rispettivamente.
-```
 
 La distribuzione di Poisson è una distribuzione discreta che esprime le
 probabilità di avere un numero $x\in\mathbb{N}^+$ di eventi che si
@@ -496,6 +495,10 @@ tempo, sapendo che mediamente se ne verifica un numero
 $\lambda\in\mathbb{R}^+$ nello stesso intervallo. È nota anche come
 **legge degli eventi rari**.
 
+```{marginfigure}
+Si noti che l'intervallo di riferimento non deve essere necessariamente temporale. Ad esempio, la d. di Posson si applica alla distribuzione di difetti su una data lunghezza di filo di ferro, sapendo che il nuero medio di difetti per la stessa lunghezza è $\lambda$.
+Di seguito, con $\mathbb{N}^+$ e $\mathbb{R}^+$ intendiamo gli **insiemi dei numeri naturali e reali incluso lo 0**, rispettivamente.
+```
 
 ```{r pois, echo=F,fig.margin=T, fig.cap="PDF della distribuzione di Poisson $\\mathcal{P}(5)$"}
 tibble(q=0:20, p=dpois(q, 5)) %>%
@@ -621,6 +624,10 @@ standard**.
 
 Come sopra anticipato, vale il seguente
 
+```{marginfigure}
+Il teorema del limite centrale è di fondamentale importanza soprattutto nell'ambito delle misure: infatti, siccome possiamo assumere che il risultato di una misurazione dipenda da numerose variabili aleatorie e ne sia in qualche modo la somma; di conseguenza, più una misurazione è complessa e più le misure risultanti saranno distribuite in maniera normale. Ciò vale sia come predizione che come giustificazione di un'osservazione pratica: di fatto, la grande maggioranza delle misure è distribuita normalmente; quando non lo è tipicamente significa che è affetta da fenomeni indesiderati (ad esempio, un risultato oscillante dovuto alla competizione alternata di due fenomeni distinti).
+```
+
 ```{=tex}
 \begin{thm}[del Limite Centrale]
 Se $x_1, x_2, \dots,x_n$ sono $n$ variabili casuali indipendenti e identicamente distribuite (IID) con $E(x_i)=\mu$ e $V(x_i)=\sigma^2~~\forall i=1,2,\dots,n$ (entrambi finiti), e $y=x_1+x_2+\dots+x_n$, allora:
@@ -634,9 +641,6 @@ approssima una distribuzione $\mathcal{N}(0,1)$, nel senso che se $F_n(z)$ è la
 \end{thm}
 ```
 
-```{marginfigure}
-Il teorema del limite centrale è di fondamentale importanza soprattutto nell'ambito delle misure: infatti, siccome possiamo assumere che il risultato di una misurazione dipenda da numerose variabili aleatorie e ne sia in qualche modo la somma; di conseguenza, più una misurazione è complessa e più le misure risultanti saranno distribuite in maniera normale. Ciò vale sia come predizione che come giustificazione di un'osservazione pratica: di fatto, la grande maggioranza delle misure è distribuita normalmente; quando non lo è tipicamente significa che è affetta da fenomeni indesiderati (ad esempio, un risultato oscillante dovuto alla competizione alternata di due fenomeni distinti).
-```
 
 Il teorema dice che la distribuzione normale gioca un ruolo centrale tra
 le altre distribuzioni perché è il limite a cui esse---quali che
@@ -751,13 +755,6 @@ Per ogni distribuzione *continua* è possibile calcolare e rappresentare tre fun
 2. la funzione **di ripartizione** (*Cumulative Distribution Function*, CDF), $F(x)$, che è l'integrale della PDF
 3. la funzione **quantile**, $F^{-1}(x)$, che è l'inverso della CDF
 
-In particolare, è possibile definire due funzioni di ripartizione: cosiddette **coda inferiore** (*lower tail*) e **coda superiore** (*upper tail*):
-\begin{eqnarray}
-F_-(x) &=& \int_{-\infty}^x f(\xi)d\xi \\
-F_+(x) &=& \int^{+\infty}_x f(\xi)d\xi
-\end{eqnarray}
-Le quali hanno le corrispondenti inverse (funzione quantile superiore e inferiore) $F_-^{-1}(x)$ e $F_+^{-1}(x)$
-
 ```{r distfunc, echo=F,fig.margin=T, fig.cap="Funzioni di ripartizione inferiore e superiore e funzione di densità della distribuzione $\\mathcal{N}(0,1)$"}
 tibble(
   q=seq(-3.5,3.5,0.01), 
@@ -772,19 +769,26 @@ tibble(
   labs(x=TeX("x"), y=TeX("f(x)"), color="CDF")
 ```
 
+In particolare, è possibile definire due funzioni di ripartizione: cosiddette **coda inferiore** (*lower tail*) e **coda superiore** (*upper tail*):
+\begin{eqnarray}
+F_-(x) &=& \int_{-\infty}^x f(\xi)d\xi \\
+F_+(x) &=& \int^{+\infty}_x f(\xi)d\xi
+\end{eqnarray}
+Le quali hanno le corrispondenti inverse (funzione quantile superiore e inferiore) $F_-^{-1}(x)$ e $F_+^{-1}(x)$
+
 Per le *distribuzioni discrete*, si parla di *funzione di probabilità* $p(x),~x\in\mathbb{N}$, che restituisce la probabilità di un dato valore $x$. Le funzioni di ripartizione sono definite ovviamente mediante sommatorie anziché integrali (e risultano funzioni a gradino, con salti in corrispondenza dei numeri naturali).
 
 Nel caso delle *distribuzioni continue* la $f(x)$ non restituisce la probabilità di un valore, bensì la *densità di probabilità* in quell'intorno.
 Ne consegue che per distribuzioni continue non è possibile calcolare la probabilità di un unico valore esatto, dato che per un intorno di ampiezza nulla, la probabilità è nulla quale che sia la densità. È invece possibile calcolare la probabilità di ottenere un valore in un dato intervallo $(a,b)$:
 \begin{equation}
-P(a\leq x\leq b) = \int_a^b f(\xi)d\xi
+\mathrm{Pr}(a\leq x\leq b) = \int_a^b f(\xi)d\xi
 \end{equation}
 
 Ne consegue che le funzioni di ripartizione sono molto più utili per distribuzioni continue che per distribuzioni discrete, in quanto possono essere utilizzate per calcolare la probabilità di ottenere un valore inferiore (o superiore) ad un certo valore, oppure la probabilità di ottenere un valore in un intervallo:
 \begin{eqnarray}
-P(x\leq a) &=& F_-(a) \\
-P(x\geq a) &=& F_+(a) \\
-P(a\leq x\leq b) &=& F_-(a) - F_-(b) = F_+(b)-F_+(a)
+\mathrm{Pr}(x\leq a) &=& F_-(a) \\
+\mathrm{Pr}(x\geq a) &=& F_+(a) \\
+\mathrm{Pr}(a\leq x\leq b) &=& F_-(a) - F_-(b) = F_+(b)-F_+(a)
 \end{eqnarray}.
 ```{marginfigure}
 Nelle Parti seguenti, indicheremo a pedice anche la distribuzione di riferimento, come ad esempio in $F_{\mathcal{N}+}()$ per la funzione di ripartizione coda superiore della distribuzione normale
@@ -859,6 +863,9 @@ v <- rnorm(100, 1, 1)
 plot(v, typ="p", xlab="indice", ylab="x")
 ```
 Se si vogliono aggiungere al grafico ulteriori serie di dati è necessario usare la funzione `points()`. In generale, la logica è che il grafico e la prima serie vengono creati con `plot()`, specificando il tipo di grafico con l'opzione `typ=`, mentre successive serie vengono *aggiunte* con le funzioni `points()` e `lines()`:
+```{marginfigure}
+Questa *opportunità* può non essere evidente in esempi semplici come quelli riportati. Tuttavia, nei casi reali spesso si ha a che fare con decine di variabili differenti ed è quindi molto più comodo raggrupparle in un data frame: garantisce che tutti i vettori in analisi abbiano la stessa lunghezza e semplifica le operaizoni in importazione ed esportazione su file.
+```
 ```{r}
 N <- 100
 v1 <- rnorm(N, 5, 1)
@@ -868,9 +875,6 @@ points(v2, col="blue", pch=2)
 ```
 
 Tuttavia, quando si hanno più serie è *opportuno* raccogliere i dati in un data frame:
-```{marginfigure}
-Questa *opportunità* può non essere evidente in esempi semplici come quelli riportati. Tuttavia, nei casi reali spesso si ha a che fare con decine di variabili differenti ed è quindi molto più comodo raggrupparle in un data frame: garantisce che tutti i vettori in analisi abbiano la stessa lunghezza e semplifica le operaizoni in importazione ed esportazione su file.
-```
 ```{r}
 df <- data.frame(indice=1:N, v1=rnorm(N, 5, 1), v2=rchisq(N, 5))
 str(df)

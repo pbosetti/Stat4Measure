@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ] 
   tufte::tufte_html:
   tufte::tufte_book:
     citation_package: natbib
@@ -131,15 +134,15 @@ Tuttavia questo approccio ha due limiti:
 2. a meno di non replicare l'esperimento più volte, non ho nessuna indicazione statistica sull'effetto, perché non posso stimare la varianza.
 
 Supponiamo ora di completare l'esperimento con un trattamento in cui **entrambi i fattori sono a livello alto**, cioè il trattamento $ab$: otteniamo la tabella seguente e la Fig. \ref{fig:2to2}:
-```{r echo=F}
-data %>% select(Yates, A:resa) %>% knitr::kable()
-```
 ```{r 2to2, fig.margin=T, echo=F, fig.cap="Esperimento fattoriale completo"}
 ggplot(data, aes(x=A, y=B)) +
   geom_label(aes(x=A, y=B, label=resa))
 A <- with(data, (resa[2]+resa[4])/2 - (resa[1]+resa[3])/2)
 B <- with(data, (resa[3]+resa[4])/2 - (resa[1]+resa[2])/2)
 AB <- with(data, (resa[1]+resa[4])/2 - (resa[2]+resa[3])/2)
+```
+```{r echo=F}
+data %>% select(Yates, A:resa) %>% knitr::kable()
 ```
 
 Abbiamo realizzato un **piano fattoriale completo** di tipo $2^2$, cioè con due fattori, ciascuno a 2 livelli e un totale di $2^2=4$ trattamenti.
@@ -445,7 +448,10 @@ ggplot(dm, aes(x=B, y=resid)) +
 ```
 
 Anche in questo caso non notiamo condizioni sospette, quindi possiamo completare l'analisi realizzando un grafico a contorno della superficie di risposta. Quest'ultima, dato che abbiamo rimosso il termine di interazione dal modello lineare, risulterà ovviamente essere un piano con massimo in $(1,-1)$ e minimo in $(-1,1)$, quindi rappresentata da iso-linee parallele sul grafico a contorno:
-```{r fig.margin=T}
+```{marginfigure}
+**Nota**: la combinazione della funzione `rescale()` (che consente di riscalare da unità codificate a unità originarie) e dell'opzione `sec.axis` di `scale_x_continuous()` permette di aggiungere una seconda scala che riporta alle unità originarie la superficie di risposta.
+```
+```{r fig.margin=T, fig.pos="-3cm"}
 dm.lmr <- lm(Yield~as.numeric(A)+as.numeric(B), data=dm)
 rs <- expand.grid(A=seq(-1,1,0.1), B=seq(-1,1,0.1)) %>% 
   add_predictions(dm.lmr)
@@ -463,9 +469,6 @@ ggplot(rs, aes(x=A, y=B, z=pred)) +
   )
 ```
 
-```{marginfigure}
-**Nota**: la combinazione della funzione `rescale()` (che consente di riscalare da unità codificate a unità originarie) e dell'opzione `sec.axis` di `scale_x_continuous()` permette di aggiungere una seconda scala che riporta alle unità originarie la superficie di risposta.
-```
 
 
 ## Esempio $2^3$: wafer-etching plant
@@ -520,7 +523,7 @@ summary(dm.lm)$adj.r.squared
 Il modello rivisto ha un coefficiente di regressione corretto $R^2_\mathit{adj}$ pari a `r round(summary(dm.lm)$r.squared, 4)`, inferiore a quello del modello completo: il modello ridotto è quindi in grado di rappresentare meglio i dati originali.
 
 Per quanto riguarda i residui, procediamo come sopra:
-```{r fig.margin=T}
+```{r fig.margin=T, fig.pos="-5cm"}
 dm <- dm %>% add_residuals(dm.lm) %>% add_predictions(dm.lm)
 st <- shapiro.test(dm$resid)
 dm %>% ggplot(aes(sample=resid)) +
@@ -530,9 +533,11 @@ dm %>% ggplot(aes(sample=resid)) +
 ```
 
 La normalità è confermata e così pure l'assenza di *pattern* in rapporto ai fattori $A$ e $C$:
-```{r, fig.margin=T, fig.dim=c(5, 2)*0.8}
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8, fig.pos="-0.5cm"}
 ggplot(dm, aes(x=A, y=resid)) + 
   geom_point() + labs(y="residui")
+```
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8, fig.pos="-0.5cm"}
 ggplot(dm, aes(x=B, y=resid)) + 
   geom_point() + labs(y="residui")
 ```
@@ -692,10 +697,11 @@ Il principale limite dei piani fattoriali $2^k$ è l'assunzione di **linearità 
 
 La soluzione può nascere dall'osservazione della Fig. \ref{fig:respsurf}: Nel caso in cui non ci siano componenti quadratiche nella risposta, è chiaro che quando $A=0$ la resa media sarà a metà strada tra la linea verde e quella rossa. Viceversa, se la resa reale ha un comportamento quadratico possiamo aspettarci che nell'origine essa sia più bassa o più alta del punto medio tra le due tracce.
 
-Quindi possiamo aggiungere dei trattamenti, possibilmente replicati 3 o più volte, nell'origine, cioè quando tutti i fattori hanno valore 0 nelle unità codificate. Successivamente verifichiamo la **significatività** della curvatura con un modello lineare che includa un fattore al quadrato. Si noti che con un unico punto centrale non possiamo discriminare se il comportamento quadratico derivi da uno o più dei fattori, ma solo che esso sia significativo oppure no: di conseguenza è indifferente quale dei fattori viene considerato come termine quadratico nel modello.
 ```{marginfigure}
 **Nota**: se nei piani fattoriali $2^k$ è opportuno specificare che i fattori siano di tipo `factor` in modo che valori ripetuti dello stesso trattamento siano effettivamente raggruppati consentendo una miglior valutazione della variabilità del sistema, nei piani con più di due livelli per fattore e quando il modello lineare include termini di grado 2 o superiore, i fattori **devono essere numerici**, perché l'elevazione a potenza non è definita sui `factor` (che sono l'equivalente di una stringa).
 ```
+
+Quindi possiamo aggiungere dei trattamenti, possibilmente replicati 3 o più volte, nell'origine, cioè quando tutti i fattori hanno valore 0 nelle unità codificate. Successivamente verifichiamo la **significatività** della curvatura con un modello lineare che includa un fattore al quadrato. Si noti che con un unico punto centrale non possiamo discriminare se il comportamento quadratico derivi da uno o più dei fattori, ma solo che esso sia significativo oppure no: di conseguenza è indifferente quale dei fattori viene considerato come termine quadratico nel modello.
 
 Vediamo un esempio aggiungendo 5 repliche del trattamento in $(A,C,D)= (0,0,0)$:
 ```{r}
@@ -843,7 +849,7 @@ dm %>% slice_head(n=5) %>% knitr::kable()
 Per semplicità, diamo per assodata la solita procedura di casualizzazione della sequenza operativa.
 
 Il PFF non è replicato, quindi dobbiamo applicare il metodo di Daniel:
-```{r fig.margin=T}
+```{r fig.margin=T, fig.pos="5cm"}
 dm.lm <- lm(Y~A*B*C*D*E, data=dm)
 c <- effects(dm.lm)
 tibble(
@@ -877,7 +883,7 @@ E questa tabella conferma le conclusioni della precedente. Il modello definitivo
 
 
 Non resta che verificare l'adeguatezza del modello:
-```{r fig.margin=T}
+```{r fig.margin=T, fig.pos="1.5cm"}
 dm <- dm %>% add_residuals(dm.lm) %>% add_predictions(dm.lm)
 st <- shapiro.test(dm$resid)
 dm %>% ggplot(aes(sample=resid)) +
@@ -887,11 +893,15 @@ dm %>% ggplot(aes(sample=resid)) +
 ```
 
 La normalità è confermata e così pure l'assenza di *pattern* in rapporto ai fattori $A$, $B$ e $C$:
-```{r, fig.margin=T, fig.dim=c(5, 2)*0.8}
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8, fig.pos="3.5cm"}
 ggplot(dm, aes(x=A, y=resid)) + 
   geom_point() + labs(y="residui")
+```
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8, fig.pos="0cm"}
 ggplot(dm, aes(x=B, y=resid)) + 
   geom_point() + labs(y="residui")
+```
+```{r, fig.margin=T, fig.dim=c(5, 2)*0.8, fig.pos="0cm"}
 ggplot(dm, aes(x=C, y=resid)) + 
   geom_point() + labs(y="residui")
 ```

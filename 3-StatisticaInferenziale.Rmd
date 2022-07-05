@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html:
 bibliography: skeleton.bib
 link-citations: yes
@@ -403,7 +406,7 @@ G_0 &=& \frac{\underset{i=1,\dots,n}{\max}|Y_i-\bar Y|}{s}\\
 G_0 &>& \frac{n-1}{n}\sqrt{\frac{t^2_{\alpha/(2n),n-2}}{n-2+t^2_{\alpha/(2n),n-2}}} \Rightarrow \neg H_0
 \end{eqnarray}
 ```{marginfigure}
-$\neg H_0$ significa che $H_0$ è falsa.
+**Nota**: $\neg H_0$ significa che $H_0$ è falsa.
 ```
 
 
@@ -843,14 +846,16 @@ A quanto pare, sia i fattori che la loro interazione sono tutti significativi.
 options(width=60)
 ```
 Spesso si rappresentano questo tipo di esperimenti con i cosiddetti **interaction plot**: si tratta di grafici in cui si riporta la resa dell'esperimento contro uno dei due fattori (possibilmente quantitativo), tenendo il secondo fattore come parametro e mediando sulle ripetizioni.
-Possiamo ottenere questo risultato raggruppando il data frame secondo i due fattori e calcolando i tempi di vita medi per ogni gruppo:
-```{r, fig.margin=T}
+Possiamo ottenere questo risultato raggruppando il data frame secondo i due fattori e calcolando i tempi di vita medi per ogni gruppo.
+
+```{r, fig.margin=T, fig.pos="3cm"}
 df %>% group_by(Temperature, Material) %>%
   summarise(Response=mean(Response), .groups="keep") %>%
   ggplot(aes(x=Temperature, y=Response, color=Material)) +
   geom_line(aes(group=Material))
 ```
-Oltre a rappresentare l'effetto medio dei trattamenti, questi grafici di chiamano **interaction plot** proprio perché consentono rapidamente di identificare le interazioni tra fattori: quando due linee sono parallele significa che l'interazione è bassa, se invece sono convergenti o incrociate significa che l'interazione è alta.
+
+Si noti che, oltre a rappresentare l'effetto medio dei trattamenti, questi grafici si chiamano **interaction plot** proprio perché consentono rapidamente di identificare le interazioni tra fattori: quando due linee sono parallele significa che l'interazione è bassa, se invece sono convergenti o incrociate significa che l'interazione è alta.
 
 \boxedpar{
 Sebbene gli \emph{interaction plot} siano molto diffusi, è importante comprendere che sono validi \strong{solo} dopo aver dimostrato con l'analisi della varianza che il termine di interazione è significativo. Infatti, anche se il \emph{p-value} corrispondente all'interazione fosse alto potremmo comunque avere rette intersecanti, ma in maniera \strong{statisticamente non significativa}, cioè ripetendo una seconda volta lo stesso esperimento potremmo ottenere un risultato completamente differente, dato che stiamo essenzialmente osservando dei numeri casuali senza contenuto fisico.

@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ]
   tufte::tufte_html:
 bibliography: skeleton.bib
 link-citations: yes
@@ -232,11 +235,12 @@ I valori di questi attributi possono essere stampati in forma di report con la f
 ```{r}
 summary(df.lm)
 ```
-
-Qui troviamo tre dati interessanti: una tabella con i quartili dei residui (dovrebbero essere centrati su zero); una tabella dei coefficienti *con i loro p-value*; il valore del **coefficiente di determinazione** $R^2$, che misura la bontà della regressione (deve essere vicino a 1).
 ```{marginfigure}
 Il **coefficiente di determinazione** è definito come $R^2=1-SS_{\mathrm{res}}/SS_{\mathrm{tot}}$, dove $SS_{\mathrm{res}}=\sum\varepsilon_i^2$ e $SS_{\mathrm{tot}}=\sum(y_i-\bar y)^2$: se i valori regrediti corrispondono ai valori osservati, la somma dei residui è 0 e $R^2=1$.
 ```
+
+Qui troviamo tre dati interessanti: una tabella con i quartili dei residui (dovrebbero essere centrati su zero); una tabella dei coefficienti *con i loro p-value*; il valore del **coefficiente di determinazione** $R^2$, che misura la bontà della regressione (deve essere vicino a 1).
+
 Soffermiamoci sui *p-value* dei coefficienti: per essi, vale quanto visto nella Parte precedente: tanto più piccolo è il *p-value*, tanto più il termine è statisticamente significativo, e viceversa. In questo caso notiamo che, mentre i termini di grado 1 e 2 sono sicuramente significativi, l'intercetta lo è solo al 8%. Possiamo quindi rivedere il modello eliminando l'intercetta, cioè forzando il modello a passare per l'origine:
 ```{marginfigure}
 In una formula, per rimuovere l'intercetta è necessario aggiungere il termine `-1`.
@@ -294,7 +298,7 @@ Ciò è confermato anche dal test:
 con un `r round(st$p.value*100, 1)`% di probabilità d'errore rifiutando l'ipotesi di normalità. 
 
 Ma, soprattutto, studiando la relazione tra residui e regressore, risulta:
-```{r fig.margin=T}
+```{r fig.margin=T, fig.pos="3cm"}
 p <- df %>% ggplot(aes(x=x, y=df.lm2$residuals)) +
   geom_point() +
   labs(y="residui")
