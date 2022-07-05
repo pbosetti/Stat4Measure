@@ -15,6 +15,9 @@ output:
     toc: yes
     citation_package: natbib
     latex_engine: xelatex
+    pandoc_args: [
+      "-V", "papersize=a4paper"
+    ] 
   tufte::tufte_html:
   tufte::tufte_book:
     citation_package: natbib
@@ -40,9 +43,13 @@ library(tsbox)
 library(astsa)
 source("myfunctions.R")
 ```
+```{=tex}
+\newtheorem{dfn}{Definizione}
+```
+
 
 # Statistica delle serie temporali
-`r newthought("I metodi statistici fin ora descritti")` nelle parti precedenti si basano, come già detto, sull'ipotesi che le variabili aleatorie osservate abbiano delle determinate distribuzioni (spesso normali) e che siano **indipendenti**. Il concetto di indipendenza delle osservazioni non è stato precedentemente affermato con sufficiente chiarezza, ma è ora il caso di farlo. Quanto visto fin ora si basa sul concetto di variabili aleatorie **identicamente e indipendentemente distribuite** (*IID*), tant'è che a rigore tali variabili andrebbero indicate come:
+`r newthought("I metodi statistici fin ora descritti")` nelle parti precedenti si basano, come già detto, sull'ipotesi che le variabili aleatorie osservate abbiano delle determinate distribuzioni (spesso normali) e che siano **indipendenti**. Il concetto di indipendenza delle osservazioni non è stato precedentemente affermato con sufficiente chiarezza, ma è ora il caso di farlo. Quanto visto fin ora si basa sul concetto di variabili aleatorie **identicamente e indipendentemente distribuite** (*IID*), tant'è che a rigore tali variabili andrebbero indicate, ad esempio, come:
 \[
 x\overset{iid}{\sim}\mathcal{N}(0,1)
 \]
@@ -50,7 +57,7 @@ x\overset{iid}{\sim}\mathcal{N}(0,1)
 La più volte citata necessità di casualizzare la sequenza operativa non è altro che un modo per ridurre l'**autocorrelazione** tra le misure, cioè il fatto che il risultato di una misurazione condotta al tempo $t$ possa influire su quella condotta al tempo $t+\Delta t$.
 
 Tuttavia, nella maggior parte dei casi pratici esiste un $\Delta t$ sufficientemente piccolo per cui la condizione di indipendenza non è più verificata, e quindi non si può parlare di variabili aleatorie IID. 
-```{r globtemp, echo=F, fig.margin=T, fig.cap="Anomalia termica mare/terra dal 1880 al 2015"}
+```{r globtemp, echo=F, fig.pos="-5cm", fig.margin=T, fig.cap="Anomalia termica mare/terra dal 1880 al 2015"}
 ggplot(ts_xts(globtemp), aes(x=Index, y=value)) + 
   geom_line(color=gray(0.5)) + 
   geom_point(shape=4) +
@@ -58,15 +65,452 @@ ggplot(ts_xts(globtemp), aes(x=Index, y=value)) +
   labs(x="anno", y="Anomalia termica mare/terra (°C)")
 ```
 
-Questa situazione, tipicamente, sussiste quando la dinamica propria dello strumento di misura o del misurando stesso è più lenta dell'intervallo temporale $\Delta t$ in cui si effettuano le misure.
+Questa situazione, tipicamente, sussiste quando la dinamica propria dello strumento di misura o del misurando stesso---che sono **sempre finite**---sono più lente dell'intervallo temporale $\Delta t$ in cui si effettuano le misure.
 
-In queste condizioni le tecniche di analisi statistica necessitano di opportuni accorgimenti e si parla di **analisi delle serie temporali** (*Time-Series Analysis*).
+In queste condizioni le tecniche di analisi statistica necessitano di opportuni accorgimenti e si parla di **analisi delle serie temporali** (*Time-Series Analysis*)(@Shumway2017).
 
-Si veda ad esempio la serie temporale di Fig. \ref{fig:globtemp}, che riguarda la differenza tra la temperatura media terrestre e marina dal 1880 al 2015. Questa serie mostra diverse condizioni che mostrino come---sebbene un contributo aleatorio sia evidente---sia difficile affermare che osservazioni adiacenti siano indipendenti. Vedi ad esempio la sequenza degli anni 1900--1905: se si trattasse di una variabile puramente aleatoria, la probabilità di 5 punti consecutivi in tendenza sarebbe minimale. Altresì, osservando il grafico appare un trend al riscaldamento a partire dal 1970 circa. Quanto questo trend sia effettivo e quanto sia invece di origine aleatoria è oggetto di dibattito tra politici e climatologi: è possibile sviluppare metodi di analisi statistica che consentano di assegnare delle probabilità d'errore a queste domande?
+La serie temporale di Fig. \ref{fig:globtemp} riguarda la differenza tra la temperatura media terrestre e marina dal 1880 al 2015. Questa serie evidenzia in diversi punti come---sebbene un contributo aleatorio sia evidente---sia difficile affermare che osservazioni adiacenti siano indipendenti. Vedi ad esempio la sequenza degli anni 1900--1905: se si trattasse di una variabile puramente aleatoria, la probabilità di 5 punti consecutivi in tendenza sarebbe minimale. Altresì, osservando il grafico appare una tendenza---o *trend*---al riscaldamento a partire dal 1970 circa. Quanto questo *trend* sia effettivo e quanto sia invece di origine aleatoria è oggetto di dibattito tra politici e climatologi: è possibile sviluppare metodi di analisi statistica che consentano di assegnare delle probabilità d'errore a queste domande?
+
+## Autocovarianza e autocorrelazione
+Secondo quanto detto sopra, è importante poter definire dei criteri per comprendere quanto delle osservazioni successive si possano dire indipendenti.
+
+Nella prima Parte abbiamo visto come gli operatori **covarianza** e **correlazione** servano a stimare l'indipendenza di due campioni.
+
+Considerando un segnale temporale continuo $x=x(t)$ è quindi naturale verificare l'autocorrelazione del segnale con se stesso traslato nel tempo. Si definisce quindi la **funzione di autocovarianza** $\gamma(s, t)$ come la funzione che valuta la covarianza di un segnale temporale con se stesso valutato *iniziando* ai tempi $s$ e $t$:
+\begin{equation}
+\gamma_x(s, t) = \sigma_{x_s, x_t} = E[(x_s-\mu_s)(x_t-\mu_t)] \label{eq:autovar}
+\end{equation}
+in cui $x_s$ è il segnale temporale valutata iniziando al tempo $s$ e $\mu_s$ è il valore atteso di $x_s$. È evidente che $\gamma_x(s,s)=\sigma(x_s)$.
+```{marginfigure}
+**Nota**: in questa notazione $x_s$ indica il segnale $x$ traslato all'origine del tempo in $s$, e non il segnale valutato al tempo $s$. 
+```
+
+La **funzione di autocorrelazione** (ACF), di conseguenza, è definita come:
+\begin{equation}
+\rho_x(s, t) = \frac{\gamma_x(s,t)}{\sqrt{\gamma_x(s,s)\gamma_x(t,t)}}
+\end{equation}
+ed ha il vantaggio di essere sempre compresa in $[-1,1]$. È inoltre evidente che $\rho_x(s,s)=1$.
+
+Se campioniamo un segnale continuo a intervalli fissi $\Delta t$ per una durata complessiva $T$, otteniamo una **serie temporale** finita di $N=T/\Delta t$ osservazioni: $x_{0}=\left<x_1, x_2, \dots, x_N\right>$. Possiamo estendere la definizione in (\ref{eq:autovar}) stabilendo che sia $s=t_0 = 0$ l'istante iniziale della serie e che sia $t=s+\tau$ un generico momento successivo tale per cui
+\[
+\tau = \ell \Delta t
+\]
+dove $\ell$ è il ritardo o *lag*, e allora:
+\begin{equation}
+\gamma_x(\ell) = \frac{\sum_{i=1}^{N-\ell} (x_i - \bar x_0) (x_{i+\ell}-\bar x_\ell) }{N-\ell-2} \label{eq:ACF}
+\end{equation}
+con $\bar x_0=1/(N-\ell)\sum_{i=1}^{N-\ell} x_i$ e $\bar x_\ell=1/(N-\ell)\sum_{i=\ell}^{N} x_i$.
+
+```{r speech1, echo=F, fig.margin=T, fig.cap="Pronuncia del suono \\emph{aahh}"}
+# provare con by=6: ACF risulta molto contenuta
+s <- ts_data.frame(speech) %>% slice(seq(1,n(),by=1)) %>%
+  mutate(time=seq_along(time)/10000)
+s %>%
+ggplot(aes(x=time, y=value)) + 
+  geom_line() +
+  labs(x="tempo (s)", y="tensione (mV)")
+```
+
+```{r speech1acf, echo=F, fig.margin=T, fig.cap="ACF della registrazione in Fig. \\ref{fig:speech1}"}
+with(acf(s$value, lag.max = 100, plot=F), data.frame(lag, acf)) %>%
+  ggplot(aes(x=lag, y=acf)) + 
+  geom_hline(aes(yintercept=0)) +
+  geom_hline(yintercept=c(-1,1)*qnorm((1 + 0.95)/2)/sqrt(1020),
+             linetype=2, color="blue") +
+  geom_segment(mapping = aes(xend = lag, yend = 0)) +
+  labs(x="lag", y=TeX("$\\rho_x$"))
+```
+
+La (\ref{eq:ACF}) rappresenta la funzione di autovarianza di una serie temporale per un dato ritardo $\ell$. L'autovarianza può essere normalizzata dividendola per la varianza del segnale stesso ottenendo la **funzione di autocorrelazione** (ACF) della serie temporale:
+\begin{equation}
+\rho_x(\ell) = \frac{\gamma_x(\ell)}{\sqrt{\sigma_x(0)\sigma_x(\ell)}}
+\end{equation}
+dove $\sigma_x(0)$ è la deviazione standard di $x_{0}$ e $\sigma_x(\ell)$ è la deviazione standard di $\left<x_\ell, x_{\ell+1},\dots,x_N\right>$.
+
+Nel caso in cui la serie temporale sia una **serie stazionaria in senso ampio**, cioè tale da avere valore atteso e varianza costanti (cioè indipendenti dal *lag*), allora nelle equazioni precedenti si può assumere $\sigma_x(0)=\sigma_x(\ell)$ e $\bar x_0=\bar x_\ell$.
+
+```{marginfigure}
+**Nota**: Dalla definizione è evidente che la ACF a *lag* nullo vale sempre 1, essendo l'autocorrelazione di un campione con se stesso: $\rho_x(0) = 1$. È altrettanto evidente che se la serie temporale è puramente casuale (*random walk*) risulta $\rho_x(\ell) = 0~\forall \ell > 0$.
+```
+
+Consideriamo il segnale audio corrispondente alla pronuncia del suono "*aahh*", riportato in Fig. \ref{fig:speech1}.
+
+il segnale viene campionato ottenendo una serie temporale di `r length(s$time)` campioni. La serie è evidentemente autocorrelata, ma vediamo di verificarlo con il grafico della ACF (chiamato anche **correlogramma**), riportato in Fig. \ref{fig:speech1acf}, che riporta anche l'intervallo di confidenza al 95%, nel senso che i termini all'interno di questo intervallo sono da ritenersi non significativi. L'intervallo di confidenza è definito come:
+\[
+\left[-\frac{F^{-1}(\alpha/2)}{N}, \frac{F^{-1}(\alpha/2)}{N}\right]
+\]
+dove $F^{-1}(\cdot)$ è la funzione quantile della normale standard.
+
+
+```{r speech2, echo=F, fig.margin=T, fig.cap="Lo stesso segnale sonoro di Fig. \\ref{fig:speech1} ma campionato a tempi casuali"}
+# provare con by=6: ACF risulta molto contenuta
+s <- s %>% mutate(value = sample(value))
+s %>%
+ggplot(aes(x=time, y=value)) + 
+  geom_line() +
+  labs(x="tempo", y="tensione (mV)")
+```
+
+Ebbene, la Fig. \ref{fig:speech1acf} ci conferma che la serie temporale è autocorrelata (cioè non IID) fino a *lag* 4. Inoltre, essendo la serie evidentemente periodica, anche la ACF mostra oscillazioni periodiche (cioè la serie è **periodicamente autocorrelata**).
+
+Come controprova, supponiamo ora di campionare lo stesso suono ma a intervalli temporali casuali. Ovviamente, in questo modo la correlazione tra una misurazione e la successiva tende a svanire: ci aspettiamo una serie temporale senza strutture evidenti e una ACF senza picchi significativi (eccetto il *lag* 0).
+
+```{r speech2acf, echo=F, fig.margin=T, fig.cap="ACF della Fig. \\ref{fig:speech2}"}
+with(acf(s$value, lag.max = 100, plot=F), data.frame(lag, acf)) %>%
+  ggplot(aes(x=lag, y=acf)) + 
+  geom_hline(aes(yintercept=0)) +
+  geom_hline(yintercept=c(-1,1)*qnorm((1 + 0.95)/2)/sqrt(1020),
+             linetype=2, color="blue") +
+  geom_segment(mapping = aes(xend = lag, yend = 0)) +
+  labs(x="lag", y=TeX("$\\rho_x$"))
+```
+
+Infatti, la Fig. \ref{fig:speech2} mostra che il segnale campionato a tempi casuali porta ad una serie storica priva di strutture. Altrettanto, la ACF non mostra alcun picco significativo, dimostrando che il campione corrispondente può considerarsi IID (vedi Fig. \ref{fig:speech2acf}).
+
+
+```{r eval=FALSE, include=FALSE}
+acorr <- Vectorize(function(tau, data) {
+    N <- length(data)
+    i <- integrate(\(t,tau, data) data[t] * data[t-tau],
+            subdivisions = N*3, stop.on.error = F,
+            lower = tau + 1, upper = N,
+            tau, data)
+    return(i$value * 1/(N-tau))
+  },
+  vectorize.args=c("tau")
+)
+tibble(
+  tau=1:100,
+  autocorr=acorr(tau, data = speech-mean(speech))
+) %>% ggplot(aes(x=tau, y=autocorr)) + 
+  geom_line() + 
+  labs( x= TeX("\\tau"), y=TeX("$R_{xx}$"))
+```
+
+Si è parlato sopra di **serie temporale stazionaria in senso ampio**: vediamo due definizioni in merito.
+
+\begin{dfn}[Serie temporale stazionaria in senso stretto]
+È una serie temporale per cui il comportamento probabilistico di una qualsiasi collezione di valori $\left<x_{t_1}, x_{t_2},\dots, x_{t_k}\right>$ è identico a quello della collezione traslata $\left<x_{t_1+h}, x_{t_2+h},\dots, x_{t_k+h}\right>$, cioè:
+\begin{equation}
+\mathrm{Pr}(x_{t_1}\leq c_1, \dots, x_{t_k}\leq c_k) = \mathrm{Pr}(x_{t_1+h}\leq c_1, \dots, x_{t_k+h}\leq c_k).
+\end{equation}
+\end{dfn}
+
+```{marginfigure}
+In generale ci si riferisce ad una **serie stazionaria** intendendo stazionaria in senso ampio (*weakly stationary*). Dove necessario si specifica **stazionaria in senso stretto** (*strictly stationary*). 
+```
+
+\begin{dfn}[Serie temporale stazionaria in senso ampio]
+È una serie temporale per cui:
+\begin{enumerate}[(i)]
+\item il valor medio della serie temporale è costante e non dipende dal tempo
+\item la funzione di autocovarianza $\gamma(s,t)$ dipende da $s$ e $t$ solo tramite la loro differenza $|s-t|$ 
+\end{enumerate}
+\end{dfn}
+
+Spesso tuttavia una serie temporale non è stazionaria, com'è il caso dell'anomalia termica riportata in Fig. \ref{fig:globtemp}. In questi casi può essere utile separare nella serie un termine responsabile del *trend* e un termine responsabile della variabilità locale.
+
+## Stabilizzazione delle serie temporali
+
+Un primo approccio alla stabilizzazione (*detrending*) delle serie temporali mira a rendere costante il valor medio e può essere ottenuto sottraendo alla serie una sua regressione lineare.
+
+```{r chicken, fig.margin=T, echo=F, fig.cap="Prezzo di un pollo intero in Georgia"}
+m <- lm(chicken~time(chicken))
+f <- xts(data.frame(
+    line = predict(m),
+    res = residuals(m)
+  ), order.by=as.Date(time(chicken)))
+ggplot(ts_xts(chicken)) +
+  geom_line(aes(x=Index, y=value)) +
+  geom_line(aes(x=Index, y=line), data=f, col="blue") +
+  labs(x="data", y="prezzo ($)")
+```
+
+Consideriamo ad esempio la serie temporale di Fig. \ref{fig:chicken}, che riporta l'andamento del prezzo del pollo in Georgia. È evidente una tendenza all'aumento del prezzo, nonostante le fluttuazioni. Possiamo rimuovere la tendenza sottraendo una regressione lineare (linea blu). Ciò equivale a esprimere la serie temporale come
+\[
+x_t = \mu_t + y_t
+\]
+in cui ci si attende che $y_t$ sia la componente stazionaria della serie (da verificare!).
+
+Il grafico della $y_t$ coincide ovviamente con la serie temporale rappresentata dai residui della regressione lineare. Tale grafico è riportato in Fig. \ref{fig:reschicken}: la serie sembra sicuramente più stabile, ma la media sembra abbassarsi attorno all'anno 2010 e. soprattutto, la varianza sembra anch'essa essere poco costante (secondo requisito per la definizione di stabilità in senso ampio).
+
+```{r reschicken, fig.margin=T, echo=F, fig.cap="Residui della regressione in Fig. \\ref{fig:chicken}"}
+ggplot(f) +
+  geom_line(aes(x=Index, y=res)) +
+  labs(x="data", y="prezzo ($)")
+```
+
+La stabilità della varianza può infatti mancare anche in serie temporali che hanno una media evidentemente costante, come ad esempio in Fig. \ref{fig:speech1}, dove la seconda metà del suono ha una varianza evidentemente ridotta.
+
+```{r diffchicken, fig.margin=T, echo=F, fig.cap="Derivata della serie temporale in Fig. \\ref{fig:chicken}"}
+ggplot(diff(ts_xts(chicken))) +
+  geom_line(aes(x=Index, y=value))
+```
+
+Un modo migliore per stabilizzare una serie è la **differenziazione**: la derivata di una funzione linerae è costante; la derivata seconda di una funzione quadratica è costante; e così via. Anzitutto estendiamo il concetto di derivazione ad una sequenza discreta come una serie temporale.
+
+\begin{dfn}[Operatore backshift]
+sia $B$ un operatore per cui $Bx_t=x_{t-1}$. Tale definizione si estende alle potenze, per cui $B^2x_t = x_{t-2}$
+\end{dfn}
+\begin{dfn}[Operatore differenza]
+sia $\nabla$ un operatore per cui $\nabla x_t=x_t - x_{t-1} = (1-B)x_t$. Tale definizione si estende alle potenze, per cui la differenza di ordine $d$ è $\nabla^d x_t=(1-B)^dx_t$. Ad esempio, $\nabla^2 x_t = (1-B)^2x_t=x_t - 2x_{t-1} + x_{t-2}$.
+\end{dfn}
+
+La Fig. \ref{fig:diffchicken} mostra la differenziazione del primo ordine della serie temporale del prezzo del pollo: rispetto al grafico dei residui, questa serie storica sembra più costante nella media e nella varianza.
+
+```{r checkenACF1, fig.dim=c(5, 3)*0.8, fig.margin=T, echo=F, fig.cap="ACF del prezzo del pollo in Georgia"}
+with(acf(as.numeric(chicken), lag.max = 50, plot=F), data.frame(lag, acf)) %>%
+  ggplot(aes(x=lag, y=acf)) + 
+  geom_hline(aes(yintercept=0)) +
+  geom_hline(yintercept=c(-1,1)*qnorm((1 + 0.95)/2)/sqrt(1020),
+             linetype=2, color="blue") +
+  geom_segment(mapping = aes(xend = lag, yend = 0)) +
+  labs(x="lag", y=TeX("$\\rho_x$"))
+```
+
+È ora interessante confrontare l'effetto della stabilizzazione sull'autocorrelazione della serie temporale. Prendendo sempre come esempio il prezzo del pollo, otteniamo i grafici in Fig. \ref{fig:checkenACF1}--\ref{fig:checkenACF3}: una serie temporale **non stazionaria** mostra al solito un elevata autocorrelazione per un numero elevato di *lag*. Sottraendo il modello lineare l'autocorrelazione si riduce sensibilmente, pur restando elevata (si anulla a *lag* 19).
+
+```{r checkenACF2, fig.dim=c(5, 3)*0.8, fig.margin=T, echo=F, fig.cap="ACF del prezzo del pollo in Georgia: residui"}
+with(acf(f$res, lag.max = 50, plot=F), data.frame(lag, acf)) %>%
+  ggplot(aes(x=lag, y=acf)) + 
+  geom_hline(aes(yintercept=0)) +
+  geom_hline(yintercept=c(-1,1)*qnorm((1 + 0.95)/2)/sqrt(1020),
+             linetype=2, color="blue") +
+  geom_segment(mapping = aes(xend = lag, yend = 0)) +
+  labs(x="lag", y=TeX("$\\rho_x$"))
+```
+```{r checkenACF3, fig.dim=c(5, 3)*0.8, fig.margin=T, echo=F, fig.cap="ACF del prezzo del pollo in Georgia: differenziazione"}
+with(acf(diff(chicken), lag.max = 50, plot=F), data.frame(lag=1:51, acf)) %>%
+  ggplot(aes(x=lag, y=acf)) + 
+  geom_hline(aes(yintercept=0)) +
+  geom_hline(yintercept=c(-1,1)*qnorm((1 + 0.95)/2)/sqrt(1020),
+             linetype=2, color="blue") +
+  geom_segment(mapping = aes(xend = lag, yend = 0)) +
+  labs(x="lag", y=TeX("$\\rho_x$"))
+```
+Infine, la serie stabilizzata per differenziazione mostra un'autocorrelazione per i primi tre valori, dopodiché si instaurano delle oscillazioni armoniche, indici di una **periodicità nella serie originale**, che pure non è evidente né nella serie stabilizzata né, tanto meno, nella serie originale.
+
+Quindi, in definitiva, possiamo dire che la serie storica originale del prezzo del pollo mostra un *trend* che si stabilizza al primo ordine di differenziazione, ha una dinamica che mostra autocorrelazione di ogni punto fino ai tre punti precedenti, e un andamento periodico con periodo pari a 12 *lag*.
+
+# Serie temporali in R
+`r newthought("In R sono disponibili funzioni e librerie")` per la gestione di date e serie temporali, incluso il calcolo della ACF. Purtroppo, non tutte le librerie sono perfettamente compatibili l'una con l'altra e non esiste un'interfaccia unificata. Soprattutto la compatibilità con `ggplot` è spesso limitata.
+
+## Gestire le date
+
+In alcuni casi la base temporale della serie è irrilevante, come nel caso di Fig. \ref{fig:speech1}. In altri casi, invece, è fondamentale poter riferire esattamente l'origine della scala temporale ad una specifica data, ed è il caso di Fig. \ref{fig:chicken}.
+
+Le date sono rappresentate in R mediante le classi `Date` e `POSIXct`.
+
+```{r}
+# Oggi (R base):
+today <- Sys.Date()
+now <- Sys.time()
+class(now)
+class(today)
+```
+
+Come si vede, e a differenza che in altri linguaggi, ci sono due classi per rappresentare il tempo: `Date` per le date, con risoluzione di un giorno, e `POSIXct` per un preciso istante temporale, con risoluzione del secondo (e frazioni).
+```{marginfigure}
+Questo significa che `today + 1` è la data di domani, mentre `now + 1` incrementa di un secondo.
+```
+
+Oltre le funzioni base di R per la gestione di tali oggetti è disponibile la libreria `lubridate` (parte di `tidyverse`) che rende molto flessibile la gestione. Vediamo gli esempi principali, rimandando alla documentazione per completezza.
+```{r}
+library(lubridate)
+t1 <- dmy("01/01/2022") # i separatori sono opzionali
+t2 <- ymd("20220601")            # Date
+t3 <- ymd_hm("2022/06/01 10:30") # POSIXct
+```
+
+Per estrarre informazioni da una data sono disponibili le funzioni `year()`, `month()`, `day()`, `wday()`, ecc.
+```{r}
+wday(t1)
+month(t2)
+```
+
+È possibile eseguire operazioni algebriche (somma e differenza) tra date in maniera nativa o utilizzando funzioni di conversione:
+```{r}
+today - t1
+now + months(2)
+today + days(1:4)
+```
+```{marginfigure}
+**Nota**: tutte le funzioni di `lubridate` sono vettorializzate.
+```
+
+Sono molto utili le funzioni `floor_date()` e `ceiling_date()` che consentono di arrotondare una data all'ultimo giorno, mese, anno, ecc.:
+```{r}
+floor_date(today, "weeks")
+ceiling_date(now, "months")
+```
+
+Infine, soprattutto in ottica di serie temporali, la funzione `seq()` può generare sequenze anche di `Date` o di `POSIXct`:
+```{r}
+seq(today, to = today+months(1), by="2 days")
+seq(now, to=now+minutes(2), by="13 secs")
+```
+Si noti che i valori `POSIXct` sono normalmente arrotondati al secondo **quando stampati**, ma internamente hanno la risoluzione del sistema operativo (tipicamente del microsecondo). Per visualizzare pù cifre:
+```{r}
+options(digits.secs=6)
+now
+options(digits.secs=0) #default
+```
+
+
+## Classi per le serie temporali
+
+Nel tempo sono state sviluppate numerose librerie per la gestione delle serie temporali in R. Di queste le più diffuse sono `ts`, che è parte standard di R, e `xts`, che ne estende le caratteristiche rendendo soprattutto più facile l'estrazione di **finestre temporali** (sottoinsiemi).
+
+La classe `ts` è la più semplice: prevede un passo temporale costante e non si basa su oggetti `Date` o `POSIXct`, ma richiede di specificare la base temporale arbitraria di partenza e la frequenza (osservazioni per unità di tempo):
+```{r}
+s1 <- ts(1:5, start = c(2022,4), frequency=12)
+s1
+s2 <- ts(tibble(x=1:5, y=x^2), start = 0, frequency=1000)
+s2
+```
+```{marginfigure}
+**Nota**: quando l'opzione `frequency=12`, `ts()` assume che la base dei tempi siano anni con risoluzione dei mesi; in questi casi, `start=c(2022,4)` significa "inizia dal 4 mese del 2022".
+
+Inoltre, un `ts` può essere creato **monovariato**, a partire da un vettore; oppure **multivariato** a partire da un data frame.
+Una signola colonna di un `ts` multivariato è estratta con `s2[,"x"]`.
+```
+
+Le funzioni `start()`, `end()` e `frequency()` possono essere utilizzate per estrarre il tempo di inizio, fine e frequenza della serie. La funzione `tsp()` restituisce un vettore con tutte e tre le informazioni. Infine, `tsp<-()` può essere utilizzata per **cambiare** date e frequenza:
+```{r}
+dt <- (nrow(s2) - 1) / (frequency(s2)*2)
+tsp(s2) <- c(10, 10 + dt, frequency(s2)*2)
+s2
+```
+I dati di un oggetto `ts` possono essere estratti come vettore con `as.numeric(s1)`, mentre il vettore dei tempi con `times(s1)`
+
+Infine, la funzione base `plot()` accetta direttamente gli oggetti `ts`, anche multivariati, ma dato che i tempi non sono oggetti `Date` **ha poco controllo sulla formattazione delle date**. 
+
+Si noti che in realtà `plot()` è una **funzione generica**, cioè una funzione che passa il controllo ad una serie di funzioni differenti a seconda del *tipo* del primo parametro: se esso è un oggetto `ts`, passa il controllo a `plot.ts()`, se è una formula, chiama `plot.formula()`, e così via.
+
+```{r fig.margin=T}
+plot(s2, oma.multi=c(4.1,0,0.1,0))
+```
+
+Se la formattazione dell'asse dei tempi è importante, è necessario ricorrere a `ggplot`, ma convertendo prima la serie nel formato `xts`.
+
+La classe `xts` rappresenta una **_extensible time series_**. Rispetto a `ts` ha alcune importanti differenze:
+
+* dispone di funzioni evolute per la selezione di intervalli e per il filtraggio
+* è integrata con `ggplot`
+* mentre in `ts` il tempo è codificato come inizio/fine/frequenza (quindi ammette solo passo temporale costante), in `xts` è codificato come una serie (vettore) di oggetti `Date` o `POSIXct` (quindi consente intervalli variabili)
+
+Gli oggetti `xts` possono essere creati direttamente oppure possono essere ottenuti convertendo un data frame o un oggetto `ts`. Per la creazione, la funzione `xts()` richiede i dati (come vettore o come data frame, se multivariato) e il vettore dei tempi come parametro `order.by=`:
+```{r tidy=F}
+x1 <- xts(
+  tibble(A=1:8, B=rnorm(8)),
+  order.by=seq(
+    from=today,
+    to=today+weeks(1),
+    by="1 days"
+  )
+)
+x1
+```
+
+Se hanno associato un nome, le singole colonne di `x1` possono essere selezionate come `x1$A` e `x1$B`, ottenendo degli `xts` monovariati. Operazioni vettorializzate possono essere effettuate direttamente sulla singola colonna: `mean(x1$B)`. Inoltre, sono sempre valide le funzioni `start()` e `end()`.
+
+È possibile convertire una `ts` in `xts`
+```{r}
+x2 <- as.xts(s1)
+head(x2, n=3)
+```
+
+Come si vene, però, questa conversione porta ad una colonna anonima. Quando ciò accade si può modificare manualmente i nomi delle colonne:\footnote{Si noti che i nomi devono essere passati come una lista il cui primo elemento (nome della colonna dei tempi) è \texttt{NULL}.}
+```{r}
+dimnames(x2) <- list(NULL, "value")
+head(x2, n=3)
+```
+
+la funzione `as.xts()` funziona solo se l'oggetto `ts` di partenza ha una il tempo esplicitamente espresso come data. In caso contrario è necessario operare una conversione manuale:
+```{r tidy=F}
+x2 <- xts(
+  s2,
+  order.by=seq(
+    from=ymd_hm("2022-06-01 12:00"),
+    by="sec",
+    length.out=nrow(s2)
+  )
+) 
+```
+```{marginfigure}
+La libreria `tsbox` fornisce un'ampia selezione di funzioni di conversione tra diversi tipi di serie temporali, tra cui `ts_xts()` è molto più robusta di `as.xts()`. La funzione `ts_ts()`, inoltre, consente di convertire nuovamente in `ts` un oggetto `xts`.
+```
+
+La classe `xts` dispone di funzioni di selezione e indicizzazione molto potenti. In particolare consente di selezionare **finestre** su cui operare:
+```{r}
+gt <- as.xts(globtemp)
+dimnames(gt) <- list(NULL, "temp")
+gt["1885/1887"]
+```
+La sintassi prevede che tra parentesi quadrate si passi una stringa del tipo `"yyyy-mm-dd/yyyy-mm-dd"` intesa come `inizio/fine`. È possibile omettere parti della data e omettere completamente l'inizio o la fine: in tal caso si intende "dall'inizio serie" o "fino a fine serie", rispettivamente.
+
+Spesso è utile applicare delle funzioni ad una finestra mobile di una certa ampiezza $k$: ciò significa che ogni punto è sostituito dal valore della funzione applicata al punto stesso e ai $k-1$ punti precedenti:\footnote{Oppure successivi, con \texttt{align="left"}, o attorno, con \texttt{align="center} Esistono anche le scorciatoie \texttt{rollmean()}, \texttt{rollmedian()}, \texttt{rollmax()} e \texttt{rollsum()}.}
+```{r}
+rollapply(x1, 3, mean) # k = 3
+```
+
+`xts` mette a disposizione una famiglia di funzioni `apply.*()` che sostituisce ogni intervallo con il risultato della funzione applicata ai valori dell'intervallo stesso, effettivamente decimando il numero di osservazioni nella serie temporale:
+```{marginfigure}
+Le funzioni `apply.*()` disponibili sono:
+
+* `apply.daily()`
+* `apply.weekly()`
+* `apply.monthly()`
+* `apply.quarterly()`
+* `apply.yearly()`
+```
+
+```{r}
+x3 <- xts(rnorm(365), order.by=seq(
+  from = ymd("2021-01-01"),
+  to = ymd("2021-12-31"),
+  by = "day")
+)
+apply.quarterly(x3, sum)
+```
+
+Infine, sono disponibili le funzioni `lag()` e `diff()`, sia per gli oggetti `ts` che `xts`, che corrispondono agli operatori *backshift* $B$ e differenza $\nabla$ visti sopra. Tuttavia si noti che `dplyr` definisce una sua versione di `lag()`, che non funziona con `xts`, quindi se `dplyr` è caricato è necessario specificare esplicitamente che si desidera la versione `lag.xts()`:
+```{r}
+lag.xts(x1) %>% head(n=4)
+diff(x1) %>% head(n=4)
+```
+
+Per concludere, gli oggetti `xts` possono essere messi in grafico direttamente: la funzione `plot(gt)` di fatto chiama `plot.xts(gt)`, che a sua volta è basata internamente su `ggplot`:
+```{r, fig.margin=T}
+plot(gt)
+```
+Tuttavia questi grafici---sebbene gestiscano correttamente le etichette dell'asse dei tempi---sono scarsamente personalizzabili e controllabili e sono quindi da intendersi come strumento di lavoro e non come funzione per ottenere grafici di qualità. 
+
+## Grafici di serie temporali con `ggplot`
+```{marginfigure}
+**Nota**: in realtà, `ggplot` chiama implicitamente la funzione `fortify()` sull'oggetto data che riceve. Questa funzione converte tutto ciò che conosce in una `tibble`. È preferibile quindi eseguire ad esempio `fortify(ts_xts(s2))` per scoprire in nomi delle colonne generati per le colonne che non hanno già un nome.
+```
+Per realizzare grafici di serie temporali con `ggplot` è necessario passare per la classe `xts`, perché `ts` non è supportata. Quando si specifica l'estetica è necessario ricordarsi che la colonna dei tempi ha il nome `Index`.
+
+```{r fig.margin=T}
+gt <- ts_xts(globtemp) 
+gt$mean <- rollmean(gt, 10, align = "right")
+
+ggplot(gt, aes(x=Index, y=value)) +
+  geom_line() +
+  geom_line(aes(y=mean), col="red") +
+  scale_x_date(breaks = "10 years", labels=scales::label_date("%Y")) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x="Anno", y="Anomalia termica (°C)")
+```
+
 
 # Regressione delle serie temporali
+`r newthought("La regressione classica applicata")` alle serie temporali è spesso insufficiente. Ad esempio, nel caso del prezzo del pollo l'analisi della autocorrelazione mostra un comportamento ciclico che la regressione classica non riesce ad evidenziare.
 
-## Modelli ARMA
+È quindi necessario sviluppare delle tecniche che consentano di modellare i dettagli di una serie temporale.
+
+## Modelli AR, MA e ARMA
 
 ## Modelli ARIMA
 
@@ -75,3 +519,4 @@ Si veda ad esempio la serie temporale di Fig. \ref{fig:globtemp}, che riguarda 
 ## Akaike Information Criterion
 
 # Analisi di regressione: ACF e PACF
+`r newthought("")`
