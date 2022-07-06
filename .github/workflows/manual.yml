@@ -15,6 +15,8 @@ on:
         default: '[0-8]-*'
         # Input has to be provided for the workflow to run
         required: true
+    tags:
+      - '*'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -28,20 +30,25 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Test Rscript
-      run: echo $(Rscript --version)
+      
+    - name: git safe directory
+      run: git config --global --add safe.directory $pwd)
+      
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::$(git describe --long --dirty=X)
       shell: bash
+      
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
+      
     - uses: actions/upload-artifact@v2
       name: Upload Artifact
       with:
         name: S4M_${{ steps.get_version.outputs.VERSION }}
         path: |
           ${{ inputs.files_glob }}.pdf
+          
     - name: Release
       uses: actions/create-release@v1
       id: create_release
@@ -52,7 +59,8 @@ jobs:
         tag_name: ${{ github.ref }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-    - name: Upload S4M artifact
+        
+    - name: Publish S4M artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
