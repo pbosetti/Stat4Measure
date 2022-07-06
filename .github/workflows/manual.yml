@@ -41,7 +41,7 @@ jobs:
       run: git config --global --add safe.directory $(pwd)
       
     - name: Compile pdf
-      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R [0-8]-*.Rmd
+      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
     
     - name: Create zip
       run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.pdf
