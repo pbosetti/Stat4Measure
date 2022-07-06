@@ -20,6 +20,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)
@@ -28,7 +29,7 @@ jobs:
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R [0-8]-*.Rmd
         
     - name: Create zip
-      run: zip S4M_${{ github.ref }}.zip [0-8]-*.pdf
+      run: zip S4M_${{ env.VERSION }}.zip [0-8]-*.pdf
           
     - name: Create Release
       uses: actions/create-release@v1
@@ -36,8 +37,8 @@ jobs:
       with:
         draft: false
         prerelease: false
-        release_name: S4M, ${{ github.ref }}
-        tag_name: S4M_${{ github.ref }}
+        release_name: S4M, ${{ env.VERSION }}
+        tag_name: S4M_${{ env.VERSION }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
@@ -47,6 +48,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./S4M_${{ github.ref }}.zip
-        asset_name: S4M_${{ github.ref }}.zip
+        asset_path: ./S4M_${{ env.VERSION }}.zip
+        asset_name: S4M_${{ env.VERSION }}.zip
         asset_content_type: application/zip
