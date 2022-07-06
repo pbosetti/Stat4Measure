@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     # Inputs the workflow accepts.
     inputs:
-      name:
+      files_glob:
         # Friendly description to be shown in the UI instead of 'name'
-        description: 'Person to greet'
+        description: 'Files to compile'
         # Default value if no value is explicitly provided
-        default: 'World'
+        default: '[0-8]-*.Rmd'
         # Input has to be provided for the workflow to run
         required: true
 
@@ -36,4 +36,4 @@ jobs:
     - name: test docker
       run: echo $(Rscript --version)
     - name: Compile pdf
-      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R [0-8]-*.Rmd
+      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}
