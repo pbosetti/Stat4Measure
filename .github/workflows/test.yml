@@ -39,7 +39,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Create Artifact
       with:
-        name: S4M_${{ steps.get_version.outputs.VERSION }}
+        name: S4M_${{ steps.get_version.outputs.VERSION }}.zip
         path: |
           ${{ inputs.files_glob }}.Rmd
           
@@ -60,6 +60,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./S4M.zip
-        asset_name: S4M.zip
+        asset_path: ./S4M_${{ steps.get_version.outputs.VERSION }}.zip
+        asset_name: S4M_${{ steps.get_version.outputs.VERSION }}.zip
         asset_content_type: application/zip
