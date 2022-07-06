@@ -32,6 +32,6 @@ jobs:
     - name: list files
       run: ls -l
     - name: current dir
-      run: echo "Current directory: $(pwd)"
+      run: echo "Current directory:" $(pwd)
     - name: test docker
       run: echo $(Rscript --version)
