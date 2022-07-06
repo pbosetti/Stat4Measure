@@ -39,6 +39,19 @@ jobs:
       id: get_version
       run: echo "::set-output name=VERSION::$(git describe --long)"
       
+    - name: Find Tag
+      id: tagger
+      uses: jimschubert/query-tag-action@v1
+      with:
+        include: '*'
+        exclude: '*-rc*'
+        commit-ish: 'HEAD~'
+
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tagger.outputs.tag}}'
+      
     - name: Create zip
       run: zip test_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.Rmd
           
