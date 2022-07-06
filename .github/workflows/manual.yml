@@ -63,6 +63,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./test_${{ steps.date.outputs.date }}.zip
-        asset_name: test_${{ steps.date.outputs.date }}.zip
+        asset_path: ./S4M_${{ steps.date.outputs.date }}.zip
+        asset_name: S4M_${{ steps.date.outputs.date }}.zip
         asset_content_type: application/zip
