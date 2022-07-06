@@ -419,7 +419,7 @@ range(s1)
 In questo caso particolare, il test segnala una probabilità d'errore del `r round(gt$p.value*100, 1)`% dello scartare il massimo dei valori, che è quello con lo scarto massimo.
 
 # Controllo di normalità
-`r newthought("Non è stato sufficientemente sottolineato")`, nei capitoli precedenti, quanto i test statistici siano **basati sull'ipotesi di normalità**. Infatti è chiaro che la (\ref{eq:}) è distribuita come una T di Student se e solo se il campione medesimo è distribuito in maniera normale. In forza del Teorema del Limite Centrale questa ipotesi non è troppo stringente nella maggior parte delle applicazioni reali. Tuttavia **deve** sempre essere verificata, perché quando accade che il o i campioni non sono normali è necessario approfondire e comprenderne il motivo.
+`r newthought("Non è stato sufficientemente sottolineato")`, nei capitoli precedenti, quanto i test statistici siano **basati sull'ipotesi di normalità**. Infatti è chiaro che la (\ref{eq:tconzero}) è distribuita come una T di Student se e solo se il campione medesimo è distribuito in maniera normale. In forza del Teorema del Limite Centrale questa ipotesi non è troppo stringente nella maggior parte delle applicazioni reali. Tuttavia **deve** sempre essere verificata, perché quando accade che il o i campioni non sono normali è necessario approfondire e comprenderne il motivo.
 
 Ci sono tre metodi comuni per il controllo di normalità di un set di dati $\left<x_1, x_2,\dots,x_n\right>$: un metodo grafico e due test inferenziali, il test del Chi-quadro e il test di Shapiro-Wilk.
 

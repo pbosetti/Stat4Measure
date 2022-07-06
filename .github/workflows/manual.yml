@@ -10,9 +10,9 @@ on:
     inputs:
       files_glob:
         # Friendly description to be shown in the UI instead of 'name'
-        description: 'Files to compile'
+        description: 'Files to compile (no extension!)'
         # Default value if no value is explicitly provided
-        default: '[0-8]-*.Rmd'
+        default: '[0-8]-*'
         # Input has to be provided for the workflow to run
         required: true
 
@@ -29,11 +29,23 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     # Runs a single command using the runners shell
-    - name: list files
+    - name: List files
       run: ls -l
-    - name: current dir
+    - name: Current dir
       run: echo "Current directory:" $(pwd)
-    - name: test docker
+    - name: Test Rscript
       run: echo $(Rscript --version)
     - name: Compile pdf
-      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}
+      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
+    - name: List files (after)
+      run: ls -l
+    - name: Create Package
+      run: zip S4M.zip ${{ inputs.files_glob }}.pdf
+    - uses: actions/upload-artifact@v2
+      name: Upload Artifact
+      with:
+        name: S4M
+        path: |
+          ${{ inputs.files_glob }}.pdf
+          S4M.zip
+          
