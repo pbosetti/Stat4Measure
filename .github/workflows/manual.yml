@@ -44,7 +44,7 @@ jobs:
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
     
     - name: Create zip
-      run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.Rmd
+      run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.pdf
           
     - name: Create Release
       uses: actions/create-release@v1
@@ -52,7 +52,7 @@ jobs:
       with:
         draft: false
         prerelease: false
-        release_name: S4M, built on ${{ steps.date.outputs.long_date }}
+        release_name: S4M, built on ${{ steps.long_date.outputs.long_date }}
         tag_name: S4M_${{ steps.date.outputs.date }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
