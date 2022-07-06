@@ -18,14 +18,6 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: Set current date as env variable
-      id: date
-      run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
-      
-    - name: Set current date as env variable
-      id: long_date
-      run: echo "::set-output name=long_date::$(date +'%Y-%m-%d %H:%M')"
-      
     - name: Checkout
       uses: actions/checkout@v3
       
@@ -36,7 +28,7 @@ jobs:
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
     
     - name: Create zip
-      run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.pdf
+      run: zip S4M_${{ github.ref }}.zip ${{ inputs.files_glob }}.pdf
           
     - name: Create Release
       uses: actions/create-release@v1
@@ -45,7 +37,7 @@ jobs:
         draft: false
         prerelease: false
         release_name: S4M, ${{ github.ref }}
-        tag_name: S4M_${{ steps.date.outputs.date }}
+        tag_name: S4M_${{ github.ref }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
@@ -55,6 +47,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./S4M_${{ steps.date.outputs.date }}.zip
-        asset_name: S4M_${{ steps.date.outputs.date }}.zip
+        asset_path: ./S4M_${{ github.ref }}.zip
+        asset_name: S4M_${{ github.ref }}.zip
         asset_content_type: application/zip
