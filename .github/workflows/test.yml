@@ -45,7 +45,7 @@ jobs:
       with:
         draft: false
         prerelease: false
-        release_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Test version
         tag_name: test
       env:
         GITHUB_TOKEN: ${{ github.token }}
