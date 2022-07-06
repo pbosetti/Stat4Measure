@@ -15,8 +15,6 @@ on:
         default: '[0-8]-*'
         # Input has to be provided for the workflow to run
         required: true
-    tags:
-      - '*'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -52,7 +50,7 @@ jobs:
         draft: false
         prerelease: false
         release_name: ${{ steps.get_version.outputs.VERSION }}
-        tag_name: ${{ github.ref }}
+        tag_name: test
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
