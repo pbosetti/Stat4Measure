@@ -54,7 +54,7 @@ theme_set(theme_gray()+theme(legend.position = "bottom"))
 ```
 ```{=tex}
 \newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
-\renewcommand{\ul}[1]{\underline{#1}}
+\newcommand{\myul}[1]{\underline{#1}}
 ```
 
 
@@ -770,7 +770,7 @@ Un **piano fattoriale frazionato** viene di solito indicato quindi come $2^{3-1}
 Considerando la matrice di progetto è evidente che con questa frazione del piano fattoriale possiamo comunque stimare tutti gli effetti, nel senso che i **contrasti** sono tutti costruiti con lo stesso numero di termini non nulli (4 su 8). Ma cosa perdiamo passando da un piano completo ad uno frazionato? lo capiamo osservando gli effetti $A$ e di $BC$:
 \begin{eqnarray}
 A  &=& (-(1)+a-b+ab-c+ac-bc+abc)/(2r) \\
-BC &=& (+\ul{(1)}+a-b-\ul{ab}-c-\ul{ac}+\ul{bc}+abc)/(2r)
+BC &=& (+\myul{(1)}+a-b-\myul{ab}-c-\myul{ac}+\myul{bc}+abc)/(2r)
 \end{eqnarray}
 È evidente che, essendo nulli i termini sottolineati nel piano frazionato, l'effetto di $A$ **è indistinguibile** dall'effetto di $BC$, dato che i segni dei termini non nulli sono uguali. In questo caso si dice che **$A$ è in alias con $BC$**. Quindi ciò che si sacrifica con il frazionamento è la capacità di distinguere tra gli effetti in alias.
 ```{marginfigure}
