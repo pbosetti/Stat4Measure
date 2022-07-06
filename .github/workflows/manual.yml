@@ -40,6 +40,9 @@ jobs:
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)
       
+    - name: Unshallow
+      run: git fetch --unshallow
+      
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
     
