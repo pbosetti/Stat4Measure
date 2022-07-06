@@ -32,6 +32,6 @@ jobs:
     - name: list files
       run: ls -l
     - name: current dir
-      run: pwd
+      run: echo "Current directory: $(pwd)"
     - name: test docker
-      run: docker run --rm -ti p4010/rmarkdown
+      run: echo $(Rscript --version)
