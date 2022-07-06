@@ -28,24 +28,37 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    # Runs a single command using the runners shell
-    - name: List files
-      run: ls -l
-    - name: Current dir
-      run: echo "Current directory:" $(pwd)
     - name: Test Rscript
       run: echo $(Rscript --version)
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::$(git describe --long --dirty=X)
+      shell: bash
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
-    - name: List files (after)
-      run: ls -l
-    - name: Create Package
-      run: zip S4M.zip ${{ inputs.files_glob }}.pdf
     - uses: actions/upload-artifact@v2
       name: Upload Artifact
       with:
-        name: S4M
+        name: S4M_${{ steps.get_version.outputs.VERSION }}
         path: |
           ${{ inputs.files_glob }}.pdf
-          S4M.zip
-          
+    - name: Release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: false
+        release_name: ${{ steps.get_version.outputs.VERSION }}
+        tag_name: ${{ github.ref }}
+        body_path: CHANGELOG.md
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Upload S4M artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./S4M.zip
+        asset_name: S4M.zip
+        asset_content_type: application/zip
