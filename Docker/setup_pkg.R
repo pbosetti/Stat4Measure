@@ -1,0 +1,19 @@
+packages <- c(
+  "rmarkdown",
+  "tufte",
+  "tidyverse",
+  "tufte",
+  "latex2exp",
+  "outliers",
+  "ggExtra",
+  "ROCR",
+  "tidymodels",
+  "PearsonDS",
+  "xts",
+  "tsbox",
+  "astsa",
+  "forecast",
+  "metR"
+)
+install.packages(packages)
+tinytex::install_tinytex(force=T)
