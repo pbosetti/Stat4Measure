@@ -30,7 +30,8 @@ jobs:
       run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
         
     - name: Checkout
-      uses: actions/checkout@v3-unshallow
+      uses: actions/checkout@v3
+      fetch-depth: 0
       
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)

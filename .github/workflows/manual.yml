@@ -35,13 +35,11 @@ jobs:
       run: echo "::set-output name=long_date::$(date +'%Y-%m-%d %H:%M')"
       
     - name: Checkout
-      uses: actions/checkout@v3-unshallow
+      uses: actions/checkout@v3
+      fetch-depth: 0
       
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)
-      
-    - name: Unshallow
-      run: git fetch --unshallow
       
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd

@@ -19,7 +19,8 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - name: Checkout
-      uses: actions/checkout@v3-unshallow
+      uses: actions/checkout@v3
+      fetch-depth: 0
       
     - name: Get version
       run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
