@@ -654,3 +654,9 @@ Questo ci consente di ridurre FNR a `r ct[2,1]`%, alle spese di un aumento del F
 ```{marginfigure}
 L'esempio di regressione logistica sopra riportato può sembrare banale, ma in realtà la potenza del metodo si apprezza meglio quando il modello di regressione è *multivariato*, cioè quando prende in considerazione due o più regressori. In questi casi il modello è del tipo `glm(y~a+b, data=df, family="binomial")`. In questo documento si è scelto il caso univariato perché la visualizzazione è più semplice, ma la stessa tecnica può essere facilmente estesa al caso multivariato.
 ```
+
+
+
+
+```{r child="closing.Rmd"}
+```

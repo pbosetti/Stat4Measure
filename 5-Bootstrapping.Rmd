@@ -419,3 +419,7 @@ boot_coefs <-
   unnest(coef_info)
 ```
 
+
+
+```{r child="closing.Rmd"}
+```

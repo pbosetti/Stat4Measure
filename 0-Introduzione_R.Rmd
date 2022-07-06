@@ -842,6 +842,10 @@ Infine, si noti che:
 * i file ASCII sono in generale meno efficienti (ma possono essere compressi), però hanno il vantaggio di essere sempre leggibili, con qualsiasi versione di software e di sistema operativo.
 
 
+```{r child="closing.Rmd"}
+```
+
+
 ```{r bib, include=FALSE}
 # create a bib file for the R packages used in this document
 # knitr::write_bib(c('base', 'rmarkdown'), file = 'skeleton.bib')

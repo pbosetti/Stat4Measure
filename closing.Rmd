@@ -1,0 +1,14 @@
+------------------------------------------------------------------------
+
+Questo documento è rilasciato in licenza
+[Attribution-NonCommercial-ShareAlike
+2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/legalcode).
+
+La sorgente in formato Rmarkdown è disponibile su
+<http://github.com/pbosetti/Stat4Measure>
+
+La versione PDF più recente è disponibile su
+<https://github.com/pbosetti/Stat4Measure/releases> (scaricare il file
+S4M_vX.X.X.zip)
+
+------------------------------------------------------------------------

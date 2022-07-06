@@ -910,3 +910,9 @@ mac %>% ggplot(aes(x=Material, y=Residuals)) +
   geom_point()
 ```
 Anche in questo caso, i residui hanno varianza e media confrontabili sui diversi livelli, quindi possiamo confermare che il modello `Response~Temperature:Material` è adeguato.
+
+
+
+
+```{r child="closing.Rmd"}
+```

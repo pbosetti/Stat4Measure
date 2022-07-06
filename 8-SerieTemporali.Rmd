@@ -520,3 +520,9 @@ ggplot(gt, aes(x=Index, y=value)) +
 
 # Analisi di regressione: ACF e PACF
 `r newthought("")`
+
+
+
+
+```{r child="closing.Rmd"}
+```

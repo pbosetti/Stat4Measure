@@ -923,3 +923,7 @@ expand.grid(
   labs(y="Resa")
 ```
 
+
+
+```{r child="closing.Rmd"}
+```

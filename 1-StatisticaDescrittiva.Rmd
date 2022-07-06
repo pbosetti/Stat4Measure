@@ -1149,6 +1149,11 @@ lines(x, dnorm(x, m, s))
 
 
 
+
+```{r child="closing.Rmd"}
+```
+
+
 ```{r bib, include=FALSE}
 # create a bib file for the R packages used in this document
 knitr::write_bib(c('tidyverse'), file = '1-libs.bib')
