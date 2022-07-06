@@ -28,7 +28,8 @@ jobs:
       uses: tj-actions/glob@v9.2
       id: ls_Rmd
       with:
-        files: [0-8]-*.Rmd
+        files: |
+          [0-8]-*.Rmd
 
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ steps.ls_Rmd.output.paths }}
@@ -37,7 +38,8 @@ jobs:
       uses: tj-actions/glob@v9.2
       id: ls_pdf
       with:
-        files: [0-8]-*.pdf
+        files: |
+          [0-8]-*.pdf
         
     - name: Create zip
       run: zip S4M_${{ github.ref }}.zip ${{ steps.ls_pdf.output.paths }}
