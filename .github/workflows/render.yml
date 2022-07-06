@@ -1,0 +1,60 @@
+# This is a basic workflow that is manually triggered
+
+name: PDF generation
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  push:
+    tags: "*"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "greet"
+  compile:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container: p4010/rmarkdown:latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Set current date as env variable
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
+      
+    - name: Set current date as env variable
+      id: long_date
+      run: echo "::set-output name=long_date::$(date +'%Y-%m-%d %H:%M')"
+      
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: git safe directory
+      run: git config --global --add safe.directory $(pwd)
+      
+    - name: Compile pdf
+      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
+    
+    - name: Create zip
+      run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.pdf
+          
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: false
+        release_name: S4M, ${{ github.ref }}
+        tag_name: S4M_${{ steps.date.outputs.date }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        
+    - name: Publish S4M artifact to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./S4M_${{ steps.date.outputs.date }}.zip
+        asset_name: S4M_${{ steps.date.outputs.date }}.zip
+        asset_content_type: application/zip
