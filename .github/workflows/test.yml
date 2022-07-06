@@ -36,12 +36,8 @@ jobs:
       run: echo ::set-output name=VERSION::$(git describe --long --dirty=X)
       shell: bash
       
-    - uses: actions/upload-artifact@v2
-      name: Create Artifact
-      with:
-        name: S4M_${{ steps.get_version.outputs.VERSION }}.zip
-        path: |
-          ${{ inputs.files_glob }}.Rmd
+    - name: Create zip
+      run: zip test.zip ${{ inputs.files_glob }}.Rmd
           
     - name: Create Release
       uses: actions/create-release@v1
@@ -60,6 +56,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./S4M_${{ steps.get_version.outputs.VERSION }}.zip
-        asset_name: S4M_${{ steps.get_version.outputs.VERSION }}.zip
+        asset_path: ./test.zip
+        asset_name: test.zip
         asset_content_type: application/zip
