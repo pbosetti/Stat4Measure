@@ -14,3 +14,4 @@
 *.toc
 *.bib
 !skeleton.bib
+!images/*.pdf
