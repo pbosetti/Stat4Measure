@@ -35,3 +35,5 @@ jobs:
       run: echo "Current directory:" $(pwd)
     - name: test docker
       run: echo $(Rscript --version)
+    - name: Compile pdf
+      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R [0-8]-*.Rmd
