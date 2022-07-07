@@ -7,8 +7,8 @@ Questo documento è rilasciato in licenza
 La sorgente in formato Rmarkdown è disponibile su
 <http://github.com/pbosetti/Stat4Measure>
 
-La versione PDF più recente è disponibile su
-<https://github.com/pbosetti/Stat4Measure/releases> (scaricare il file
-S4M_vX.X.X.zip)
+La versione PDF più recente è disponibile come
+`` S4M_`r params$GITHUB_VERSION`.zip `` sulla pagina
+<https://github.com/pbosetti/Stat4Measure/releases> e può essere scaricata direttamente qui: <https://github.com/pbosetti/Stat4Measure/releases/download/S4M_`r params$GITHUB_VERSION`/S4M_`r params$GITHUB_VERSION`.zip>
 
 ------------------------------------------------------------------------

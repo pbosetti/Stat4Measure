@@ -34,6 +34,8 @@ header-includes:
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
   - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
   - \usepackage[normalem]{ulem}
+params:
+  GITHUB_VERSION: NULL
 ---
 
 ```{r setup, include=FALSE}
@@ -925,5 +927,5 @@ expand.grid(
 
 
 
-```{r child="closing.Rmd"}
+```{r eval=!is.null(params$GITHUB_VERSION) , include=!is.null(params$GITHUB_VERSION), child="closing.Rmd"}
 ```

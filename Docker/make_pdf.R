@@ -4,8 +4,13 @@ library(stringr)
 
 
 dir <- Sys.getenv("GITHUB_WORKSPACE")
-if (length(dir) > 0) {
+if (str_length(dir) > 0) {
   setwd(dir)
+}
+
+ver <- Sys.getenv("GITHUB_VERSION")
+if (str_length(ver) == 0) { 
+  ver <- NULL 
 }
 
 args = commandArgs(trailingOnly = TRUE)
@@ -25,6 +30,9 @@ for (in_file in args) {
   rmarkdown::render(
     input = in_file,
     quiet = T,
-    clean = T
+    clean = T,
+    params = list(
+      GITHUB_VERSION = ver
+    )
   )
 }
