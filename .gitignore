@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.bash_history
 
 # generated:
 *.log
