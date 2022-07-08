@@ -10,7 +10,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "greet"
+  # Compile the Rmd files into PDFs, make a release and upload the zip
   compile:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -43,6 +43,10 @@ jobs:
         prerelease: false
         release_name: S4M, ${{ env.VERSION }}
         tag_name: S4M_${{ env.VERSION }}
+        body: |
+          The following files contain:
+          - `S4M_${{ env.VERSION }}`: all the PDF files, zipped in one archive
+          - `source code`: the original repo content, zipped or tarballed
       env:
         GITHUB_TOKEN: ${{ github.token }}
         

@@ -507,16 +507,112 @@ ggplot(gt, aes(x=Index, y=value)) +
 ```
 
 
-# Regressione delle serie temporali
+# Modelli statistici per le delle serie temporali
 `r newthought("La regressione classica applicata")` alle serie temporali è spesso insufficiente. Ad esempio, nel caso del prezzo del pollo l'analisi della autocorrelazione mostra un comportamento ciclico che la regressione classica non riesce ad evidenziare.
 
-È quindi necessario sviluppare delle tecniche che consentano di modellare i dettagli di una serie temporale.
+È quindi necessario sviluppare delle tecniche che consentano di modellare i dettagli di una serie temporale, in particolare tenendo in considerazione *anche* l'autocorrelazione che può caratterizzare le serie temporali.
 
 ## Modelli AR, MA e ARMA
 
-## Modelli ARIMA
+Prendendo in considerazione le **serie temporali stazionarie**, i due modelli più naturali per la loro descrizione sono il modello **autoregressivo**, o AR, e il modello **a media mobile**, o MA (da *moving average*), e la loro combinazione ARMA.
 
-## Modelli SARIMA
+`r newthought("Modello Auto-Regressivo (AR)")`
+
+Un modello AR è basato sull'idea che una determinata osservazione $x_t$ al tempo $t$ possa essere espressa come combinazione lineare di $p$ valori precedenti $x_{t-1}, x_{t-2},\dots,x_{t-p}$:
+\begin{dfn}[Modello auto-regressivo]
+Un modello AR di ordine $p$, abbreviato in $\mathrm{AR}(p)$, ha la forma
+\begin{equation}
+x_t=\phi_1 x_{t-1} + \phi_2 x_{t-2}+\dots+\phi_p x_{t-p} + w_t \label{eq:AR}
+\end{equation}
+dove $x_t$ è stazionaria in senso ampio, $w_t\sim\mathcal{N}(0, \sigma^2_w)$\footnote{Le $w_t$ sono anche chiamate \strong{innovazioni}, dato che sono l'unico contributo \emph{nuovo} di un punto rispetto ai precedenti.} e $\phi_1, \phi_2,\dots,\phi_p$, con $\phi_p\neq0$ sono costanti. La media di $x_t$ in (\ref{eq:AR}) è nulla; se non può essere nulla, si sostituisce $x_t$ con $x_t - \mu$ per ottenere:
+\begin{equation}
+x_t-\mu=\phi_1( x_{t-1}-\mu) + \phi_2 (x_{t-2}-\mu)+\dots+\phi_p (x_{t-p}-\mu) + w_t
+\end{equation}
+cioè:
+\begin{equation}
+x_t=\alpha + \phi_1 x_{t-1} + \phi_2 x_{t-2}+\dots+\phi_p x_{t-p} + w_t
+\end{equation}
+con $\alpha=\mu(1-\phi_1-\phi_2-\dots-\phi_p)$.
+\end{dfn}
+
+Ricordando la definizione dell'operatore *backshift*, la (\ref{eq:AR}) può essere scritta come:
+\begin{equation}
+(1-\phi_1 B - \phi_2 B^2 -\dots-\phi_p B^p)x_t=w_t
+\end{equation}
+o ancora più concisamente come:
+\begin{equation}
+\Phi_p(B)x_t=w_t\label{eq:AR2}
+\end{equation}
+dove $\Phi_p(B)=1-\phi_1B-\phi_2B^2-\dots-\phi_pB^p$ è detto **operatore autoregressivo**.
+
+Effettuare la regressione di un modello $\mathrm{AR}(p)$ su una serie storica $x_t$ significa quindi adattare il modello $\Phi^p(B)\hat x_t=w_t$ identificando i coefficienti di $\Phi^p(\cdot)$ che minimizzano i residui quadratici medi, essendo i residui $\varepsilon_t = x_t - \hat x_t = x_t - \Phi_p^{-1}(B)w_t$ (Ammesso che esista l'inversa $\Phi_p^{-1}(\cdot)$).
+
+`r newthought("Modello a media mobile (MA)")`
+
+Alternativamente, è possibile immaginare il caso in cui la generica osservazione $x_t$ è espressa come combinazione lineare **del disturbo** agente sulle $q$ osservazioni precedenti:
+\begin{dfn}[Modello a media mobile]
+Un modello MA di ordine $q$, abbreviato come $\mathrm{MA}(q)$ è definito come
+\begin{equation}
+x_t = w_t + \theta_1 w_{t-1} + \theta_2 w_{t-2} + \dots + \theta_q w_{t-q} \label{eq:MA}
+\end{equation}
+dove $w_t\sim\mathcal{N}(0, \sigma_w^2)$ e $\theta_1, \theta_2,\dots,\theta_q,~\theta_q\neq0$ sono parametri costanti.
+\end{dfn}
+
+Analogamente al caso $\mathrm{AR}(p)$, è possibile definire l'**operatore media mobile** di ordine $q$, $\Theta_q(B)=(1+\theta_1 B+\theta_2 B^2+\dots+\theta_q B^q)$ tale per cui la (\ref{eq:MA}) può essere scritta come:
+\begin{equation}
+x_t=\Theta_q(B)w_t \label{eq:MA2}
+\end{equation}
+
+Come sopra, la regressione di un modello $\mathrm{MA}(q)$ ad una serie storica $x_t$ significa identificare i termini di $\Phi_q(\cdot)$ che minimizzano i residui quadratici medi, definiti come $\varepsilon_t = x_t - \hat x_t = x_t - \Theta_q(B)$.
+
+`r newthought("Modello autoregressivo a media mobile (ARMA)")`
+
+L'ovvia estensione risulta dalla combinazione delle (\ref{eq:AR}) e (\ref{eq:MA}):
+\begin{dfn}[Modello autoregressivo a media mobile]
+Un modello ARMA di ordine $p,q$, abbreviato come $\mathrm{ARMA}(p,q)$ è definito come:
+\begin{multline}
+x_t=\phi_1 x_{t-1} + \phi_2 x_{t-2}+\dots+\phi_p x_{t-p} + \\
++w_t + \theta_1 w_{t-1} + \theta_2 w_{t-2} + \dots + \theta_q w_{t-q}
+\end{multline}
+con $\phi_p$ e $\theta_q$ non nulli, ovvero, più brevemente:
+\begin{equation}
+\Phi_p(B)x_t=\Theta_q(B)w_t
+\end{equation}
+\end{dfn}
+
+`r newthought("Modello autoregressivo, integrato, a media mobile (ARIMA)")`
+
+I processi $\mathrm{ARMA}(p,q)$ sono adatti a descrivere serie **stazionarie** e, quindi, non possono descrivere serie temporali come quelli di Fig. \ref{fig:chicken}.
+
+Nel primo capitolo di questa Sezione abbiamo visto come l'operatore differenza $\nabla$ abbia un effetto stabilizzante sulla serie storica $x_t$. Viene quindi spontaneo utilizzarlo per stabilizzare la serie prima di modellarla come un processo $\mathrm{ARMA}(p,q)$, ottenendo la seguente:
+\begin{dfn}[Modello autoregressivo, integrato, a media mobile]
+Un processo $x_t$ è detto $\mathrm{ARIMA}(p,d,q)$ quando:
+\begin{equation}
+\nabla^d x_t = (1-B)^d x_t
+\end{equation}
+è un processo $\mathrm{ARMA}(p,q)$. In generale, il processo $\mathrm{ARIMA}(p,d,q)$ può essere scritto come:
+\begin{equation}
+\Phi_p(B)(1.B)^dx_t=\Theta_q(B)w_t
+\end{equation}
+e se $E(\nabla^dx_t)=\mu$, allora:
+\begin{equation}
+\Phi_p(B)(1-B)^dx_t=\delta + \Theta_q(B)w_t
+\end{equation}
+dove $\delta=\mu(1-\phi_1-\dots-\phi_p)$.
+\end{dfn}
+
+
+```{r}
+set.seed(0)
+ts <- arima.sim(
+  list(order=c(0,0,2), ma=c(-5, 4)),
+  n=100)
+plot(ts)
+acf(ts)
+```
+
+
+# Regressione ARIMA
 
 ## Akaike Information Criterion
 
