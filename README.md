@@ -1,5 +1,7 @@
 # Statistica per la misura
 
+[![PDF release](https://github.com/pbosetti/Stat4Measure/actions/workflows/render.yml/badge.svg)](https://github.com/pbosetti/Stat4Measure/actions/workflows/render.yml)
+
 ***Note:** these are handouts for the course "Statistica per la Misura"
 ("Statistics for Measurements"), a course for the 2nd year of industrial
 engineering at the University of Trento. The course is offered in

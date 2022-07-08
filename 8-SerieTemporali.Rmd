@@ -32,6 +32,7 @@ header-includes:
   - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
   - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
+  - \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=red}
 params:
   GITHUB_VERSION: NULL
 ---
@@ -476,6 +477,9 @@ x3 <- xts(rnorm(365), order.by=seq(
 apply.quarterly(x3, sum)
 ```
 
+```{marginfigure}
+**Nota**: $\nabla^2x_t=(1-B)^2x_t$ può essere espresso come `diff(x, diff=2)` ma **non** come `diff(x, 2)` che corrisponde invece a $x_t - x_{t-2}$, cioè $(1-B^2)x_t$.
+```
 Infine, sono disponibili le funzioni `lag()` e `diff()`, sia per gli oggetti `ts` che `xts`, che corrispondono agli operatori *backshift* $B$ e differenza $\nabla$ visti sopra. Tuttavia si noti che `dplyr` definisce una sua versione di `lag()`, che non funziona con `xts`, quindi se `dplyr` è caricato è necessario specificare esplicitamente che si desidera la versione `lag.xts()`:
 ```{r}
 lag.xts(x1) %>% head(n=4)
@@ -601,11 +605,24 @@ e se $E(\nabla^dx_t)=\mu$, allora:
 dove $\delta=\mu(1-\phi_1-\dots-\phi_p)$.
 \end{dfn}
 
+## Stabilità e unicità dei modelli ARMA
 
-```{r}
+Consideriamo un modello $\mathrm{AR}(1)$: possiamo sviluppare la formula ricorsiva come:
+\begin{eqnarray*}
+x_t &=& \phi x_{t-1}+w_t = \phi(\phi x_{t-2}+w_t) + w_t \\
+ &\vdots& \\
+&=& \sum_{j=0}^{+\infty}\phi^j w_{t-j}
+\end{eqnarray*}
+È quindi evidente che la serie temporale $x_t$ **è stabile solo se** $|\phi|<1$.
+Nel caso generale del modello $\mathrm{AR}(p)$, si ha la condizione di stabilità:
+\begin{equation}
+\left|\sum_{i=1}^p \phi_i\right| < 1 \label{eq:ARstab}
+\end{equation}
+
+```{r 
 set.seed(0)
 ts <- arima.sim(
-  list(order=c(0,0,2), ma=c(-5, 4)),
+  list(order=c(2,0,0), ar=c(-0.9, 0.1)),
   n=100)
 plot(ts)
 acf(ts)
