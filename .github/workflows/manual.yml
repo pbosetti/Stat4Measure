@@ -38,12 +38,15 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+        
+    - name: Get version
+      run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)
       
     - name: Compile pdf
-      run: GITHUB_WORKSPACE=$PWD Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
+      run: GITHUB_WORKSPACE=$PWD GITHUB_VERSION=$VERSION Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
     
     - name: Create zip
       run: zip S4M_${{ steps.date.outputs.date }}.zip ${{ inputs.files_glob }}.pdf
@@ -56,6 +59,11 @@ jobs:
         prerelease: false
         release_name: S4M, built on ${{ steps.long_date.outputs.long_date }}
         tag_name: S4M_${{ steps.date.outputs.date }}
+        body: |
+          This is a manually generated package.
+          The following files contain:
+          - `S4M_${{ env.VERSION }}`: all the PDF files, zipped in one archive
+          - `source code`: the original repo content, zipped or tarballed
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
