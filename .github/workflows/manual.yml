@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
     # Inputs the workflow accepts.
     inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'     
+        required: false
+        default: false
       files_glob:
         # Friendly description to be shown in the UI instead of 'name'
         description: 'Files to compile (no extension!)'
@@ -44,6 +48,10 @@ jobs:
       
     - name: git safe directory
       run: git config --global --add safe.directory $(pwd)
+      
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       
     - name: Compile pdf
       run: GITHUB_WORKSPACE=$PWD GITHUB_VERSION=$VERSION Docker/make_pdf.R ${{ inputs.files_glob }}.Rmd
