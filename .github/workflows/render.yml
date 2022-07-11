@@ -46,7 +46,7 @@ jobs:
         body: |
           The following files contain:
           - `S4M_${{ env.VERSION }}`: all the PDF files, zipped in one archive
-          - `source code`: the original repo content, zipped or tarballed
+          - `source code`: the original repo content, zipped or tarballed (but **NO PDFs!**)
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
