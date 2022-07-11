@@ -48,6 +48,7 @@ source("myfunctions.R")
 ```
 ```{=tex}
 \newtheorem{dfn}{Definizione}
+\newcommand{\boxedpar}[1]{\bigskip\noindent\fbox{\parbox{\textwidth}{{#1}}}\bigskip}
 ```
 
 
@@ -567,7 +568,7 @@ Analogamente al caso $\mathrm{AR}(p)$, è possibile definire l'**operatore media
 x_t=\Theta_q(B)w_t \label{eq:MA2}
 \end{equation}
 
-Come sopra, la regressione di un modello $\mathrm{MA}(q)$ ad una serie storica $x_t$ significa identificare i termini di $\Phi_q(\cdot)$ che minimizzano i residui quadratici medi, definiti come $\varepsilon_t = x_t - \hat x_t = x_t - \Theta_q(B)$.
+Come sopra, la regressione di un modello $\mathrm{MA}(q)$ ad una serie storica $x_t$ significa identificare i termini di $\Theta_q(\cdot)$ che minimizzano i residui quadratici medi, definiti come $\varepsilon_t = x_t - \hat x_t = x_t - \Theta_q(B)$.
 
 `r newthought("Modello autoregressivo a media mobile (ARMA)")`
 
@@ -618,16 +619,76 @@ Nel caso generale del modello $\mathrm{AR}(p)$, si ha la condizione di stabilit�
 \begin{equation}
 \left|\sum_{i=1}^p \phi_i\right| < 1 \label{eq:ARstab}
 \end{equation}
+Un modello AR non stabile è detto anche **anticausale**, perché si può dimostrare che per essere stabilizzato richiede la conoscenza delle osservazioni future.
 
-```{r 
+Se invece consideriamo un modello $\mathrm{MA}(1)$ abbiamo un potenziale problema di carattere differente. Consideriamo i due modelli:
+\begin{eqnarray}
+x_t &=& w_t + k w_{t-1}, ~w_t\sim\mathcal{N}(0, 1) \\
+y_t &=& \nu_t + 1/k \nu_{t-1}, ~w_t\sim\mathcal{N}(0, k^2) 
+\end{eqnarray}
+È evidente che $x_t$ e $\nu_t$ hanno la stessa ACF e sono indistinguibili, dato che noi non conosciamo le innovazioni $w_t$ e $\nu_t$ ma solo le due serie. Si può dimostrare che il risultato è generale (cioè non dipende dell'orine $q$). È quindi necessario scegliere una delle due forme alternative. Per individuare quale, riscriviamo la serie come $w_t=-\theta x_{t-1}+x_t$, che ha la stessa forma della $\mathrm{AR}(1)$ (\ref{eq:AR}). Possiamo quindi scegliere l'alternativa che rispetta lo stesso criterio di *stabilità* (\ref{eq:ARstab}):
+\begin{equation}
+\left|\sum_{i=1}^q \theta_i\right| < 1 \label{eq:MAstab}
+\end{equation}
+Tale alternativa si dice **invertibile**.
+
+\boxedpar{
+In generale, si può dimostrare che i criteri in (\ref{eq:ARstab}) e (\ref{eq:MAstab}) corrispondono a imporre il requisito che le radici complesse dei polinomi $\Phi_p(z)=1-\phi_1 z-\phi_2 z^2 - \dots -\phi_p z^p$ e $\Theta_q(z)=1+\theta_1 z+\theta_2 z^2 + \dots +\theta_q z^q$ (con $\phi_p$ e $\theta_q$ non nulli) siano \strong{tutte} strettamente fuori dal cerchio unitario sul piano complesso.
+}
+Per i dettagli delle dimostrazioni vedi @Shumway2017.
+ 
+Ad esempio, il modello $\mathrm{ARMA}(2,3)$ con polinomi $\Phi_2(z)= 1 + 0.9z + 0.1z^2$ e $\theta_q(z) = 1 + 2z + 15z^2$ può essere verificato con R mediante la funzione `polyroot()`:
+```{r}
+abs(polyroot(c(1, -0.9, -0.1)))
+abs(polyroot(c(1, 2, 15)))
+abs(polyroot(c(1, 1/2, 1/15)))
+```
+
+Quindi: la parte AR del modello non è causale (perché solo una delle radici è maggiore di 1) e la parte MA non è invertibile. Quest'ultima può però essere sostituita dal polinomio con fattori inversi.
+
+Se i criteri di causalità e invertibilità riguardano, rispettivamente, la parte AR e la parte MA di un modello **in maniera indipendente**, c'è un criterio che invece dipende dai valori **combinati** dei polinomi $\phi^p$ e $\theta^q$.
+
+Consideriamo il processo $x_t = w_t$: si tratta ovviamente di puro rumore casuale. Se moltiplichiamo entrambi i lati per $1-0.5B$ otteniamo $(1-0.5B)x_t=(1-0.5B)w_t$, cioè
+\[
+x_t=0.5x_{t-1}-0.5w_{t-1}+w_t
+\]
+che *sembra* un modello $\mathrm{ARMA}(1,1)$, ma ovviamente è sempre lo stesso rumore casuale $x_t=w_t$.
+
+Questo ci dice che un modello ARMA può avere parametri ridondanti e ci serve quindi un criterio per identificare questi casi.
+
+Di fatto, è sufficiente scomporre in fattori i polinomi $\Phi_p$ e $\Theta_q$ ed eliminare i fattori comuni. È più semplice con un esempio. Consideriamo il processo
+\[
+x_t=0.4x_{t-1}+0.45x_{t-2}+w_t + w_{t-1}+0.25w_{t-2}
+\]
+che usando l'operatore $B$ diventa
+\[
+(1-0.4B-0.45B^2)x_t = (1+B+0.25B^2)w_t.
+\]
+In questa forma il processo sembra $\mathrm{ARMA}(2,2)$, tuttavia possiamo scomporre i due polinomi in fattori, usando `polyroot()` per calcolare le radici:
+```{r}
+# per Phi:
+-1/polyroot(c(1, -0.4, -0.45))
+# per Theta:
+-1/polyroot(c(1, 1, 0.25))
+```
+Come si vede, si può scrivere $\Phi_p(B)=(1-0.9B)(1+0.5B)$ e $\Theta_q(B)=(1+0.5B)^2$. Eliminando il fattore comune $(1+0.5B)$ otteniamo il modello 
+\[
+x_t=0.9x_{t-1}+0.5w_{t-1}+w_t
+\]
+che è un $\mathrm{ARMA}(1,1)$.
+
+```{r eval=F, echo=F}
 set.seed(0)
 ts <- arima.sim(
-  list(order=c(2,0,0), ar=c(-0.9, 0.1)),
+  list(order=c(2,0,0), ar=c(-0.5, -0.5)),
   n=100)
 plot(ts)
 acf(ts)
 ```
 
+\boxedpar{
+Quindi ai criteri di \strong{causalità} e di \strong{invertibilità} si aggiunge il criterio di \strong{non ridondanza} dei parametri, che si verifica eliminando ogni fattore comune dalla scomposizione in fattori dei polinomi $\Phi_p(B)$ e $\Theta_q(B)$.
+}
 
 # Regressione ARIMA
 

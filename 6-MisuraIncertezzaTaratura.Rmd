@@ -32,7 +32,6 @@ header-includes:
   - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
   - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
-  - \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=red}
 params:
   GITHUB_VERSION: NULL
 ---
