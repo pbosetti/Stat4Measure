@@ -24,7 +24,6 @@ bibliography: skeleton.bib
 link-citations: yes
 header-includes:
   - \usepackage[italian]{babel}
-  - \usepackage{wasysym}
   - \usepackage{units}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
@@ -32,6 +31,9 @@ header-includes:
   - \fancyfoot[LO,LE]{\footnotesize \emph{Statistica per la Misura}}
   - \fancyfoot[CO,CE]{\includegraphics[height=0.5cm]{by-nc-sa.png}}
   - \fancyfoot[RO,RE]{\footnotesize \url{paolo.bosetti@unitn.it}}
+  - \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=red}
+params:
+  GITHUB_VERSION: NULL
 ---
 
 ```{r setup, include=FALSE}
@@ -400,7 +402,7 @@ u_{x,\textrm{rel}}=\frac{u_x}{|\bar x|}
 \end{equation}
 
 ```{marginfigure}
-**Nota**: in genere, $u_{x,\textrm{rel}}$ è molto piccola, per cui si indica **con un'unica cifra significativa**: ad es. $7\times10^{-5}$, oppure in permille ($0.7\permil$) o in parti per milione (70 ppm)
+**Nota**: in genere, $u_{x,\textrm{rel}}$ è molto piccola, per cui si indica **con un'unica cifra significativa**: ad es. $7\times10^{-5}$, oppure in permille ($0.7$ per mille) o in parti per milione (70 ppm)
 ```
 
 È anche utile esprimere l'incertezza in relazione all'**intervallo di confidenza** all'interno del quale ricade il valore atteso della misura con una determinata probabilità, detta **livello di confidenza**. Ricordando quanto visto nella Parte dedicata alla statistica inferenziale, sappiamo che:
@@ -612,6 +614,5 @@ quantile(data$V)
 
 
 
-
-```{r eval=F, child="closing.Rmd"}
+```{r eval=!is.null(params$GITHUB_VERSION) , include=!is.null(params$GITHUB_VERSION), child="closing.Rmd"}
 ```
